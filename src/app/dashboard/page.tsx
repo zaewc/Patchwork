@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ContributionQuilt } from "@/components/contribution-quilt";
 import { MergedPullRequests, PullRequestBoard } from "@/components/pull-request-board";
@@ -15,26 +14,15 @@ import {
   RANGES,
   type DashboardData,
 } from "@/lib/github";
-import { isNotableTier, type ImpactTier } from "@/lib/impact";
+import { isNotable } from "@/lib/impact";
 import { getSession } from "@/lib/session";
 
 const TOP_REPOS = 10;
 
-function Section({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-10">
-      <div className="mb-3 flex items-baseline justify-between gap-4">
-        <h2 className="text-sm font-medium text-muted">{title}</h2>
-        {action}
-      </div>
+      <h2 className="mb-3 text-sm font-medium text-muted">{title}</h2>
       {children}
     </section>
   );
@@ -93,8 +81,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const { viewer, totals, external, notable, repos, openPullRequests, mergedPullRequests } = data;
   // 주요 OSS 모드에서는 세 목록 모두 같은 기준으로 걸러 화면이 어긋나지 않게 한다.
-  const keep = <T extends { tier: ImpactTier }>(items: T[]) =>
-    showAll ? items : items.filter((item) => isNotableTier(item.tier));
+  const keep = <T extends { impact: number }>(items: T[]) =>
+    showAll ? items : items.filter((item) => isNotable(item.impact));
 
   const visibleRepos = keep(repos);
   const visibleOpen = keep(openPullRequests);
@@ -154,7 +142,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <PullRequestBoard
             pullRequests={visibleOpen}
             emptyMessage={
-              openPullRequests.length > 0 ? `열린 pull request ${openPullRequests.length}건이 모두 ${notNotable}` : undefined
+              openPullRequests.length > 0
+                ? `열린 pull request ${openPullRequests.length}건이 모두 ${notNotable}`
+                : undefined
             }
           />
         </Section>

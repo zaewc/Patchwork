@@ -1,6 +1,5 @@
 import type { CheckState, PullRequest } from "@/lib/github";
 import { relativeTime } from "@/lib/format";
-import { TierBadge } from "@/components/tier-badge";
 
 type ColumnKey = "changes" | "review" | "approved" | "draft";
 
@@ -32,7 +31,6 @@ function PullRequestCard({ pr }: { pr: PullRequest }) {
     <li className="rounded-lg border border-border bg-surface p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-muted">
         <span className="truncate">{pr.repo}</span>
-        <TierBadge tier={pr.tier} score={pr.impact} />
         {pr.isPrivate ? <span className="shrink-0">Private</span> : null}
       </div>
 
@@ -111,7 +109,6 @@ export function MergedPullRequests({
             <span className="text-muted">{pr.repo}</span>{" "}
             <span className="text-muted tabular-nums">#{pr.number}</span> {pr.title}
           </a>
-          <TierBadge tier={pr.tier} score={pr.impact} />
           <span className="shrink-0 text-[11px] text-muted">
             {relativeTime(pr.mergedAt ?? pr.updatedAt)}
           </span>

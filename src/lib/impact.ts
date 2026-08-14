@@ -9,10 +9,8 @@
  * 등급을 받으므로, trust는 audience를 넘겨 받을 수 없게 묶는다. 즉 외부 관심이
  * 0이면 아무리 잘 관리해도 0점이다.
  *
- * 어디까지나 휴리스틱이며, 가중치와 등급 경계는 아래 WEIGHTS·TIERS에서 조정한다.
+ * 어디까지나 휴리스틱이며, 가중치와 기준선은 아래 WEIGHTS·NOTABLE_MIN에서 조정한다.
  */
-
-export type ImpactTier = "flagship" | "major" | "unranked";
 
 export type RepoSignals = {
   /** 비공개 Repository는 공개 OSS 권위 척도의 대상이 아니다. */
@@ -46,18 +44,14 @@ export const WEIGHTS = {
   archivedPenalty: 20,
 } as const;
 
-/** 등급을 받기 위한 최소 Stars. 점수와 무관하게 이 아래는 등급이 없다. */
+/** 등급을 받기 위한 최소 Stars. 점수와 무관하게 이 아래는 주요 OSS로 보지 않는다. */
 export const MIN_STARS = 30;
 
-/** 자격 미달 Repository의 점수 상한 — 가장 낮은 등급(주요 OSS 60)에 닿지 못한다. */
-const UNRANKED_CAP = 59;
+/** 주요 OSS로 인정하는 점수. 실질적으로 Stars 600개 안팎이 기준선이다. */
+export const NOTABLE_MIN = 60;
 
-export const TIERS: { tier: ImpactTier; min: number; label: string; description: string }[] = [
-  { tier: "flagship", min: 80, label: "대표 OSS", description: "생태계의 중심이 되는 프로젝트" },
-  { tier: "major", min: 60, label: "주요 OSS", description: "널리 쓰이는 프로젝트" },
-  // 그 아래는 등급을 주지 않는다. 일반 프로젝트까지 표시되면 구분의 의미가 없다.
-  { tier: "unranked", min: 0, label: "", description: "" },
-];
+/** 자격 미달 Repository의 점수 상한 — NOTABLE_MIN에 닿지 못한다. */
+const UNRANKED_CAP = NOTABLE_MIN - 1;
 
 const YEAR = 365 * 86_400_000;
 
@@ -99,21 +93,7 @@ export function scoreRepo(signals: RepoSignals, now: number = Date.now()): numbe
   return qualified ? score : Math.min(score, UNRANKED_CAP);
 }
 
-export function tierOf(score: number): ImpactTier {
-  return TIERS.find((t) => score >= t.min)!.tier;
+/** 주요 OSS(= 목록에 올릴 만한 프로젝트)인지 */
+export function isNotable(score: number): boolean {
+  return score >= NOTABLE_MIN;
 }
-
-export function tierMeta(tier: ImpactTier) {
-  return TIERS.find((t) => t.tier === tier)!;
-}
-
-/** 주요 OSS 이상(= 권위 있는 프로젝트)인지 */
-export function isNotableTier(tier: ImpactTier): boolean {
-  return tier === "flagship" || tier === "major";
-}
-
-export const TIER_BADGE_CLASS: Record<ImpactTier, string> = {
-  flagship: "bg-accent text-white",
-  major: "bg-accent-soft text-accent",
-  unranked: "",
-};

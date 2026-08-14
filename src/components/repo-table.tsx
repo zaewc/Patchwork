@@ -1,6 +1,5 @@
 import type { RepoStat } from "@/lib/github";
 import { formatNumber } from "@/lib/format";
-import { TierBadge } from "@/components/tier-badge";
 
 export function RepoTable({
   repos,
@@ -34,7 +33,6 @@ export function RepoTable({
                   <a href={repo.url} className="truncate hover:text-accent hover:underline">
                     {repo.nameWithOwner}
                   </a>
-                  <TierBadge tier={repo.tier} score={repo.impact} />
                   {repo.isPrivate ? (
                     <span className="shrink-0 text-[11px] text-muted">Private</span>
                   ) : null}

@@ -1,10 +1,4 @@
-import {
-  isNotableTier,
-  scoreRepo,
-  tierOf,
-  type ImpactTier,
-  type RepoSignals,
-} from "@/lib/impact";
+import { isNotable, scoreRepo, type RepoSignals } from "@/lib/impact";
 
 const GITHUB_GRAPHQL = "https://api.github.com/graphql";
 
@@ -203,7 +197,6 @@ export type PullRequest = {
   isPrivate: boolean;
   isExternal: boolean;
   impact: number;
-  tier: ImpactTier;
   /** 최근 업데이트가 없는 채로 열려 있는 PR */
   isStale: boolean;
 };
@@ -215,7 +208,6 @@ export type RepoStat = {
   isExternal: boolean;
   /** 0~100 권위 추정 점수 (lib/impact.ts) */
   impact: number;
-  tier: ImpactTier;
   commits: number;
   pullRequests: number;
   reviews: number;
@@ -348,7 +340,6 @@ function toPullRequest(node: PullRequestNode, viewerLogin: string, now: number):
     isPrivate: node.repository.isPrivate,
     isExternal: node.repository.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
     impact,
-    tier: tierOf(impact),
     isStale: !node.mergedAt && updatedDaysAgo >= STALE_DAYS,
   };
 }
@@ -373,7 +364,6 @@ export function aggregateRepos(
         isPrivate: repo.isPrivate,
         isExternal: repo.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
         impact,
-        tier: tierOf(impact),
         commits: 0,
         pullRequests: 0,
         reviews: 0,
@@ -457,7 +447,7 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
   const externalRepos = repos.filter((r) => r.isExternal);
   const externalContributions = externalRepos.reduce((sum, r) => sum + r.total, 0);
   const allContributions = repos.reduce((sum, r) => sum + r.total, 0);
-  const notableRepos = externalRepos.filter((r) => isNotableTier(r.tier));
+  const notableRepos = externalRepos.filter((r) => isNotable(r.impact));
   const notableContributions = notableRepos.reduce((sum, r) => sum + r.total, 0);
 
   const toPR = (nodes: (PullRequestNode | Record<string, never>)[]) =>
