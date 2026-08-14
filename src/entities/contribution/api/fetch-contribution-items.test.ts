@@ -174,6 +174,14 @@ describe("걸러내기", () => {
 
     await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
   });
+
+  it("PR이나 issue가 아닌 검색 결과는 걸러낸다", async () => {
+    mockSearch(() =>
+      searchItemsResponse([completedIssueItem({ __typename: "Discussion" })]),
+    );
+
+    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
+  });
 });
 
 describe("페이지 넘기기", () => {

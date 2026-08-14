@@ -151,7 +151,7 @@ export const pullRequestsResponse = (
 });
 
 export type ItemNodeFixture = {
-  __typename: "PullRequest" | "Issue";
+  __typename: string;
   title: string;
   url: string;
   createdAt: string;

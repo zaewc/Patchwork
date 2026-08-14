@@ -23,7 +23,7 @@ query Items($q: String!, $after: String) {
 }`;
 
 type ItemNode = {
-  __typename: "PullRequest" | "Issue" | string;
+  __typename: string;
   title: string;
   url: string;
   createdAt: string;
@@ -48,9 +48,9 @@ function isItemNode(node: SearchNode): node is ItemNode {
 
 /** 결론이 난 기여만 남긴다: merge된 PR과, 메인테이너가 완료로 닫은 issue. */
 function isConcluded(node: ItemNode): boolean {
-  return node.__typename === "PullRequest"
-    ? Boolean(node.mergedAt)
-    : node.stateReason === "COMPLETED";
+  if (node.__typename === "PullRequest") return Boolean(node.mergedAt);
+  if (node.__typename === "Issue") return node.stateReason === "COMPLETED";
+  return false;
 }
 
 async function searchAllPages(token: string, query: string): Promise<ItemNode[]> {
