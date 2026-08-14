@@ -4,17 +4,11 @@
 
 흩어진 commit·pull request·review·issue를 patchwork처럼 이어 붙여, **내 repository가 아닌 곳에 얼마나 기여했는지**를 중심으로 보여주는 것이 목표입니다.
 
-## Repository 권위 등급
+## 주요 OSS 판별
 
-기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. Patchwork는 repository마다 0~100점의 추정 점수를 매겨 등급을 매깁니다 ([src/lib/impact.ts](src/lib/impact.ts)).
+기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. Patchwork는 repository마다 0~100점의 추정 점수를 매기고, **60점(`NOTABLE_MIN`) 이상만 주요 OSS로 봅니다** ([src/lib/impact.ts](src/lib/impact.ts)). 실질적인 기준선은 Stars 600개 안팎입니다.
 
-| 등급 | 점수 | 의미 |
-| --- | --- | --- |
-| 대표 OSS | 80+ | 생태계의 중심이 되는 프로젝트 |
-| 주요 OSS | 60–79 | 널리 쓰이는 프로젝트 |
-| (등급 없음) | 0–59 | 일반 프로젝트 |
-
-주요 OSS 미만은 배지를 붙이지 않고, **Repositories 목록에서도 기본으로 제외**합니다. 섹션 헤더의 `전체 보기` 를 누르면(`?repos=all`) 일반 프로젝트까지 볼 수 있습니다. 실질적인 기준선은 Stars 600개 안팎입니다.
+대시보드는 기본으로 주요 OSS만 보여줍니다. Repositories·Open pull requests·Recently merged 세 목록이 모두 이 기준으로 걸러지고, 상단의 `전체` 탭(`?scope=all`)을 누르면 일반 프로젝트까지 나옵니다. 목록 자체가 주요 OSS로 걸러지므로 행마다 등급 배지를 달지는 않습니다.
 
 점수는 두 덩어리로 나뉘고, 그냥 더하지 않습니다.
 
@@ -31,14 +25,14 @@ score = audience + min(trust, audience)
 | | 최근 push (90일 내 16 / 1년 내 8) | 16 |
 | 감점 | Fork / Archived | −25 / −20 |
 
-`trust`가 `audience`를 넘지 못하게 묶은 것이 핵심입니다. 이렇게 하지 않으면 아무도 쓰지 않는 사내 프로젝트가 "org 소유 + License + 최근 push"만으로 등급을 받습니다. 외부 관심이 0이면 아무리 잘 관리해도 0점입니다.
+`trust`가 `audience`를 넘지 못하게 묶은 것이 핵심입니다. 이렇게 하지 않으면 아무도 쓰지 않는 사내 프로젝트가 "org 소유 + License + 최근 push"만으로 주요 OSS에 올라옵니다. 외부 관심이 0이면 아무리 잘 관리해도 0점입니다.
 
-점수와 별개로 **자격 조건**이 둘 있습니다. 하나라도 못 채우면 점수가 59점(= 등급 없음)으로 묶입니다.
+점수와 별개로 **자격 조건**이 둘 있습니다. 하나라도 못 채우면 점수가 59점(= 주요 OSS 미만)으로 묶입니다.
 
 - **Stars 30개 이상** (`MIN_STARS`) — 하한선. fork만 많은 강의·템플릿 repository를 거르는 역할도 합니다.
 - **License 선언** — 없으면 정의상 오픈소스가 아닙니다. GitHub이 분류하지 못한 커스텀 License(`key: other`)는 "선언은 했다"로 보고 통과시킵니다.
 
-자격 조건을 넘겨도 점수 계산을 통과해야 등급이 붙습니다.
+자격 조건을 넘겨도 점수 계산까지 통과해야 주요 OSS로 잡힙니다.
 
 Private repository는 공개 생태계의 권위 척도 대상이 아니므로 0점으로 둡니다.
 
