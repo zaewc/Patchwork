@@ -1,14 +1,53 @@
 # Patchwork
 
-<img src="src/app/icon.svg" width="200">
+<img src="app/icon.svg" width="200">
 
 오픈소스 기여 트래커. GitHub contribution과 진행 중인 pull request 상태를 한 화면에 모아 보여줍니다.
 
 흩어진 commit·pull request·review·issue를 patchwork처럼 이어 붙여, **내 repository가 아닌 곳에 얼마나 기여했는지**를 중심으로 보여주는 것이 목표입니다.
 
+## 시작하기
+
+```bash
+cp .env.example .env.local   # GitHub OAuth 앱 값을 채운다
+npm install
+npm run dev
+```
+
+OAuth 앱이 없으면 홈 화면이 준비 절차를 안내합니다. `SESSION_SECRET`은 `openssl rand -hex 32`로 만듭니다.
+
+## 구조
+
+[Feature-Sliced Design](https://feature-sliced.design)을 Next.js App Router에 적용했습니다. 라우팅은 루트 `app/`에 재내보내기 한 줄씩만 두고, 실제 코드는 `src/`의 여섯 레이어에 있습니다.
+
+```
+app/            Next.js 라우팅
+src/_app/       라우트 핸들러 · 루트 레이아웃 · 전역 스타일
+src/_pages/     화면 (home · dashboard · readme-export)
+src/widgets/    여러 화면이 공유하는 UI 블록
+src/features/   사용자가 하는 일
+src/entities/   도메인 개념 (repo · pull-request · contribution · viewer)
+src/shared/     업무 지식이 없는 토대
+```
+
+레이어를 이렇게 나눈 이유, 규칙을 지키지 않은 곳과 그 근거는 [ARCHITECTURE.md](ARCHITECTURE.md)에 있습니다.
+
+## 검사
+
+```bash
+npm run test:all      # 아래 전부
+npm run typecheck     # tsc
+npm run lint          # eslint
+npm run lint:arch     # steiger — FSD 레이어·공개 API 위반
+npm run test:coverage # vitest (4개 지표 100% 미만이면 실패)
+npm run test:e2e      # playwright
+```
+
+E2E는 GitHub 대역 서버를 띄우고 앱을 그쪽으로 물려 실제 OAuth 흐름까지 통과시킵니다. 개발 서버와 산출물이 섞이지 않도록 `.next-e2e`에 따로 빌드합니다.
+
 ## 주요 OSS 판별
 
-기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. Patchwork는 repository마다 0~100점의 추정 점수를 매기고, **60점(`NOTABLE_MIN`) 이상만 주요 OSS로 봅니다** ([src/lib/impact.ts](src/lib/impact.ts)). 실질적인 기준선은 Stars 600개 안팎입니다.
+기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. Patchwork는 repository마다 0~100점의 추정 점수를 매기고, **60점(`NOTABLE_MIN`) 이상만 주요 OSS로 봅니다** ([src/entities/repo/model/impact.ts](src/entities/repo/model/impact.ts)). 실질적인 기준선은 Stars 600개 안팎입니다.
 
 대시보드는 기본으로 주요 OSS만 보여줍니다. Repositories·Open pull requests·Recently merged 세 목록이 모두 이 기준으로 걸러지고, 상단의 `전체` 탭(`?scope=all`)을 누르면 일반 프로젝트까지 나옵니다. 목록 자체가 주요 OSS로 걸러지므로 행마다 등급 배지를 달지는 않습니다.
 
@@ -40,4 +79,4 @@ Private repository는 공개 생태계의 권위 척도 대상이 아니므로 0
 
 GitHub GraphQL에는 contributor count가 없습니다. `mentionableUsers.totalCount` 가 참여 폭에 더 가깝지만, repository마다 사용자를 세느라 집계 쿼리 전체를 타임아웃(502)시켜서 스칼라 필드인 `forkCount` 를 대용치로 씁니다. 신호는 전부 기존 응답에 필드만 추가해 계산하므로 API 요청 수는 늘지 않습니다.
 
-어디까지나 휴리스틱입니다. 가중치와 등급 경계는 `src/lib/impact.ts` 의 `WEIGHTS`, `NOTABLE_MIN`, `MIN_STARS` 에서 바로 조정할 수 있습니다. 더 엄밀한 지표가 필요하면 [deps.dev](https://deps.dev) 의 OpenSSF Criticality Score / Scorecard 를 연동하는 방법도 있습니다(패키지로 배포된 repository만 커버되고, repository당 외부 API 호출이 추가됩니다).
+어디까지나 휴리스틱입니다. 가중치와 등급 경계는 `src/entities/repo/model/impact.ts` 의 `WEIGHTS`, `NOTABLE_MIN`, `MIN_STARS` 에서 바로 조정할 수 있습니다. 더 엄밀한 지표가 필요하면 [deps.dev](https://deps.dev) 의 OpenSSF Criticality Score / Scorecard 를 연동하는 방법도 있습니다(패키지로 배포된 repository만 커버되고, repository당 외부 API 호출이 추가됩니다).
