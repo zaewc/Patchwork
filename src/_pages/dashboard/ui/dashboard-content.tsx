@@ -11,17 +11,25 @@ import { MergedPullRequestList } from "@/_pages/dashboard/ui/merged-pull-request
 import { PullRequestBoard } from "@/_pages/dashboard/ui/pull-request-board";
 import { RepoTable } from "@/_pages/dashboard/ui/repo-table";
 import { Section } from "@/_pages/dashboard/ui/section";
-import { filterByScope, ScopeTabs, scopeHref, type ScopeParams } from "@/features/contribution-scope";
+import {
+  filterByScope,
+  ScopeTabs,
+  scopeHref,
+  type ScopeParams,
+} from "@/features/contribution-scope";
 import { SiteHeader } from "@/widgets/site-header";
 import { RANGES, ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { Banner } from "@/shared/ui/banner";
+import { RefreshIcon } from "@/shared/ui/icon";
 
 /** 전체 보기에서만 목록을 자른다. 주요 OSS 모드는 이미 걸러진 목록이라 다 보여준다. */
 const TOP_REPOS = 10;
 
 export function DashboardContent({ params }: { params: ScopeParams }) {
-  const { data, error, isFetching, refetch } = useQuery(dashboardQueryOptions(params.range));
+  const { data, error, isFetching, refetch } = useQuery(
+    dashboardQueryOptions(params.range),
+  );
 
   if (error instanceof DashboardQueryError && error.status === 401) {
     return (
@@ -55,7 +63,11 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
   const visibleMerged = filterByScope(mergedPullRequests, params.showAll);
 
   /** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
-  const filteredAway = (noun: string, unit: string, total: number): { emptyMessage?: string } =>
+  const filteredAway = (
+    noun: string,
+    unit: string,
+    total: number,
+  ): { emptyMessage?: string } =>
     total > 0
       ? {
           emptyMessage: `${noun} ${total}${unit}이 모두 주요 OSS가 아닙니다. 위에서 전체로 전환하면 볼 수 있습니다.`,
@@ -73,15 +85,21 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
       <SiteHeader user={viewer} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold tracking-tight">{viewer.name ?? viewer.login}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">
+            {viewer.name ?? viewer.login}
+          </h1>
           <div className="flex flex-wrap items-center gap-2">
             <ScopeTabs params={params} path={ROUTES.dashboard} />
             <button
               type="button"
-              className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
               disabled={isFetching}
               onClick={() => void refetch()}
             >
+              {/* 불러오는 동안에는 아이콘이 돈다. 움직임을 꺼 둔 사용자에게는 멈춰 있는다. */}
+              <RefreshIcon
+                className={isFetching ? "motion-safe:animate-spin" : ""}
+              />
               {isFetching ? "새로고침 중…" : "새로고침"}
             </button>
           </div>
@@ -110,7 +128,9 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
 
         <Section title="Repositories">
           <RepoTable
-            repos={params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos}
+            repos={
+              params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos
+            }
             {...filteredAway("기여한 repository", "곳", repos.length)}
           />
         </Section>
@@ -118,14 +138,22 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
         <Section title="Open pull requests">
           <PullRequestBoard
             pullRequests={visibleOpen}
-            {...filteredAway("열린 pull request", "건", openPullRequests.length)}
+            {...filteredAway(
+              "열린 pull request",
+              "건",
+              openPullRequests.length,
+            )}
           />
         </Section>
 
         <Section title="Recently merged">
           <MergedPullRequestList
             pullRequests={visibleMerged}
-            {...filteredAway("merge된 pull request", "건", mergedPullRequests.length)}
+            {...filteredAway(
+              "merge된 pull request",
+              "건",
+              mergedPullRequests.length,
+            )}
           />
         </Section>
       </main>
