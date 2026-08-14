@@ -32,6 +32,18 @@ describe("CopyButton", () => {
     expect(button).toHaveTextContent("Markdown 복사");
   });
 
+  it("아이콘을 곁들여도 버튼 이름은 글자 그대로다", async () => {
+    const { button, click } = setup("본문");
+
+    expect(button.querySelector("svg")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Markdown 복사" }),
+    ).toBeInTheDocument();
+
+    await click();
+    expect(screen.getByRole("button", { name: "복사됨" })).toBeInTheDocument();
+  });
+
   it("누르면 클립보드에 담고 복사됨으로 바꾼다", async () => {
     const { button, click } = setup("### next.js");
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/widgets/site-header/ui/logo";
 import type { GitHubViewer } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
+import { SignOutIcon } from "@/shared/ui/icon";
 
 /** 모든 화면의 머리. 로그인 상태에서만 사용자 메뉴가 붙는다. */
 export function SiteHeader({ user }: { user?: GitHubViewer }) {
@@ -52,8 +53,9 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
             <form action={ROUTES.logout} method="post">
               <button
                 type="submit"
-                className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
               >
+                <SignOutIcon />
                 로그아웃
               </button>
             </form>
