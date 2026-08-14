@@ -16,7 +16,8 @@ describe("audienceScore", () => {
     expect(audienceScore(5_000_000, 900_000)).toBeCloseTo(MAX, 5);
   });
 
-  it("주요 OSS 경계선(60점)에 겨우 닿을 뿐이다", () => {
+  it("Scorecard를 받은 프로젝트의 상위권은 넘지 못한다", () => {
+    // 실제 상위권은 62~85점이다. 검증되지 않은 repository가 그들을 앞지르면 안 된다.
     expect(MAX).toBe(60);
   });
 

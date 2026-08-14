@@ -200,13 +200,13 @@ describe("Scorecard 점수", () => {
     ]);
   });
 
-  it("Scorecard가 바뀌면 주요 OSS 판정도 바뀐다", async () => {
-    scorecards = { "vercel/next.js": 4.0 };
+  it("Scorecard가 경계선 아래로 내려가면 주요 OSS에서 빠진다", async () => {
+    scorecards = { "vercel/next.js": 3.0 };
     mockGraphQL(handlers());
 
     const data = await settle(loadDashboard("t", "1y"));
 
-    expect(data.repos[0].impact).toBe(40);
+    expect(data.repos[0].impact).toBe(30);
     expect(data.notable).toEqual({ repos: 0, contributions: 0 });
   });
 

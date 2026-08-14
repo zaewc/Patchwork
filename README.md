@@ -8,7 +8,7 @@
 
 ## 주요 OSS만 골라 보기
 
-기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. 그래서 repository마다 0~100점을 매기고 **60점 이상만 주요 OSS로 봅니다.**
+기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. 그래서 repository마다 0~100점을 매기고 **40점 이상만 주요 OSS로 봅니다.**
 
 점수는 [OpenSSF Scorecard](https://github.com/ossf/scorecard)를 [deps.dev](https://deps.dev)에서 받아 그대로 씁니다. 코드 리뷰 요구, 의존성 고정, CI 권한, SAST 등 14개 항목을 외부에서 같은 기준으로 채점한 값입니다.
 
@@ -18,25 +18,27 @@ flowchart TD
     A -->|아니오| B{"deps.dev가 아는 프로젝트인가"}
     B -->|예| C["Scorecard 총점 × 10"]
     B -->|아니오| D["Stars·Forks로 짐작 — 60점 상한"]
-    C --> E{60점 이상인가}
+    C --> E{40점 이상인가}
     D --> E
     E -->|예| F([주요 OSS])
     E -->|아니오| G([일반 프로젝트])
     Z --> G
 ```
 
-실제 점수를 보면 기준선이 어디쯤인지 감이 옵니다.
+널리 알려진 32개 프로젝트를 표본으로 본 분포입니다. 주요 OSS는 4점대부터 고르게 퍼져 있고, 토이·방치 저장소는 3점 아래에 몰립니다.
 
-| repository | Scorecard | 점수 |
+| Scorecard | 프로젝트 | |
 | --- | --- | --- |
-| expressjs/express | 8.5 | 85 |
-| microsoft/TypeScript | 8.0 | 80 |
-| facebook/react | 7.0 | 70 |
-| vercel/next.js | 6.2 | 62 |
-| chalk/chalk | 4.6 | 46 |
-| octocat/Hello-World | 1.9 | 19 |
+| 8.0~8.5 | express · angular · axios · TypeScript | ✅ |
+| 7.0~7.9 | svelte · kubernetes · lodash · rust · react · babel | ✅ |
+| 6.0~6.9 | vite · prettier · eslint · tailwind · node · **next.js** · go · vue | ✅ |
+| 5.0~5.9 | trpc · **webpack** · **playwright** · **rollup** | ✅ |
+| 4.0~4.9 | date-fns · **chalk** · **zod** | ✅ |
+| 3.9 이하 | slugify 3.8 · octocat/Hello-World 1.9 | ❌ |
 
-Scorecard는 **관리 품질**을 재고 인기를 재지 않습니다. 널리 쓰이지만 CI가 느슨한 프로젝트는 낮게 나옵니다. deps.dev가 모르는 repository만 Stars·Forks로 짐작하고, 검증되지 않은 만큼 경계선에 겨우 닿게 둡니다.
+Scorecard는 **관리 품질**을 재고 인기를 재지 않습니다. 널리 쓰이지만 CI가 느슨한 프로젝트는 낮게 나오므로 경계선을 높게 잡으면 webpack이나 zod처럼 누구나 쓰는 프로젝트가 통째로 빠집니다.
+
+deps.dev가 모르는 repository만 Stars·Forks로 짐작합니다. 이때는 60점이 상한이라, 검증된 프로젝트를 앞지르지 못합니다.
 
 대시보드는 기본으로 주요 OSS만 보여주고, `전체` 탭을 누르면 일반 프로젝트까지 나옵니다. 경계는 [impact.ts](src/entities/repo/model/impact.ts)에서 바꿉니다.
 

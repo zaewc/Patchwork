@@ -55,8 +55,9 @@ describe("scoreRepo · Scorecard가 없을 때", () => {
     expect(scoreRepo(signals({ stars: 0, forks: 0 }), null)).toBe(0);
   });
 
-  it("검증되지 않았으므로 경계선을 겨우 넘길 뿐이다", () => {
-    expect(scoreRepo(signals({ stars: 500_000, forks: 100_000 }), null)).toBe(NOTABLE_MIN);
+  it("아무리 널리 쓰여도 60점을 넘지 못한다", () => {
+    // Scorecard를 받은 프로젝트의 상위권(62~85)을 앞지르지 않게 묶어 둔다.
+    expect(scoreRepo(signals({ stars: 500_000, forks: 100_000 }), null)).toBe(60);
   });
 
   it("작은 repository는 낮게 남는다", () => {
@@ -71,8 +72,22 @@ describe("isNotable", () => {
     expect(isNotable(100)).toBe(true);
   });
 
-  it("Scorecard 6.0이 경계선이다", () => {
-    expect(isNotable(scoreRepo(signals(), 6.0))).toBe(true);
-    expect(isNotable(scoreRepo(signals(), 5.9))).toBe(false);
+  it("Scorecard 4.0이 경계선이다", () => {
+    expect(isNotable(scoreRepo(signals(), 4.0))).toBe(true);
+    expect(isNotable(scoreRepo(signals(), 3.9))).toBe(false);
+  });
+
+  it("누구나 쓰는 프로젝트는 관행이 느슨해도 남는다", () => {
+    // webpack 5.7 · playwright 5.3 · rollup 5.3 · chalk 4.6 · zod 4.4
+    for (const scorecard of [5.7, 5.3, 4.6, 4.4]) {
+      expect(isNotable(scoreRepo(signals(), scorecard))).toBe(true);
+    }
+  });
+
+  it("토이·방치 저장소는 걸러진다", () => {
+    // octocat/Hello-World 1.9 · slugify 3.8
+    for (const scorecard of [1.9, 3.8]) {
+      expect(isNotable(scoreRepo(signals(), scorecard))).toBe(false);
+    }
   });
 });
