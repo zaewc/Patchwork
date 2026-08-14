@@ -12,9 +12,9 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "tsc --noEmit && eslint && steiger ./src && vitest run --coverage && playwright test",
+    "test:all": "npm run typecheck && eslint && steiger ./src && vitest run --coverage && playwright test",
     "lint:arch": "steiger ./src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
