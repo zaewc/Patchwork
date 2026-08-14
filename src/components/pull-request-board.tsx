@@ -1,5 +1,6 @@
 import type { CheckState, PullRequest } from "@/lib/github";
 import { relativeTime } from "@/lib/format";
+import { RepoLogo } from "@/components/repo-logo";
 
 type ColumnKey = "changes" | "review" | "approved" | "draft";
 
@@ -30,6 +31,7 @@ function PullRequestCard({ pr }: { pr: PullRequest }) {
   return (
     <li className="rounded-lg border border-border bg-surface p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-muted">
+        <RepoLogo src={pr.ownerAvatarUrl} alt="" size={14} />
         <span className="truncate">{pr.repo}</span>
         {pr.isPrivate ? <span className="shrink-0">Private</span> : null}
       </div>
@@ -104,7 +106,8 @@ export function MergedPullRequests({
   return (
     <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
       {pullRequests.map((pr) => (
-        <li key={pr.url} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+        <li key={pr.url} className="flex items-center gap-2.5 px-4 py-2.5 text-sm">
+          <RepoLogo src={pr.ownerAvatarUrl} alt="" />
           <a href={pr.url} className="min-w-0 flex-1 truncate hover:text-accent hover:underline">
             <span className="text-muted">{pr.repo}</span>{" "}
             <span className="text-muted tabular-nums">#{pr.number}</span> {pr.title}
