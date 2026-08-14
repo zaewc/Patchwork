@@ -34,7 +34,11 @@ export function RepoTable({
               <td className="px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <RepoLogo src={repo.ownerAvatarUrl} alt="" />
-                  <a href={repo.url} className="truncate hover:text-accent hover:underline">
+                  <a
+                    href={repo.url}
+                    title={`권위 점수 ${repo.impact}/100`}
+                    className="truncate hover:text-accent hover:underline"
+                  >
                     {repo.nameWithOwner}
                   </a>
                   {repo.isPrivate ? (

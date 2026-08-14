@@ -146,7 +146,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
         <Section title="Repositories">
           <RepoTable
-            repos={visibleRepos.slice(0, TOP_REPOS)}
+            repos={showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos}
             emptyMessage={
               repos.length > 0 ? `기여한 repository ${repos.length}곳이 모두 ${notNotable}` : undefined
             }
