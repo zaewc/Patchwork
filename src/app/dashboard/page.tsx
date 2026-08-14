@@ -99,7 +99,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             accent
           />
           <StatCard
-            label="외부 저장소 기여"
+            label="외부 Repository 기여"
             value={external.contributions}
             hint={`전체의 ${external.ratio}%`}
           />

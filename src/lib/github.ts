@@ -73,7 +73,7 @@ async function graphql<T>(
         `x-github-request-id=${res.headers.get("x-github-request-id") ?? "none"}`,
       );
       lastError = new GitHubError(
-        `GitHub가 쿼리를 끝내지 못했습니다 (HTTP ${res.status}). 기여한 저장소가 많으면 집계 쿼리가 제한 시간을 넘길 수 있습니다.`,
+        `GitHub가 쿼리를 끝내지 못했습니다 (HTTP ${res.status}). 기여한 Repository가 많으면 집계 쿼리가 제한 시간을 넘길 수 있습니다.`,
       );
       continue;
     }
@@ -233,7 +233,7 @@ export type DashboardData = {
     contributions: number;
     ratio: number;
   };
-  /** 주요 OSS 이상 등급이면서 내 소유가 아닌 저장소에 대한 기여 */
+  /** 주요 OSS 이상 등급이면서 내 소유가 아닌 Repository에 대한 기여 */
   notable: {
     repos: number;
     contributions: number;
@@ -253,9 +253,9 @@ export type DashboardData = {
 /* ------------------------------------------------------------------ 쿼리 */
 
 /**
- * 권위 추정에 쓰는 저장소 신호. 두 쿼리가 같은 조각을 공유한다.
+ * 권위 추정에 쓰는 Repository 신호. 두 쿼리가 같은 조각을 공유한다.
  * 전부 스칼라(또는 단건 조회) 필드로만 구성한다 — 여기에 커넥션 totalCount를 넣으면
- * 저장소 수십 개를 순회할 때 GraphQL 쿼리가 통째로 타임아웃(502)난다.
+ * Repository 수십 개를 순회할 때 GraphQL 쿼리가 통째로 타임아웃(502)난다.
  */
 const REPO_CORE_FRAGMENT = `
 fragment RepoCore on Repository {
