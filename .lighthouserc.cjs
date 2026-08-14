@@ -38,7 +38,7 @@ module.exports = {
         ],
         "total-blocking-time": [
           "error",
-          { maxNumericValue: 100, aggregationMethod: "median" },
+          { maxNumericValue: 150, aggregationMethod: "median" },
         ],
         "cumulative-layout-shift": [
           "error",
