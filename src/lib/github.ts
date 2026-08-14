@@ -130,7 +130,7 @@ type RepoRef = {
   createdAt: string;
   pushedAt: string | null;
   owner: { login: string };
-  licenseInfo: { spdxId: string | null; key: string } | null;
+  licenseInfo: { key: string } | null;
 };
 
 function signalsOf(repo: RepoRef): RepoSignals {
@@ -141,7 +141,8 @@ function signalsOf(repo: RepoRef): RepoSignals {
     isInOrganization: repo.isInOrganization,
     isFork: repo.isFork,
     isArchived: repo.isArchived,
-    hasLicense: Boolean(repo.licenseInfo?.spdxId) && repo.licenseInfo?.key !== "other",
+    // GitHub이 분류하지 못한 커스텀 라이선스(key: other)도 '선언은 했다'로 본다.
+    hasLicense: repo.licenseInfo !== null,
     createdAt: repo.createdAt,
     pushedAt: repo.pushedAt,
   };
@@ -270,7 +271,7 @@ fragment RepoCore on Repository {
   createdAt
   pushedAt
   owner { login }
-  licenseInfo { spdxId key }
+  licenseInfo { key }
 }`;
 
 const REPO_FIELDS = `

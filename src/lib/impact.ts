@@ -1,9 +1,15 @@
 /**
  * Repository의 "권위" 추정.
  *
- * 스타 수만으로는 1인 토이 프로젝트(스타 많음)와 재단이 운영하는 인프라 프로젝트(스타 적음)를
- * 구분할 수 없다. 그래서 규모(스타) 외에 기여자 폭, 조직 소유 여부, 성숙도, 활성도를 함께 본다.
- * 어디까지나 휴리스틱이며, 가중치는 아래 WEIGHTS에서 조정할 수 있다.
+ *   score = audience + min(trust, audience)
+ *
+ * audience(Stars·Forks)는 바깥에서 이 프로젝트를 쓰거나 참여한 흔적이고,
+ * trust(Organization 소유·업력·활성도)는 잘 관리되고 있다는 신호다.
+ * 둘을 그냥 더하면 아무도 안 쓰는 사내 프로젝트가 "org 소유 + 최근 push"만으로
+ * 등급을 받으므로, trust는 audience를 넘겨 받을 수 없게 묶는다. 즉 외부 관심이
+ * 0이면 아무리 잘 관리해도 0점이다.
+ *
+ * 어디까지나 휴리스틱이며, 가중치와 등급 경계는 아래 WEIGHTS·TIERS에서 조정한다.
  */
 
 export type ImpactTier = "flagship" | "major" | "community" | "personal";
