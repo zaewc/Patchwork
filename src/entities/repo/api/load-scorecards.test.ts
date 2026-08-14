@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadScorecards } from "@/entities/repo/api/load-scorecards";
 import type { RepoScoring } from "@/entities/repo/model/scoring";
-import { fetchDepsDevProject } from "@/shared/api";
+import { fetchDepsDevProject, type DepsDevProject } from "@/shared/api";
 
 vi.mock("@/shared/api", () => ({ fetchDepsDevProject: vi.fn() }));
 
@@ -10,9 +10,10 @@ const scoring = (key: string, isPrivate = false): RepoScoring => ({
   signals: { isPrivate, stars: 1_000, forks: 100 },
 });
 
-const project = (overallScore: number | null) => ({
-  scorecard: overallScore === null ? undefined : { date: "2026-08-03", overallScore, checks: [] },
-});
+const project = (overallScore: number | null): DepsDevProject =>
+  overallScore === null
+    ? {}
+    : { scorecard: { date: "2026-08-03", overallScore, checks: [] } };
 
 beforeEach(() => {
   vi.mocked(fetchDepsDevProject).mockReset();

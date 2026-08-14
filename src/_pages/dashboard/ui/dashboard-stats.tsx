@@ -15,14 +15,17 @@ export function DashboardStats({
   staleCount: number;
   mergedCount: number;
 }) {
+  const restrictedHint =
+    totals.restricted > 0
+      ? { hint: `Private ${formatNumber(totals.restricted)}건 포함` }
+      : {};
+
   return (
     <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard
         label="Contributions"
         value={totals.contributions}
-        hint={
-          totals.restricted > 0 ? `Private ${formatNumber(totals.restricted)}건 포함` : undefined
-        }
+        {...restrictedHint}
       />
       <StatCard
         label="주요 OSS 기여"

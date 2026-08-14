@@ -55,10 +55,12 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
   const visibleMerged = filterByScope(mergedPullRequests, params.showAll);
 
   /** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
-  const filteredAway = (noun: string, unit: string, total: number) =>
+  const filteredAway = (noun: string, unit: string, total: number): { emptyMessage?: string } =>
     total > 0
-      ? `${noun} ${total}${unit}이 모두 주요 OSS가 아닙니다. 위에서 전체로 전환하면 볼 수 있습니다.`
-      : undefined;
+      ? {
+          emptyMessage: `${noun} ${total}${unit}이 모두 주요 OSS가 아닙니다. 위에서 전체로 전환하면 볼 수 있습니다.`,
+        }
+      : {};
 
   const warnings = [
     error ? errorMessage(error, "데이터를 새로 불러오지 못했습니다.") : null,
@@ -109,21 +111,21 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
         <Section title="Repositories">
           <RepoTable
             repos={params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos}
-            emptyMessage={filteredAway("기여한 repository", "곳", repos.length)}
+            {...filteredAway("기여한 repository", "곳", repos.length)}
           />
         </Section>
 
         <Section title="Open pull requests">
           <PullRequestBoard
             pullRequests={visibleOpen}
-            emptyMessage={filteredAway("열린 pull request", "건", openPullRequests.length)}
+            {...filteredAway("열린 pull request", "건", openPullRequests.length)}
           />
         </Section>
 
         <Section title="Recently merged">
           <MergedPullRequestList
             pullRequests={visibleMerged}
-            emptyMessage={filteredAway("merge된 pull request", "건", mergedPullRequests.length)}
+            {...filteredAway("merge된 pull request", "건", mergedPullRequests.length)}
           />
         </Section>
       </main>
