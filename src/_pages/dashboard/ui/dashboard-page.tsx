@@ -1,8 +1,12 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboard-query";
-import { loadDashboard, type DashboardData } from "@/_pages/dashboard/api/load-dashboard";
+import {
+  loadDashboard,
+  type DashboardData,
+} from "@/_pages/dashboard/api/load-dashboard";
 import { DashboardContent } from "@/_pages/dashboard/ui/dashboard-content";
+import { DashboardQueryProvider } from "@/_pages/dashboard/ui/dashboard-query-provider";
 import { ErrorScreen } from "@/_pages/dashboard/ui/error-screen";
 import { getSession } from "@/entities/viewer";
 import { parseScopeParams, scopeHref } from "@/features/contribution-scope";
@@ -46,8 +50,10 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   }
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <DashboardContent params={params} />
-    </HydrationBoundary>
+    <DashboardQueryProvider>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <DashboardContent params={params} />
+      </HydrationBoundary>
+    </DashboardQueryProvider>
   );
 }
