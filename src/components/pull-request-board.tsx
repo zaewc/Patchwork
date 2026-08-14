@@ -52,7 +52,17 @@ function PullRequestCard({ pr }: { pr: PullRequest }) {
   );
 }
 
-export function PullRequestBoard({ pullRequests }: { pullRequests: PullRequest[] }) {
+export function PullRequestBoard({
+  pullRequests,
+  emptyMessage = "열려 있는 pull request가 없습니다.",
+}: {
+  pullRequests: PullRequest[];
+  emptyMessage?: string;
+}) {
+  if (pullRequests.length === 0) {
+    return <p className="text-sm text-muted">{emptyMessage}</p>;
+  }
+
   const grouped = new Map<ColumnKey, PullRequest[]>(COLUMNS.map((c) => [c.key, []]));
   for (const pr of pullRequests) grouped.get(columnOf(pr))!.push(pr);
 
@@ -82,9 +92,15 @@ export function PullRequestBoard({ pullRequests }: { pullRequests: PullRequest[]
   );
 }
 
-export function MergedPullRequests({ pullRequests }: { pullRequests: PullRequest[] }) {
+export function MergedPullRequests({
+  pullRequests,
+  emptyMessage = "이 기간에 merge된 pull request가 없습니다.",
+}: {
+  pullRequests: PullRequest[];
+  emptyMessage?: string;
+}) {
   if (pullRequests.length === 0) {
-    return <p className="text-sm text-muted">이 기간에 merge된 pull request가 없습니다.</p>;
+    return <p className="text-sm text-muted">{emptyMessage}</p>;
   }
 
   return (

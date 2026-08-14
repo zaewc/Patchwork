@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ContributionQuilt } from "@/components/contribution-quilt";
 import { MergedPullRequests, PullRequestBoard } from "@/components/pull-request-board";
 import { RangeTabs } from "@/components/range-tabs";
+import { ScopeTabs } from "@/components/scope-tabs";
 import { RepoTable } from "@/components/repo-table";
 import { SiteHeader } from "@/components/site-header";
 import { StatCard } from "@/components/stat-card";
@@ -14,7 +15,7 @@ import {
   RANGES,
   type DashboardData,
 } from "@/lib/github";
-import { isNotableTier } from "@/lib/impact";
+import { isNotableTier, type ImpactTier } from "@/lib/impact";
 import { getSession } from "@/lib/session";
 
 const TOP_REPOS = 10;
@@ -63,8 +64,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const params = await searchParams;
   const range = parseRange(params.range);
-  // 기본은 주요 OSS 이상만. 일반 프로젝트까지 보려면 ?repos=all
-  const showAllRepos = params.repos === "all";
+  // 기본은 주요 OSS 이상만. 일반 프로젝트까지 보려면 ?scope=all
+  const showAll = params.scope === "all";
 
   let data: DashboardData;
   try {
@@ -91,8 +92,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   }
 
   const { viewer, totals, external, notable, repos, openPullRequests, mergedPullRequests } = data;
-  const staleCount = openPullRequests.filter((pr) => pr.isStale).length;
-  const notableRepos = repos.filter((repo) => isNotableTier(repo.tier));
+  // 주요 OSS 모드에서는 세 목록 모두 같은 기준으로 걸러 화면이 어긋나지 않게 한다.
+  const keep = <T extends { tier: ImpactTier }>(items: T[]) =>
+    showAll ? items : items.filter((item) => isNotableTier(item.tier));
+
+  const visibleRepos = keep(repos);
+  const visibleOpen = keep(openPullRequests);
+  const visibleMerged = keep(mergedPullRequests);
+  const staleCount = visibleOpen.filter((pr) => pr.isStale).length;
+  const notNotable = "주요 OSS가 아닙니다. 위에서 전체로 전환하면 볼 수 있습니다.";
 
   return (
     <>
@@ -100,7 +108,10 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-xl font-semibold tracking-tight">{viewer.name ?? viewer.login}</h1>
-          <RangeTabs current={range} showAllRepos={showAllRepos} />
+          <div className="flex flex-wrap items-center gap-2">
+            <ScopeTabs range={range} showAll={showAll} />
+            <RangeTabs current={range} showAll={showAll} />
+          </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -122,8 +133,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           />
           <StatCard
             label="Open pull requests"
-            value={data.openCount}
-            hint={staleCount > 0 ? `Stale ${staleCount}건` : `Merged ${data.mergedCount}건`}
+            value={showAll ? data.openCount : visibleOpen.length}
+            hint={staleCount > 0 ? `Stale ${staleCount}건` : `Merged ${visibleMerged.length}건`}
           />
         </div>
 
@@ -140,32 +151,32 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         </Section>
 
         <Section title="Open pull requests">
-          <PullRequestBoard pullRequests={openPullRequests} />
+          <PullRequestBoard
+            pullRequests={visibleOpen}
+            emptyMessage={
+              openPullRequests.length > 0 ? `열린 pull request ${openPullRequests.length}건이 모두 ${notNotable}` : undefined
+            }
+          />
         </Section>
 
-        <Section
-          title={`Repositories · ${showAllRepos ? "전체" : "주요 OSS"}`}
-          action={
-            <Link
-              href={`/dashboard?range=${range}${showAllRepos ? "" : "&repos=all"}`}
-              className="text-xs text-muted underline-offset-2 hover:text-accent hover:underline"
-            >
-              {showAllRepos ? `주요 OSS만 (${notableRepos.length}곳)` : `전체 보기 (${repos.length}곳)`}
-            </Link>
-          }
-        >
+        <Section title="Repositories">
           <RepoTable
-            repos={(showAllRepos ? repos : notableRepos).slice(0, TOP_REPOS)}
+            repos={visibleRepos.slice(0, TOP_REPOS)}
             emptyMessage={
-              showAllRepos
-                ? "이 기간에 기여한 repository가 없습니다."
-                : "이 기간에 주요 OSS 기여가 없습니다. 전체 보기로 확인하세요."
+              repos.length > 0 ? `기여한 repository ${repos.length}곳이 모두 ${notNotable}` : undefined
             }
           />
         </Section>
 
         <Section title="Recently merged">
-          <MergedPullRequests pullRequests={mergedPullRequests} />
+          <MergedPullRequests
+            pullRequests={visibleMerged}
+            emptyMessage={
+              mergedPullRequests.length > 0
+                ? `merge된 pull request ${mergedPullRequests.length}건이 모두 ${notNotable}`
+                : undefined
+            }
+          />
         </Section>
       </main>
     </>
