@@ -84,7 +84,7 @@ describe("loadScorecards", () => {
 
     expect(scorecards.get("flaky/repo")).toBeNull();
     expect(scorecards.get("good/repo")).toBe(8);
-    expect(warn.mock.calls[0][0]).toContain("deps.dev 조회 1/2건 실패");
+    expect(warn.mock.calls[0]![0]).toContain("deps.dev 조회 1/2건 실패");
   });
 
   it("전부 성공하면 아무 말도 하지 않는다", async () => {

@@ -21,7 +21,7 @@ describe("fetchViewerIdentity", () => {
 
     await fetchViewerIdentity("gho_token");
 
-    const { query } = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    const { query } = JSON.parse(String(fetchMock.mock.calls[0]![1]?.body));
     expect(query).toContain("viewer");
     expect(query).toContain("login");
     expect(query).toContain("avatarUrl");

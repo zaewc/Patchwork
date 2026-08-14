@@ -26,7 +26,7 @@ const SESSION = {
 const group = (overrides: Partial<ContributionGroup> = {}): ContributionGroup => {
   const nameWithOwner = overrides.nameWithOwner ?? "vercel/next.js";
   return {
-    name: nameWithOwner.split("/")[1],
+    name: nameWithOwner.split("/")[1] ?? nameWithOwner,
     nameWithOwner,
     url: `https://github.com/${nameWithOwner}`,
     impact: NOTABLE_IMPACT,

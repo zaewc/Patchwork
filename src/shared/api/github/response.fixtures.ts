@@ -16,6 +16,8 @@ export function repoRef(
   overrides: Partial<RepoRefFixture> = {},
 ): RepoRefFixture {
   const [login, name] = nameWithOwner.split("/");
+  if (!login || !name) throw new Error(`올바르지 않은 repository 이름: ${nameWithOwner}`);
+
   return {
     name,
     nameWithOwner,
@@ -59,8 +61,12 @@ export function calendarWeeks(
   counts.forEach((contributionCount, offset) => {
     const date = new Date(start.getTime() + offset * 86_400_000);
     const weekday = date.getUTCDay();
-    if (weeks.length === 0 || weekday === 0) weeks.push({ contributionDays: [] });
-    weeks[weeks.length - 1].contributionDays.push({
+    let week = weeks.at(-1);
+    if (!week || weekday === 0) {
+      week = { contributionDays: [] };
+      weeks.push(week);
+    }
+    week.contributionDays.push({
       date: date.toISOString().slice(0, 10),
       contributionCount,
       weekday,

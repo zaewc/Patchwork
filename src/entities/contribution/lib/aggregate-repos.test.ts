@@ -33,7 +33,7 @@ describe("aggregateRepos", () => {
       total: 16,
     });
     // 점수는 여기서 매기지 않는다. 나중에 채울 꼬리표만 달려 있다.
-    expect(repos[0].scoring).toEqual({
+    expect(repos[0]!.scoring).toEqual({
       key: "vercel/next.js",
       signals: { isPrivate: false, stars: 50_000, forks: 10_000 },
     });
@@ -48,8 +48,8 @@ describe("aggregateRepos", () => {
       "octocat",
     );
 
-    expect(repos[0].commits).toBe(17);
-    expect(repos[0].total).toBe(17);
+    expect(repos[0]!.commits).toBe(17);
+    expect(repos[0]!.total).toBe(17);
   });
 
   it("기여가 없는 항목은 0으로 둔다", () => {
@@ -94,8 +94,8 @@ describe("aggregateRepos", () => {
       "octocat",
     );
 
-    expect(repos[0].scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
-    expect(repos[0].total).toBe(3);
+    expect(repos[0]!.scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
+    expect(repos[0]!.total).toBe(3);
   });
 
   it("비공개 repository의 신호도 그대로 옮긴다", () => {
@@ -110,7 +110,7 @@ describe("aggregateRepos", () => {
       "octocat",
     );
 
-    expect(repos[0].scoring.signals.isPrivate).toBe(true);
+    expect(repos[0]!.scoring.signals.isPrivate).toBe(true);
   });
 
   it("기여가 없으면 빈 목록이다", () => {

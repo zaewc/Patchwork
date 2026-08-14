@@ -70,7 +70,8 @@ describe("seal · unseal", () => {
   it("본문을 건드린 값은 인증태그 검증에서 거부한다", async () => {
     const { seal, unseal } = await loadSession();
     const raw = Buffer.from(seal(SESSION), "base64url");
-    raw[raw.length - 1] ^= 0xff;
+    const lastIndex = raw.length - 1;
+    raw[lastIndex] = raw[lastIndex]! ^ 0xff;
     expect(unseal(raw.toString("base64url"))).toBeNull();
   });
 

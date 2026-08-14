@@ -39,5 +39,5 @@ export function windowsFor(range: RangeKey, now: number): { from: Date; to: Date
 
 /** 조회 범위가 시작하는 날짜(YYYY-MM-DD). GitHub 검색 한정자에 그대로 넣는다. */
 export function rangeStartDate(range: RangeKey, now: number): string {
-  return windowsFor(range, now)[0].from.toISOString().slice(0, 10);
+  return windowsFor(range, now)[0]!.from.toISOString().slice(0, 10);
 }

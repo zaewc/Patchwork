@@ -22,8 +22,8 @@ describe("windowsFor", () => {
     for (const range of ["30d", "90d", "1y"] as const) {
       const windows = windowsFor(range, NOW);
       expect(windows).toHaveLength(1);
-      expect(windows[0].to.getTime()).toBe(NOW);
-      expect(windows[0].from.getTime()).toBe(NOW - RANGES[range].days * DAY);
+      expect(windows[0]!.to.getTime()).toBe(NOW);
+      expect(windows[0]!.from.getTime()).toBe(NOW - RANGES[range].days * DAY);
     }
   });
 
@@ -40,15 +40,15 @@ describe("windowsFor", () => {
     expect(windows.at(-1)!.to.getTime()).toBe(NOW);
 
     for (let i = 1; i < windows.length; i++) {
-      expect(windows[i].from.getTime()).toBeGreaterThan(windows[i - 1].to.getTime());
+      expect(windows[i]!.from.getTime()).toBeGreaterThan(windows[i - 1]!.to.getTime());
       // 앞 창의 끝과 뒤 창의 시작이 1ms만 떨어져 있어야 기간에 구멍이 없다.
-      expect(windows[i].from.getTime() - windows[i - 1].to.getTime()).toBe(1);
+      expect(windows[i]!.from.getTime() - windows[i - 1]!.to.getTime()).toBe(1);
     }
   });
 
   it("전체 범위가 요청한 일수를 덮는다", () => {
     const windows = windowsFor("5y", NOW);
-    const covered = windows.at(-1)!.to.getTime() - windows[0].from.getTime();
+    const covered = windows.at(-1)!.to.getTime() - windows[0]!.from.getTime();
     expect(covered).toBe(RANGES["5y"].days * DAY + (windows.length - 1));
   });
 });
@@ -61,7 +61,7 @@ describe("rangeStartDate", () => {
 
   it("5년은 첫 창의 시작을 가리킨다", () => {
     expect(rangeStartDate("5y", NOW)).toBe(
-      windowsFor("5y", NOW)[0].from.toISOString().slice(0, 10),
+      windowsFor("5y", NOW)[0]!.from.toISOString().slice(0, 10),
     );
   });
 });

@@ -34,7 +34,7 @@ let scorecards: Record<string, number> = {};
 
 /** deps.dev 조회를 흉내낸다. 요청 URL에서 repository 이름을 되돌린다. */
 function replyFromDepsDev(url: string): Response {
-  const key = decodeURIComponent(url.split("/projects/")[1]).replace("github.com/", "");
+  const key = decodeURIComponent(url.split("/projects/")[1]!).replace("github.com/", "");
   if (!(key in scorecards)) return new Response("project not found", { status: 404 });
   return new Response(
     JSON.stringify({ scorecard: { date: "2026-08-03", overallScore: scorecards[key], checks: [] } }),
@@ -146,9 +146,9 @@ describe("모아 오기", () => {
     await settle(loadDashboard("t", "30d"));
 
     const [variables] = requestsFor("contributions").map((r) => r.variables);
-    expect(variables.to).toBe(new Date(NOW).toISOString());
-    expect(variables.from).toBe(new Date(NOW - 30 * 86_400_000).toISOString());
-    expect(requestsFor("pullRequests")[0].variables.mergedQuery).toContain(
+    expect(variables!.to).toBe(new Date(NOW).toISOString());
+    expect(variables!.from).toBe(new Date(NOW - 30 * 86_400_000).toISOString());
+    expect(requestsFor("pullRequests")[0]!.variables.mergedQuery).toContain(
       "merged:>=2026-07-16",
     );
   });
@@ -206,7 +206,7 @@ describe("Scorecard 점수", () => {
 
     const data = await settle(loadDashboard("t", "1y"));
 
-    expect(data.repos[0].impact).toBe(30);
+    expect(data.repos[0]!.impact).toBe(30);
     expect(data.notable).toEqual({ repos: 0, contributions: 0 });
   });
 
@@ -224,7 +224,7 @@ describe("Scorecard 점수", () => {
 
     const { repos } = await settle(loadDashboard("t", "1y"));
 
-    expect(repos[0].impact).toBe(0);
+    expect(repos[0]!.impact).toBe(0);
     expect(depsDevRequests()).toHaveLength(0);
   });
 
@@ -253,7 +253,7 @@ describe("Scorecard 점수", () => {
 
     expect(data.totals.contributions).toBe(6);
     expect(data.repos.find((r) => r.nameWithOwner === "vercel/next.js")!.impact).toBe(56);
-    expect(warn.mock.calls[0][0]).toContain("deps.dev");
+    expect(warn.mock.calls[0]![0]).toContain("deps.dev");
   });
 });
 
@@ -286,7 +286,7 @@ describe("pull request 가공", () => {
       isStale: false,
     });
     // vercel/next.js의 Scorecard 8.0 → 80점
-    expect(pr.impact).toBe(80);
+    expect(pr!.impact).toBe(80);
   });
 
   it("14일 넘게 조용한 열린 PR은 stale로 본다", async () => {
@@ -316,7 +316,7 @@ describe("pull request 가공", () => {
     );
 
     const { mergedPullRequests } = await settle(loadDashboard("t", "1y"));
-    expect(mergedPullRequests[0].isStale).toBe(false);
+    expect(mergedPullRequests[0]!.isStale).toBe(false);
   });
 
   it.each([
@@ -326,7 +326,7 @@ describe("pull request 가공", () => {
     mockGraphQL(handlers([pullRequestNode(overrides)], []));
 
     const { openPullRequests } = await settle(loadDashboard("t", "1y"));
-    expect(openPullRequests[0].checkState).toBeNull();
+    expect(openPullRequests[0]!.checkState).toBeNull();
   });
 
   it("PR이 아닌 검색 결과는 걸러낸다", async () => {

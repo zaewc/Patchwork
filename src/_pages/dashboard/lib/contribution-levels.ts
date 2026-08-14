@@ -17,7 +17,8 @@ export function contributionLevels(days: CalendarDay[]): (count: number) => Patc
 
   if (active.length === 0) return () => 0;
 
-  const at = (ratio: number) => active[Math.min(active.length - 1, Math.floor(active.length * ratio))];
+  const at = (ratio: number) =>
+    active[Math.min(active.length - 1, Math.floor(active.length * ratio))]!;
   const [first, second, third] = [at(0.25), at(0.5), at(0.75)];
 
   return (count) => {

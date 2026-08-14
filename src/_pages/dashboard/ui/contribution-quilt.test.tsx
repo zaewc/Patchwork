@@ -20,7 +20,7 @@ function weeksFrom(startDate: string, counts: number[]): CalendarDay[][] {
     const date = new Date(start + offset * DAY_MS).toISOString().slice(0, 10);
     const entry = day(date, count);
     if (weeks.length === 0 || entry.weekday === 0) weeks.push([]);
-    weeks[weeks.length - 1].push(entry);
+    weeks.at(-1)!.push(entry);
   });
 
   return weeks;
@@ -32,7 +32,7 @@ const cellOf = (date: string, count: number) =>
   screen.getByTitle(`${date} · ${count} contributions`);
 
 const levelOf = (element: HTMLElement) =>
-  Number(element.className.match(/patch-(\d)/)![1]);
+  Number(element.className.match(/patch-(\d)/)![1]!);
 
 describe("ContributionQuilt", () => {
   it("달력이 비어 있어도 범례는 그린다", () => {

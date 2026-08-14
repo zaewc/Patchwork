@@ -70,7 +70,7 @@ describe("묶기", () => {
       nameWithOwner: "vercel/next.js",
       url: "https://github.com/vercel/next.js",
     });
-    expect(groups[0].items).toEqual([
+    expect(groups[0]!.items).toEqual([
       {
         type: "PR",
         title: "PR 제목",
@@ -85,7 +85,7 @@ describe("묶기", () => {
       },
     ]);
     // 점수는 여기서 매기지 않는다. deps.dev 조회 뒤에 채워진다.
-    expect(groups[0].scoring).toEqual({
+    expect(groups[0]!.scoring).toEqual({
       key: "vercel/next.js",
       signals: { isPrivate: false, stars: 50_000, forks: 10_000 },
     });
@@ -104,7 +104,7 @@ describe("묶기", () => {
     );
 
     const groups = await fetchContributionItems("t", SINCE);
-    expect(groups[0].items.map((item) => item.title)).toEqual(["먼저", "나중"]);
+    expect(groups[0]!.items.map((item) => item.title)).toEqual(["먼저", "나중"]);
   });
 
   it("기여가 많은 repository부터, 동점이면 이름 오름차순으로 세운다", async () => {
@@ -140,7 +140,7 @@ describe("묶기", () => {
     );
 
     const groups = await fetchContributionItems("t", SINCE);
-    expect(groups[0].scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
+    expect(groups[0]!.scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
   });
 
   it("결론난 기여가 없으면 빈 목록이다", async () => {
@@ -186,7 +186,7 @@ describe("페이지 넘기기", () => {
 
     const groups = await fetchContributionItems("t", SINCE);
 
-    expect(groups[0].items.map((item) => item.title)).toEqual(["1페이지", "2페이지"]);
+    expect(groups[0]!.items.map((item) => item.title)).toEqual(["1페이지", "2페이지"]);
     const prRequests = requests.filter((r) => String(r.variables.q).includes("is:pr"));
     expect(prRequests.map((r) => r.variables.after)).toEqual([null, "cursor-1"]);
   });

@@ -49,7 +49,7 @@ describe("요청 모양", () => {
 
     await expect(call()).resolves.toEqual({ viewer: { login: "octocat" } });
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(GITHUB_GRAPHQL);
     expect(init).toMatchObject({ method: "POST", cache: "no-store" });
     expect(init?.headers).toMatchObject({
@@ -64,7 +64,7 @@ describe("요청 모양", () => {
 
     await settle(githubGraphQL("t", QUERY, { from: "2026-01-01" }));
 
-    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body))).toEqual({
       query: QUERY,
       variables: { from: "2026-01-01" },
     });
@@ -75,7 +75,7 @@ describe("요청 모양", () => {
 
     await settle(githubGraphQL("t", QUERY));
 
-    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).variables).toEqual({});
+    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body)).variables).toEqual({});
   });
 
   it("제한 시간 안에 끝내라고 신호를 붙인다", async () => {
@@ -83,7 +83,7 @@ describe("요청 모양", () => {
 
     await call();
 
-    expect(fetchMock.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    expect(fetchMock.mock.calls[0]![1]?.signal).toBeInstanceOf(AbortSignal);
   });
 });
 
@@ -126,7 +126,7 @@ describe("재시도", () => {
     await expect(call()).rejects.toThrow(/HTTP 503/);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(warn).toHaveBeenCalledTimes(3);
-    expect(warn.mock.calls[0].join(" ")).toContain("x-github-request-id=req-1");
+    expect(warn.mock.calls[0]!.join(" ")).toContain("x-github-request-id=req-1");
   });
 
   it("request id가 없는 5xx 응답도 기록한다", async () => {
@@ -134,7 +134,7 @@ describe("재시도", () => {
     fetchMock.mockResolvedValue(new Response("", { status: 500 }));
 
     await expect(call()).rejects.toBeInstanceOf(GitHubError);
-    expect(warn.mock.calls[0].join(" ")).toContain("x-github-request-id=none");
+    expect(warn.mock.calls[0]!.join(" ")).toContain("x-github-request-id=none");
   });
 
   it("요청 자체가 실패하면 제한 시간을 알려준다", async () => {

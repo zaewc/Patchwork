@@ -85,14 +85,14 @@ export async function loadDashboard(token: string, range: RangeKey): Promise<Das
   const loaded = contributions.filter(loadedOf);
   const failures = contributions.filter(failureOf);
   // 기여 집계는 대시보드의 뼈대라 전부 실패하면 렌더할 것이 없다.
-  if (loaded.length === 0) throw failures[0].error;
+  if (loaded.length === 0) throw failures[0]!.error;
 
   const board: PullRequestBoardData = pullRequests.ok ? pullRequests.value : EMPTY_PULL_REQUESTS;
   const pullRequestsError = pullRequests.ok
     ? null
     : errorMessage(pullRequests.error, "PR을 불러오지 못했습니다.");
 
-  const viewer = loaded[0].value.viewer;
+  const viewer = loaded[0]!.value.viewer;
   const collections = loaded.map((outcome) => outcome.value.collection);
 
   const weeks = mergeCalendars(collections);

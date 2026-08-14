@@ -69,8 +69,8 @@ describe("loadContributionItems", () => {
 
     const groups = await loadContributionItems("t", "1y");
 
-    expect(groups[0].impact).toBe(85);
-    expect("scoring" in groups[0]).toBe(false);
+    expect(groups[0]!.impact).toBe(85);
+    expect("scoring" in groups[0]!).toBe(false);
   });
 
   it("deps.dev가 모르는 repository는 외부 관심으로 짐작한다", async () => {
@@ -78,7 +78,7 @@ describe("loadContributionItems", () => {
 
     const groups = await loadContributionItems("t", "1y");
 
-    expect(groups[0].impact).toBe(4);
+    expect(groups[0]!.impact).toBe(4);
   });
 
   it("내보낼 기여가 없으면 빈 목록이다", async () => {

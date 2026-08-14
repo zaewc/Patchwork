@@ -21,8 +21,12 @@ export function mergeCalendars(collections: ContributionsCollection[]): Calendar
   const days = [...byDate.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
   const weeks: CalendarDay[][] = [];
   for (const day of days) {
-    if (weeks.length === 0 || day.weekday === 0) weeks.push([]);
-    weeks[weeks.length - 1].push(day);
+    let week = weeks.at(-1);
+    if (!week || day.weekday === 0) {
+      week = [];
+      weeks.push(week);
+    }
+    week.push(day);
   }
   return weeks;
 }

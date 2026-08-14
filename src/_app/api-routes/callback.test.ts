@@ -101,7 +101,7 @@ describe("GET /api/auth/callback · 토큰 교환", () => {
   it("code와 앱 자격증명을 담아 토큰을 받아온다", async () => {
     await handleCallback(request());
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(TOKEN_URL);
     expect(init).toMatchObject({ method: "POST", cache: "no-store" });
     expect(JSON.parse(String(init?.body))).toEqual({
@@ -190,7 +190,7 @@ describe("GET /api/auth/callback · 성공", () => {
 
     const response = await handleCallback(request());
     expect(response.headers.get("location")).toBe("https://patchwork.example.com/dashboard");
-    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).redirect_uri).toBe(
+    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body)).redirect_uri).toBe(
       "https://patchwork.example.com/api/auth/callback",
     );
   });

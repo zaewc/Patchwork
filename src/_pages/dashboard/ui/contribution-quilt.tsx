@@ -35,7 +35,10 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
     lastMonth = month;
     // 조밀한 모드에서는 1월(연 경계)에만 연도를 찍는다.
     if (dense && month !== 0) return;
-    labels.push({ index, label: dense ? String(date.getUTCFullYear()) : MONTHS[month] });
+    labels.push({
+      index,
+      label: dense ? String(date.getUTCFullYear()) : MONTHS[month]!,
+    });
   });
 
   return (

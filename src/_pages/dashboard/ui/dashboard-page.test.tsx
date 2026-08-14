@@ -213,7 +213,7 @@ describe("탭", () => {
       ["90일", "90d"],
       ["1년", "1y"],
       ["5년", "5y"],
-    ]) {
+    ] as const) {
       expect(screen.getByRole("link", { name: label })).toHaveAttribute(
         "href",
         `/dashboard?range=${range}&scope=all`,

@@ -29,7 +29,7 @@ describe("fetchDepsDevProject", () => {
 
     await fetchDepsDevProject("vercel/next.js");
 
-    expect(fetchMock.mock.calls[0][0]).toBe(
+    expect(fetchMock.mock.calls[0]![0]).toBe(
       "https://api.deps.dev/v3/projects/github.com%2Fvercel%2Fnext.js",
     );
   });
@@ -39,7 +39,7 @@ describe("fetchDepsDevProject", () => {
 
     await fetchDepsDevProject("some-org/repo.with+chars");
 
-    expect(fetchMock.mock.calls[0][0]).toBe(
+    expect(fetchMock.mock.calls[0]![0]).toBe(
       "https://api.deps.dev/v3/projects/github.com%2Fsome-org%2Frepo.with%2Bchars",
     );
   });
@@ -78,7 +78,7 @@ describe("fetchDepsDevProject", () => {
 
     await fetchDepsDevProject("vercel/next.js");
 
-    expect(fetchMock.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    expect(fetchMock.mock.calls[0]![1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it("deps.dev가 정한 수명만큼 캐시한다", async () => {
@@ -86,6 +86,6 @@ describe("fetchDepsDevProject", () => {
 
     await fetchDepsDevProject("vercel/next.js");
 
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({ next: { revalidate: 3600 } });
+    expect(fetchMock.mock.calls[0]![1]).toMatchObject({ next: { revalidate: 3600 } });
   });
 });

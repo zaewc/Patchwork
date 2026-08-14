@@ -28,7 +28,7 @@ describe("mergeCalendars", () => {
     const weeks = mergeCalendars([calendar("2026-08-09", Array.from({ length: 15 }, () => 0))]);
 
     expect(weeks.map((week) => week.length)).toEqual([7, 7, 1]);
-    expect(weeks.map((week) => week[0].weekday)).toEqual([0, 0, 0]);
+    expect(weeks.map((week) => week[0]!.weekday)).toEqual([0, 0, 0]);
   });
 
   it("일요일이 아닌 날부터 시작해도 첫 주를 만든다", () => {
@@ -36,7 +36,7 @@ describe("mergeCalendars", () => {
 
     expect(weeks).toHaveLength(2);
     expect(weeks[0]).toHaveLength(4);
-    expect(weeks[0][0].weekday).toBe(3);
+    expect(weeks[0]![0]!.weekday).toBe(3);
   });
 
   it("창 경계에서 겹친 날짜는 하나로 합친다", () => {
