@@ -42,7 +42,7 @@ test.describe("OAuth 흐름", () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test("세션 쿠키는 httpOnly로 심는다", async ({ page, context, signIn }) => {
+  test("세션 쿠키는 httpOnly로 심는다", async ({ context, signIn }) => {
     await signIn();
 
     const session = (await context.cookies()).find((cookie) => cookie.name === "pw_session");
