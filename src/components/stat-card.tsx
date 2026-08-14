@@ -7,7 +7,7 @@ export function StatCard({
   accent = false,
 }: {
   label: string;
-  value: number | string;
+  value: number;
   hint?: string;
   accent?: boolean;
 }) {
@@ -18,9 +18,7 @@ export function StatCard({
       }`}
     >
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">
-        {typeof value === "number" ? formatNumber(value) : value}
-      </p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums">{formatNumber(value)}</p>
       {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </div>
   );
