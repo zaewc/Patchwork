@@ -144,6 +144,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           </div>
         </Section>
 
+        <Section title="Repositories">
+          <RepoTable
+            repos={visibleRepos.slice(0, TOP_REPOS)}
+            emptyMessage={
+              repos.length > 0 ? `기여한 repository ${repos.length}곳이 모두 ${notNotable}` : undefined
+            }
+          />
+        </Section>
+
         <Section title="Open pull requests">
           <PullRequestBoard
             pullRequests={visibleOpen}
@@ -151,15 +160,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               openPullRequests.length > 0
                 ? `열린 pull request ${openPullRequests.length}건이 모두 ${notNotable}`
                 : undefined
-            }
-          />
-        </Section>
-
-        <Section title="Repositories">
-          <RepoTable
-            repos={visibleRepos.slice(0, TOP_REPOS)}
-            emptyMessage={
-              repos.length > 0 ? `기여한 repository ${repos.length}곳이 모두 ${notNotable}` : undefined
             }
           />
         </Section>
