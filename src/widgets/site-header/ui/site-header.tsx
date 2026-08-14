@@ -8,17 +8,29 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href={ROUTES.home} className="flex items-center gap-2 font-semibold tracking-tight">
+        <Link
+          href={ROUTES.home}
+          prefetch={false}
+          className="flex items-center gap-2 font-semibold tracking-tight"
+        >
           <Logo />
           Patchwork
         </Link>
 
         {user ? (
           <div className="flex items-center gap-3">
-            <Link href={ROUTES.dashboard} className="text-sm text-muted hover:text-accent">
+            <Link
+              href={ROUTES.dashboard}
+              prefetch={false}
+              className="text-sm text-muted hover:text-accent"
+            >
               Dashboard
             </Link>
-            <Link href={ROUTES.export} className="text-sm text-muted hover:text-accent">
+            <Link
+              href={ROUTES.export}
+              prefetch={false}
+              className="text-sm text-muted hover:text-accent"
+            >
               README
             </Link>
             <a
@@ -33,7 +45,9 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
                 height={28}
                 className="rounded-full border border-border"
               />
-              <span className="hidden sm:inline">{user.name ?? user.login}</span>
+              <span className="hidden sm:inline">
+                {user.name ?? user.login}
+              </span>
             </a>
             <form action={ROUTES.logout} method="post">
               <button
