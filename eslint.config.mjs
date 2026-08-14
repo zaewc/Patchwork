@@ -31,7 +31,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // 생성물 — 검사할 소스가 아니다.
     ".next-e2e/**",
+    ".next-performance/**",
+    ".lighthouseci/**",
     "coverage/**",
+    "lighthouse-reports/**",
     "test-results/**",
     "playwright-report/**",
   ]),

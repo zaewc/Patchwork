@@ -16,6 +16,8 @@
 /playwright-report
 /blob-report
 /.playwright
+/lighthouse-reports
+/.lighthouseci
 
 # next.js
 /.next/
@@ -45,3 +47,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /.next-e2e/
+/.next-performance/

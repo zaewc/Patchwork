@@ -3,11 +3,13 @@
 const DAY = 86_400_000;
 const iso = (daysAgo) => new Date(Date.now() - daysAgo * DAY).toISOString();
 const date = (daysAgo) => iso(daysAgo).slice(0, 10);
+const avatarUrl = (login) =>
+  process.env.MOCK_AVATAR_URL ?? `https://avatars.githubusercontent.com/${login}`;
 
 export const VIEWER = {
   login: "octocat",
   name: "The Octocat",
-  avatarUrl: "https://avatars.githubusercontent.com/u/583231",
+  avatarUrl: avatarUrl("u/583231"),
 };
 
 const repo = (nameWithOwner, overrides = {}) => {
@@ -19,7 +21,7 @@ const repo = (nameWithOwner, overrides = {}) => {
     isPrivate: false,
     stargazerCount: 100_000,
     forkCount: 20_000,
-    owner: { login, avatarUrl: `https://avatars.githubusercontent.com/${login}` },
+    owner: { login, avatarUrl: avatarUrl(login) },
     ...overrides,
   };
 };
