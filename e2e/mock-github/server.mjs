@@ -11,6 +11,7 @@ import {
   MERGED_ITEMS,
   MERGED_PULL_REQUESTS,
   OPEN_PULL_REQUESTS,
+  SCORECARDS,
   VIEWER,
   contributionsCollection,
   emptyCollection,
@@ -119,6 +120,26 @@ function handleToken(res) {
   return send(res, 200, { access_token: "gho_e2e_token", token_type: "bearer" });
 }
 
+/* ------------------------------------------------------------------ deps.dev */
+
+/** GET /deps-dev/v3/projects/{github.com%2Fowner%2Frepo} */
+function handleDepsDevProject(res, pathname) {
+  if (scenario === "scorecards-failure") return send(res, 503, "service unavailable");
+
+  const key = decodeURIComponent(pathname.split("/projects/")[1] ?? "").replace("github.com/", "");
+  const overallScore = SCORECARDS[key];
+  if (overallScore === undefined) return send(res, 404, "project not found");
+
+  return send(res, 200, {
+    projectKey: { id: `github.com/${key}` },
+    scorecard: {
+      date: "2026-08-03T00:00:00Z",
+      overallScore,
+      checks: [{ name: "Maintained", score: 10, reason: "mock" }],
+    },
+  });
+}
+
 /* ------------------------------------------------------------------ 라우팅 */
 
 const server = createServer(async (req, res) => {
@@ -130,6 +151,10 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { scenario });
     }
     return send(res, 200, { scenario });
+  }
+
+  if (url.pathname.startsWith("/deps-dev/v3/projects/")) {
+    return handleDepsDevProject(res, url.pathname);
   }
 
   if (url.pathname === "/login/oauth/authorize") return handleAuthorize(res, url);

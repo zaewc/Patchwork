@@ -1,4 +1,4 @@
-import { repoSignalsOf, scoreRepo } from "@/entities/repo/@x/pull-request";
+import { repoScoringOf, type Unscored } from "@/entities/repo/@x/pull-request";
 import type { CheckState, PullRequest, ReviewDecision } from "@/entities/pull-request/model/types";
 import { REPO_CORE_FRAGMENT, githubGraphQL, type RepoRef } from "@/shared/api";
 import { daysSince } from "@/shared/lib/format";
@@ -55,7 +55,7 @@ function isPullRequestNode(node: SearchNode): node is PullRequestNode {
   return typeof (node as PullRequestNode).number === "number";
 }
 
-function toPullRequest(node: PullRequestNode, now: number): PullRequest {
+function toPullRequest(node: PullRequestNode, now: number): Unscored<PullRequest> {
   return {
     number: node.number,
     title: node.title,
@@ -68,14 +68,14 @@ function toPullRequest(node: PullRequestNode, now: number): PullRequest {
     repo: node.repository.nameWithOwner,
     ownerAvatarUrl: node.repository.owner.avatarUrl,
     isPrivate: node.repository.isPrivate,
-    impact: scoreRepo(repoSignalsOf(node.repository), now),
+    scoring: repoScoringOf(node.repository),
     isStale: !node.mergedAt && daysSince(node.updatedAt, now) >= STALE_DAYS,
   };
 }
 
 export type PullRequestBoardData = {
-  open: PullRequest[];
-  merged: PullRequest[];
+  open: Unscored<PullRequest>[];
+  merged: Unscored<PullRequest>[];
   /** GitHub이 센 열린 PR 전체 수. 화면에 담은 30건보다 클 수 있다. */
   openCount: number;
 };

@@ -1,5 +1,6 @@
 import {
   CONTRIBUTIONS,
+  IMPACT,
   EXTERNAL,
   EXTERNAL_RATIO,
   MERGED_PULL_REQUESTS,
@@ -136,10 +137,10 @@ test.describe("Repositories", () => {
     await expect(links).toHaveText(REPO_ORDER);
   });
 
-  test("권위 점수를 설명으로 붙인다", async ({ page }) => {
+  test("OpenSSF Scorecard 점수를 설명으로 붙인다", async ({ page }) => {
     await expect(
       section(page, "Repositories").getByRole("link", { name: "vercel/next.js" }),
-    ).toHaveAttribute("title", "권위 점수 100/100");
+    ).toHaveAttribute("title", `권위 점수 ${IMPACT.nextJs}/100`);
   });
 
   test("비공개 repository는 Private으로 표시한다", async ({ page }) => {
@@ -226,6 +227,21 @@ test.describe("기여가 없을 때", () => {
     await expect(page.getByText("이 기간에 기여한 repository가 없습니다.")).toBeVisible();
     await expect(page.getByText("열려 있는 pull request가 없습니다.")).toBeVisible();
     await expect(page.getByText("이 기간에 merge된 pull request가 없습니다.")).toBeVisible();
+  });
+});
+
+test.describe("deps.dev가 죽었을 때", () => {
+  test("점수를 못 받아도 대시보드는 그려진다", async ({ page, scenario }) => {
+    await scenario("scorecards-failure");
+    await page.goto("/dashboard");
+
+    await expect(
+      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), { exact: true }),
+    ).toBeVisible();
+    // Scorecard가 없으면 외부 관심(stars 100,000 · forks 20,000)만으로 60점 — 경계선에 닿는다.
+    await expect(
+      section(page, "Repositories").getByRole("link", { name: "vercel/next.js" }),
+    ).toHaveAttribute("title", "권위 점수 60/100");
   });
 });
 

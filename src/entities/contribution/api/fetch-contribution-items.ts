@@ -1,4 +1,4 @@
-import { repoSignalsOf, scoreRepo } from "@/entities/repo/@x/contribution";
+import { repoScoringOf, type Unscored } from "@/entities/repo/@x/contribution";
 import type { ContributionGroup } from "@/entities/contribution/model/types";
 import {
   MAX_SEARCH_PAGES,
@@ -82,8 +82,7 @@ async function searchAllPages(token: string, query: string): Promise<ItemNode[]>
 export async function fetchContributionItems(
   token: string,
   since: string,
-  now: number = Date.now(),
-): Promise<ContributionGroup[]> {
+): Promise<Unscored<ContributionGroup>[]> {
   const scope = `author:@me is:public created:>=${since} sort:created-asc`;
 
   const [pullRequests, issues] = await Promise.all([
@@ -91,7 +90,7 @@ export async function fetchContributionItems(
     searchAllPages(token, `${scope} is:issue is:closed reason:completed`),
   ]);
 
-  const groups = new Map<string, ContributionGroup>();
+  const groups = new Map<string, Unscored<ContributionGroup>>();
 
   for (const node of [...pullRequests, ...issues]) {
     // 검색 한정자를 GitHub이 무시하는 경우까지 대비해 응답 값으로 한 번 더 거른다.
@@ -104,7 +103,7 @@ export async function fetchContributionItems(
         name: repo.name,
         nameWithOwner: repo.nameWithOwner,
         url: repo.url,
-        impact: scoreRepo(repoSignalsOf(repo), now),
+        scoring: repoScoringOf(repo),
         items: [],
       };
       groups.set(repo.nameWithOwner, group);

@@ -1,18 +1,17 @@
-import type { RepoRef } from "@/shared/api";
 import type { RepoSignals } from "@/entities/repo/model/impact";
+import type { RepoScoring } from "@/entities/repo/model/scoring";
+import type { RepoRef } from "@/shared/api";
 
-/** GitHub 응답을 권위 추정이 보는 신호로 옮긴다. */
+/** GitHub 응답에서 점수 계산에 쓰는 신호만 뽑는다. */
 export function repoSignalsOf(repo: RepoRef): RepoSignals {
   return {
     isPrivate: repo.isPrivate,
     stars: repo.stargazerCount,
     forks: repo.forkCount,
-    isInOrganization: repo.isInOrganization,
-    isFork: repo.isFork,
-    isArchived: repo.isArchived,
-    // GitHub이 분류하지 못한 커스텀 라이선스(key: other)도 '선언은 했다'로 본다.
-    hasLicense: repo.licenseInfo !== null,
-    createdAt: repo.createdAt,
-    pushedAt: repo.pushedAt,
   };
+}
+
+/** 점수를 나중에 매기기 위해 들고 다니는 꼬리표 */
+export function repoScoringOf(repo: RepoRef): RepoScoring {
+  return { key: repo.nameWithOwner, signals: repoSignalsOf(repo) };
 }

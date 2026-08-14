@@ -9,7 +9,6 @@ import {
   type ItemNodeFixture,
 } from "@/shared/api/github/response.fixtures";
 
-const NOW = Date.parse("2026-08-15T00:00:00Z");
 const SINCE = "2025-08-15";
 
 const fetchMock = vi.fn<typeof fetch>();
@@ -44,7 +43,7 @@ describe("검색 한정자", () => {
   it("공개 저장소·기간·정렬을 쿼리에 담는다", async () => {
     mockSearch(() => searchItemsResponse([]));
 
-    await fetchContributionItems("t", SINCE, NOW);
+    await fetchContributionItems("t", SINCE);
 
     for (const query of queriesOf()) {
       expect(query).toContain("author:@me");
@@ -63,7 +62,7 @@ describe("묶기", () => {
       searchItemsResponse(isPullRequestSearch ? [mergedPullRequestItem()] : [completedIssueItem()]),
     );
 
-    const groups = await fetchContributionItems("t", SINCE, NOW);
+    const groups = await fetchContributionItems("t", SINCE);
 
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
@@ -85,7 +84,11 @@ describe("묶기", () => {
         createdAt: "2026-03-06T00:00:00Z",
       },
     ]);
-    expect(groups[0].impact).toBeGreaterThanOrEqual(60);
+    // 점수는 여기서 매기지 않는다. deps.dev 조회 뒤에 채워진다.
+    expect(groups[0].scoring).toEqual({
+      key: "vercel/next.js",
+      signals: { isPrivate: false, stars: 50_000, forks: 10_000 },
+    });
   });
 
   it("항목 안은 시간순으로 세운다", async () => {
@@ -100,7 +103,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE, NOW);
+    const groups = await fetchContributionItems("t", SINCE);
     expect(groups[0].items.map((item) => item.title)).toEqual(["먼저", "나중"]);
   });
 
@@ -119,7 +122,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE, NOW);
+    const groups = await fetchContributionItems("t", SINCE);
     expect(groups.map((group) => group.nameWithOwner)).toEqual([
       "org/many",
       "org/alpha",
@@ -127,7 +130,7 @@ describe("묶기", () => {
     ]);
   });
 
-  it("주요 OSS가 아닌 repository도 담는다 (걸러내는 곳은 화면이다)", async () => {
+  it("작은 repository도 담는다 (걸러내는 곳은 화면이다)", async () => {
     mockSearch((isPullRequestSearch) =>
       searchItemsResponse(
         isPullRequestSearch
@@ -136,11 +139,11 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE, NOW);
-    expect(groups[0].impact).toBeLessThan(60);
+    const groups = await fetchContributionItems("t", SINCE);
+    expect(groups[0].scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
   });
 
-  it("now를 생략해도 동작한다", async () => {
+  it("결론난 기여가 없으면 빈 목록이다", async () => {
     mockSearch(() => searchItemsResponse([]));
     await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
   });
@@ -159,13 +162,13 @@ describe("걸러내기", () => {
       ),
     );
 
-    await expect(fetchContributionItems("t", SINCE, NOW)).resolves.toEqual([]);
+    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
   });
 
   it("repository가 없는 검색 결과는 걸러낸다", async () => {
     mockSearch(() => searchItemsResponse([{} as unknown as ItemNodeFixture]));
 
-    await expect(fetchContributionItems("t", SINCE, NOW)).resolves.toEqual([]);
+    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
   });
 });
 
@@ -181,7 +184,7 @@ describe("페이지 넘기기", () => {
         : searchItemsResponse([mergedPullRequestItem({ title: "2페이지" })]);
     });
 
-    const groups = await fetchContributionItems("t", SINCE, NOW);
+    const groups = await fetchContributionItems("t", SINCE);
 
     expect(groups[0].items.map((item) => item.title)).toEqual(["1페이지", "2페이지"]);
     const prRequests = requests.filter((r) => String(r.variables.q).includes("is:pr"));
@@ -191,7 +194,7 @@ describe("페이지 넘기기", () => {
   it("페이지가 끝없이 이어져도 5페이지에서 멈춘다", async () => {
     mockSearch(() => searchItemsResponse([], { hasNextPage: true, endCursor: "next" }));
 
-    await fetchContributionItems("t", SINCE, NOW);
+    await fetchContributionItems("t", SINCE);
 
     // PR 검색 5페이지 + issue 검색 5페이지
     expect(requests).toHaveLength(10);

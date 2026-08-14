@@ -1,9 +1,9 @@
 import {
-  repoSignalsOf,
-  scoreRepo,
+  repoScoringOf,
   REPO_COUNT_FIELDS,
   type RepoCountField,
   type RepoStat,
+  type Unscored,
 } from "@/entities/repo/@x/contribution";
 import type {
   ContributionsByRepository,
@@ -49,12 +49,14 @@ type Gap = { field: RepoCountField; listed: Set<string> };
  *
  * GitHub 상한에 걸려 목록이 잘렸다면 그 목록에 없던 repository의 해당 항목은 null로 둔다.
  * 0으로 두면 "기여가 없었다"와 "알 수 없다"가 구분되지 않는다.
+ *
+ * impact는 여기서 매기지 않는다. deps.dev의 Scorecard를 받아야 알 수 있으므로 꼬리표만
+ * 달아 두고, 부르는 쪽이 withImpact로 완성한다.
  */
 export function aggregateRepos(
   collections: ContributionsCollection[],
   viewerLogin: string,
-  now: number = Date.now(),
-): RepoStat[] {
+): Unscored<RepoStat>[] {
   const drafts = new Map<string, Draft>();
   const gaps: Gap[] = [];
 
@@ -82,7 +84,7 @@ export function aggregateRepos(
   const login = viewerLogin.toLowerCase();
 
   return [...drafts.values()]
-    .map(({ repo, counts, total }): RepoStat => {
+    .map(({ repo, counts, total }): Unscored<RepoStat> => {
       const known = (field: RepoCountField) =>
         gaps.every((gap) => gap.field !== field || gap.listed.has(repo.nameWithOwner));
 
@@ -96,7 +98,7 @@ export function aggregateRepos(
         ownerAvatarUrl: repo.owner.avatarUrl,
         isPrivate: repo.isPrivate,
         isExternal: repo.owner.login.toLowerCase() !== login,
-        impact: scoreRepo(repoSignalsOf(repo), now),
+        scoring: repoScoringOf(repo),
         ...counted,
         total,
       };

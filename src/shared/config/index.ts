@@ -1,5 +1,7 @@
 export { appOrigin } from "@/shared/config/app";
 
+export { DEPS_DEV_API_URL, DEPS_DEV_REVALIDATE_SECONDS } from "@/shared/config/deps-dev";
+
 export {
   GITHUB_GRAPHQL_URL,
   GITHUB_OAUTH_AUTHORIZE_URL,

@@ -10,7 +10,7 @@ import {
   type PullRequest,
   type PullRequestBoardData,
 } from "@/entities/pull-request";
-import { isNotable, type RepoStat } from "@/entities/repo";
+import { isNotable, loadScorecards, withImpact, type RepoStat } from "@/entities/repo";
 import { GitHubAuthError, type GitHubViewer } from "@/shared/api";
 import { rangeStartDate, windowsFor, type RangeKey } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
@@ -96,7 +96,15 @@ export async function loadDashboard(token: string, range: RangeKey): Promise<Das
   const collections = loaded.map((outcome) => outcome.value.collection);
 
   const weeks = mergeCalendars(collections);
-  const repos = aggregateRepos(collections, viewer.login, now);
+
+  // 점수는 deps.dev의 OpenSSF Scorecard에서 온다. repository와 PR이 가리키는 곳을 모아
+  // 한 번에 물어본 뒤 세 목록에 같은 결과를 나눠 준다.
+  const tallies = aggregateRepos(collections, viewer.login);
+  const scorecards = await loadScorecards(
+    [...tallies, ...board.open, ...board.merged].map((item) => item.scoring),
+  );
+
+  const repos = tallies.map((tally) => withImpact<RepoStat>(tally, scorecards));
 
   const externalRepos = repos.filter((repo) => repo.isExternal);
   const externalContributions = externalRepos.reduce((sum, repo) => sum + repo.total, 0);
@@ -120,8 +128,8 @@ export async function loadDashboard(token: string, range: RangeKey): Promise<Das
     },
     weeks,
     repos,
-    openPullRequests: board.open,
-    mergedPullRequests: board.merged,
+    openPullRequests: board.open.map((pr) => withImpact<PullRequest>(pr, scorecards)),
+    mergedPullRequests: board.merged.map((pr) => withImpact<PullRequest>(pr, scorecards)),
     openCount: board.openCount,
     pullRequestsError,
     // 여러 해를 나눠 부르는 경우, 일부 구간만 실패하면 나머지로 그린다.

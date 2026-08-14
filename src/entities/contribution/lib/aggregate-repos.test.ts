@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { aggregateRepos } from "@/entities/contribution/lib/aggregate-repos";
 import { collection, entry, repoRef, toyRepoRef } from "@/shared/api/github/response.fixtures";
 
-const NOW = Date.parse("2026-08-15T00:00:00Z");
-
 const next = repoRef("vercel/next.js");
 const mine = repoRef("octocat/mine", { owner: { login: "octocat", avatarUrl: "a" } });
 
@@ -19,7 +17,6 @@ describe("aggregateRepos", () => {
         }),
       ],
       "octocat",
-      NOW,
     );
 
     expect(repos).toHaveLength(1);
@@ -35,7 +32,11 @@ describe("aggregateRepos", () => {
       issues: 1,
       total: 16,
     });
-    expect(repos[0].impact).toBeGreaterThanOrEqual(60);
+    // 점수는 여기서 매기지 않는다. 나중에 채울 꼬리표만 달려 있다.
+    expect(repos[0].scoring).toEqual({
+      key: "vercel/next.js",
+      signals: { isPrivate: false, stars: 50_000, forks: 10_000 },
+    });
   });
 
   it("여러 조회 창의 같은 repository를 더한다", () => {
@@ -45,7 +46,6 @@ describe("aggregateRepos", () => {
         collection({ commitContributionsByRepository: [entry(next, 7)] }),
       ],
       "octocat",
-      NOW,
     );
 
     expect(repos[0].commits).toBe(17);
@@ -56,7 +56,6 @@ describe("aggregateRepos", () => {
     const repos = aggregateRepos(
       [collection({ commitContributionsByRepository: [entry(next, 5)] })],
       "octocat",
-      NOW,
     );
 
     expect(repos[0]).toMatchObject({ commits: 5, pullRequests: 0, reviews: 0, issues: 0 });
@@ -66,7 +65,6 @@ describe("aggregateRepos", () => {
     const repos = aggregateRepos(
       [collection({ commitContributionsByRepository: [entry(mine, 1), entry(next, 1)] })],
       "OCTOCAT",
-      NOW,
     );
 
     expect(repos.find((r) => r.nameWithOwner === "octocat/mine")!.isExternal).toBe(false);
@@ -85,34 +83,39 @@ describe("aggregateRepos", () => {
         }),
       ],
       "octocat",
-      NOW,
     );
 
     expect(repos.map((r) => r.nameWithOwner)).toEqual(["c/three", "a/one", "b/two"]);
   });
 
-  it("주요 OSS가 아닌 repository도 목록에는 담는다", () => {
+  it("작은 repository도 목록에는 담는다 (걸러내는 곳은 화면이다)", () => {
     const repos = aggregateRepos(
       [collection({ commitContributionsByRepository: [entry(toyRepoRef("me/toy"), 3)] })],
       "octocat",
-      NOW,
     );
 
-    expect(repos[0].impact).toBeLessThan(60);
+    expect(repos[0].scoring.signals).toEqual({ isPrivate: false, stars: 2, forks: 0 });
     expect(repos[0].total).toBe(3);
   });
 
-  it("기여가 없으면 빈 목록이다", () => {
-    expect(aggregateRepos([collection()], "octocat", NOW)).toEqual([]);
-    expect(aggregateRepos([], "octocat", NOW)).toEqual([]);
-  });
-
-  it("now를 생략해도 동작한다", () => {
+  it("비공개 repository의 신호도 그대로 옮긴다", () => {
     const repos = aggregateRepos(
-      [collection({ commitContributionsByRepository: [entry(next, 1)] })],
+      [
+        collection({
+          commitContributionsByRepository: [
+            entry(repoRef("acme/internal", { isPrivate: true }), 5),
+          ],
+        }),
+      ],
       "octocat",
     );
-    expect(repos[0].total).toBe(1);
+
+    expect(repos[0].scoring.signals.isPrivate).toBe(true);
+  });
+
+  it("기여가 없으면 빈 목록이다", () => {
+    expect(aggregateRepos([collection()], "octocat")).toEqual([]);
+    expect(aggregateRepos([], "octocat")).toEqual([]);
   });
 
   describe("상한에 걸려 목록이 잘린 경우", () => {
@@ -132,7 +135,6 @@ describe("aggregateRepos", () => {
           }),
         ],
         "octocat",
-        NOW,
       );
 
       const onlyPr = repos.find((r) => r.nameWithOwner === "only/pr")!;
@@ -151,7 +153,6 @@ describe("aggregateRepos", () => {
           }),
         ],
         "octocat",
-        NOW,
       );
 
       expect(repos.find((r) => r.nameWithOwner === "only/commit")!.issues).toBeNull();
@@ -167,7 +168,6 @@ describe("aggregateRepos", () => {
           }),
         ],
         "octocat",
-        NOW,
       );
 
       expect(repos.every((r) => r.commits !== null && r.issues !== null)).toBe(true);
@@ -180,7 +180,6 @@ describe("aggregateRepos", () => {
           collection({ commitContributionsByRepository: [entry(repoRef("late/repo"), 5)] }),
         ],
         "octocat",
-        NOW,
       );
 
       expect(repos.find((r) => r.nameWithOwner === "late/repo")!.commits).toBeNull();

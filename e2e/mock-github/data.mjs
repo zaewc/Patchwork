@@ -19,39 +19,35 @@ const repo = (nameWithOwner, overrides = {}) => {
     isPrivate: false,
     stargazerCount: 100_000,
     forkCount: 20_000,
-    isFork: false,
-    isArchived: false,
-    isInOrganization: true,
-    createdAt: iso(3_000),
-    pushedAt: iso(2),
     owner: { login, avatarUrl: `https://avatars.githubusercontent.com/${login}` },
-    licenseInfo: { key: "mit" },
     ...overrides,
   };
 };
 
-/** 주요 OSS (impact 100) */
+/** 널리 쓰이고 잘 관리되는 프로젝트 */
 export const NEXT_JS = repo("vercel/next.js");
 
-/** 내 소유 · 주요 OSS가 아님 */
+/** 내 소유. 작고 Scorecard도 낮다. */
 export const MINE = repo("octocat/patchwork", {
   stargazerCount: 4,
   forkCount: 0,
-  isInOrganization: false,
-  licenseInfo: null,
   owner: { login: "octocat", avatarUrl: VIEWER.avatarUrl },
 });
 
-/** 남의 것이지만 주요 OSS가 아님 */
-export const TOY = repo("someone/toy-lib", {
-  stargazerCount: 6,
-  forkCount: 1,
-  isInOrganization: false,
-  licenseInfo: null,
-});
+/** 남의 것이지만 작고, deps.dev가 아직 모른다. */
+export const TOY = repo("someone/toy-lib", { stargazerCount: 6, forkCount: 1 });
 
-/** 비공개 Repository */
+/** 비공개 Repository. deps.dev에 물어볼 것도 없다. */
 export const PRIVATE = repo("acme/internal", { isPrivate: true });
+
+/**
+ * deps.dev가 아는 OpenSSF Scorecard 총점(0~10).
+ * 여기 없는 repository는 mock 서버가 404로 답한다.
+ */
+export const SCORECARDS = {
+  "vercel/next.js": 8.0,
+  "octocat/patchwork": 2.5,
+};
 
 const entry = (repository, totalCount) => ({ repository, contributions: { totalCount } });
 

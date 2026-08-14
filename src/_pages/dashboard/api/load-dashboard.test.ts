@@ -29,8 +29,22 @@ const graphQLErrors = (messages: string[]) =>
   new Response(JSON.stringify({ errors: messages.map((message) => ({ message })) }));
 const httpError = (status: number) => new Response("", { status });
 
+/** repository 이름 → Scorecard 총점. 여기 없는 repository는 deps.dev가 모르는 것으로 본다. */
+let scorecards: Record<string, number> = {};
+
+/** deps.dev 조회를 흉내낸다. 요청 URL에서 repository 이름을 되돌린다. */
+function replyFromDepsDev(url: string): Response {
+  const key = decodeURIComponent(url.split("/projects/")[1]).replace("github.com/", "");
+  if (!(key in scorecards)) return new Response("project not found", { status: 404 });
+  return new Response(
+    JSON.stringify({ scorecard: { date: "2026-08-03", overallScore: scorecards[key], checks: [] } }),
+  );
+}
+
 function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
-  fetchMock.mockImplementation(async (_url, init) => {
+  fetchMock.mockImplementation(async (url, init) => {
+    if (String(url).includes("/projects/")) return replyFromDepsDev(String(url));
+
     const body = JSON.parse(String(init?.body)) as {
       query: string;
       variables: Record<string, unknown>;
@@ -44,6 +58,9 @@ function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
     return handler(body.variables, callIndex);
   });
 }
+
+const depsDevRequests = () =>
+  fetchMock.mock.calls.filter(([url]) => String(url).includes("/projects/"));
 
 const requestsFor = (operation: Operation) =>
   requests.filter((r) => operationOf(r.query) === operation);
@@ -84,6 +101,8 @@ const handlers = (
 
 beforeEach(() => {
   requests.length = 0;
+  // 기본값: next.js는 잘 관리되고(8.0 → 80점), toy는 그렇지 않다(1.0 → 10점).
+  scorecards = { "vercel/next.js": 8.0, "octocat/mine": 3.0, "someone/toy": 1.0 };
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   vi.useFakeTimers();
@@ -158,6 +177,86 @@ describe("모아 오기", () => {
   });
 });
 
+describe("Scorecard 점수", () => {
+  it("repository와 PR이 가리키는 곳을 한 번에 묻는다", async () => {
+    mockGraphQL(handlers());
+
+    await settle(loadDashboard("t", "1y"));
+
+    // 기여한 곳 3군데 + PR이 달린 vercel/next.js(이미 포함) → 중복 없이 3번
+    expect(depsDevRequests()).toHaveLength(3);
+  });
+
+  it("Scorecard 총점을 100점으로 환산해 붙인다", async () => {
+    scorecards = { "vercel/next.js": 8.0, "octocat/mine": 3.0, "someone/toy": 1.0 };
+    mockGraphQL(handlers());
+
+    const { repos } = await settle(loadDashboard("t", "1y"));
+
+    expect(repos.map((repo) => [repo.nameWithOwner, repo.impact])).toEqual([
+      ["vercel/next.js", 80],
+      ["octocat/mine", 30],
+      ["someone/toy", 10],
+    ]);
+  });
+
+  it("Scorecard가 바뀌면 주요 OSS 판정도 바뀐다", async () => {
+    scorecards = { "vercel/next.js": 4.0 };
+    mockGraphQL(handlers());
+
+    const data = await settle(loadDashboard("t", "1y"));
+
+    expect(data.repos[0].impact).toBe(40);
+    expect(data.notable).toEqual({ repos: 0, contributions: 0 });
+  });
+
+  it("비공개 repository는 묻지 않고 0점으로 둔다", async () => {
+    const privateRepo = repoRef("acme/internal", { isPrivate: true });
+    mockGraphQL({
+      contributions: () =>
+        ok(
+          contributionsResponse({
+            commitContributionsByRepository: [entry(privateRepo, 7)],
+          }),
+        ),
+      pullRequests: () => ok(pullRequestsResponse()),
+    });
+
+    const { repos } = await settle(loadDashboard("t", "1y"));
+
+    expect(repos[0].impact).toBe(0);
+    expect(depsDevRequests()).toHaveLength(0);
+  });
+
+  it("deps.dev가 모르는 repository는 외부 관심으로 짐작한다", async () => {
+    scorecards = {};
+    mockGraphQL(handlers());
+
+    const { repos } = await settle(loadDashboard("t", "1y"));
+
+    // stars 50,000 / forks 10,000 → 56점
+    expect(repos.find((r) => r.nameWithOwner === "vercel/next.js")!.impact).toBe(56);
+    // stars 2 / forks 0 → 4점
+    expect(repos.find((r) => r.nameWithOwner === "someone/toy")!.impact).toBe(4);
+  });
+
+  it("deps.dev가 죽어도 대시보드는 그려진다", async () => {
+    const warn = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGraphQL(handlers());
+    const original = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (url, init) => {
+      if (String(url).includes("/projects/")) return new Response("", { status: 503 });
+      return original(url, init);
+    });
+
+    const data = await settle(loadDashboard("t", "1y"));
+
+    expect(data.totals.contributions).toBe(6);
+    expect(data.repos.find((r) => r.nameWithOwner === "vercel/next.js")!.impact).toBe(56);
+    expect(warn.mock.calls[0][0]).toContain("deps.dev");
+  });
+});
+
 describe("pull request 가공", () => {
   it("검토 상태·체크 상태·기간을 옮긴다", async () => {
     const node = pullRequestNode({
@@ -183,10 +282,11 @@ describe("pull request 가공", () => {
       repo: "vercel/next.js",
       ownerAvatarUrl: "https://avatars.githubusercontent.com/vercel",
       isPrivate: false,
-      impact: pr.impact,
+      impact: 80,
       isStale: false,
     });
-    expect(pr.impact).toBeGreaterThanOrEqual(60);
+    // vercel/next.js의 Scorecard 8.0 → 80점
+    expect(pr.impact).toBe(80);
   });
 
   it("14일 넘게 조용한 열린 PR은 stale로 본다", async () => {

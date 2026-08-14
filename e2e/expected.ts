@@ -22,8 +22,16 @@ const ALL = TOTALS.nextJs + TOTALS.mine + TOTALS.privateRepo + TOTALS.toy;
 export const EXTERNAL = TOTALS.nextJs + TOTALS.privateRepo + TOTALS.toy;
 export const EXTERNAL_RATIO = Math.round((EXTERNAL / ALL) * 100);
 
-/** 주요 OSS는 vercel/next.js 한 곳뿐이다 */
+/**
+ * 주요 OSS는 vercel/next.js 한 곳뿐이다.
+ * mock deps.dev가 주는 Scorecard: next.js 8.0 → 80점 · octocat/patchwork 2.5 → 25점.
+ * someone/toy-lib은 deps.dev가 모르므로 외부 관심(stars 6 · forks 1)만으로 9점.
+ * acme/internal은 비공개라 묻지 않고 0점.
+ */
 export const NOTABLE = { repos: 1, contributions: TOTALS.nextJs };
+
+/** Repositories 표가 링크 설명으로 보여주는 점수 */
+export const IMPACT = { nextJs: 80 };
 
 export const OPEN_PULL_REQUESTS = { all: 5, notable: 4, stale: 1 };
 export const MERGED_PULL_REQUESTS = { all: 2, notable: 1 };

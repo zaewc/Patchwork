@@ -1,4 +1,4 @@
-/** github.ts의 GraphQL 응답 조각을 만드는 빌더. 내부 타입과 구조적으로 호환된다. */
+/** GitHub GraphQL 응답 조각을 만드는 빌더. 실제 타입과 구조적으로 호환된다. */
 
 export type RepoRefFixture = {
   name: string;
@@ -7,16 +7,10 @@ export type RepoRefFixture = {
   isPrivate: boolean;
   stargazerCount: number;
   forkCount: number;
-  isFork: boolean;
-  isArchived: boolean;
-  isInOrganization: boolean;
-  createdAt: string;
-  pushedAt: string | null;
   owner: { login: string; avatarUrl: string };
-  licenseInfo: { key: string } | null;
 };
 
-/** 주요 OSS로 잡히는 Repository (impact 60 이상). */
+/** 널리 쓰이는 Repository. 점수는 deps.dev의 Scorecard에서 따로 온다. */
 export function repoRef(
   nameWithOwner: string,
   overrides: Partial<RepoRefFixture> = {},
@@ -29,29 +23,17 @@ export function repoRef(
     isPrivate: false,
     stargazerCount: 50_000,
     forkCount: 10_000,
-    isFork: false,
-    isArchived: false,
-    isInOrganization: true,
-    createdAt: "2016-01-01T00:00:00Z",
-    pushedAt: "2026-08-14T00:00:00Z",
     owner: { login, avatarUrl: `https://avatars.githubusercontent.com/${login}` },
-    licenseInfo: { key: "mit" },
     ...overrides,
   };
 }
 
-/** 주요 OSS 기준을 못 넘는 Repository (impact 0). */
+/** 거의 아무도 안 보는 Repository. Scorecard가 없으면 audience 점수도 낮다. */
 export function toyRepoRef(
   nameWithOwner: string,
   overrides: Partial<RepoRefFixture> = {},
 ): RepoRefFixture {
-  return repoRef(nameWithOwner, {
-    stargazerCount: 2,
-    forkCount: 0,
-    isInOrganization: false,
-    licenseInfo: null,
-    ...overrides,
-  });
+  return repoRef(nameWithOwner, { stargazerCount: 2, forkCount: 0, ...overrides });
 }
 
 export type ContributionEntry = {

@@ -1,6 +1,11 @@
 /**
- * 바깥 API를 다루는 공개 API. GitHub 하나뿐이라 이 세그먼트가 곧 GitHub 클라이언트다.
+ * 바깥 API를 다루는 공개 API.
+ *  - GitHub GraphQL — 기여 내역과 pull request
+ *  - deps.dev — OpenSSF Scorecard
  */
+
+export { fetchDepsDevProject } from "@/shared/api/deps-dev/client";
+export type { DepsDevProject } from "@/shared/api/deps-dev/client";
 
 export { githubGraphQL } from "@/shared/api/github/client";
 export { GitHubAuthError, GitHubError } from "@/shared/api/github/errors";

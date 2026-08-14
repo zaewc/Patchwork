@@ -16,6 +16,9 @@ const appEnv = {
   GITHUB_GRAPHQL_URL: `${MOCK_GITHUB_URL}/graphql`,
   GITHUB_OAUTH_AUTHORIZE_URL: `${MOCK_GITHUB_URL}/login/oauth/authorize`,
   GITHUB_OAUTH_TOKEN_URL: `${MOCK_GITHUB_URL}/login/oauth/access_token`,
+  DEPS_DEV_API_URL: `${MOCK_GITHUB_URL}/deps-dev/v3`,
+  // 시나리오를 바꿔 가며 확인하므로 Scorecard를 캐시하지 않는다.
+  DEPS_DEV_REVALIDATE_SECONDS: "0",
 };
 
 export default defineConfig({
@@ -26,6 +29,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
+  // 방금 빌드한 서버의 첫 요청은 라우트를 데우느라 오래 걸린다.
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: APP_URL,
