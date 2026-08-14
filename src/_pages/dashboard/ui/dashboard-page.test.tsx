@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryProvider } from "@/_app/layout/ui/query-provider";
 import { DashboardPage } from "@/_pages/dashboard/ui/dashboard-page";
 import {
   dashboardData,
@@ -37,7 +38,7 @@ const renderPage = async (
   searchParams?: Record<string, string | string[] | undefined>,
 ) => {
   vi.mocked(loadDashboard).mockResolvedValue(dashboardData(data));
-  return render(await DashboardPage(props(searchParams)));
+  return render(<QueryProvider>{await DashboardPage(props(searchParams))}</QueryProvider>);
 };
 
 const section = (title: string) =>
