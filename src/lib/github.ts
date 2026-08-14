@@ -105,9 +105,9 @@ async function graphql<T>(
 /* ------------------------------------------------------------------ 조회 범위 */
 
 export const RANGES = {
-  "30d": { label: "최근 30일", days: 30 },
-  "90d": { label: "최근 90일", days: 90 },
-  "1y": { label: "최근 1년", days: 365 },
+  "30d": { label: "30일", days: 30 },
+  "90d": { label: "90일", days: 90 },
+  "1y": { label: "1년", days: 365 },
 } as const;
 
 export type RangeKey = keyof typeof RANGES;
@@ -130,7 +130,6 @@ type RepoRef = {
   createdAt: string;
   pushedAt: string | null;
   owner: { login: string };
-  primaryLanguage: { name: string; color: string | null } | null;
   licenseInfo: { spdxId: string | null; key: string } | null;
 };
 
@@ -155,14 +154,7 @@ type ContributionsQuery = {
     login: string;
     name: string | null;
     avatarUrl: string;
-    url: string;
-    createdAt: string;
-    followers: { totalCount: number };
     contributionsCollection: {
-      totalCommitContributions: number;
-      totalPullRequestContributions: number;
-      totalPullRequestReviewContributions: number;
-      totalIssueContributions: number;
       restrictedContributionsCount: number;
       contributionCalendar: {
         totalContributions: number;
@@ -184,18 +176,11 @@ type PullRequestNode = {
   title: string;
   url: string;
   isDraft: boolean;
-  createdAt: string;
   updatedAt: string;
-  additions: number;
-  deletions: number;
-  changedFiles: number;
   mergedAt: string | null;
   reviewDecision: ReviewDecision;
   repository: RepoRef;
-  comments: { totalCount: number };
-  reviews: { totalCount: number };
   commits: { nodes: { commit: { statusCheckRollup: { state: CheckState } | null } }[] };
-  labels: { nodes: { name: string; color: string }[] };
 };
 
 type PullRequestsQuery = {
@@ -208,25 +193,17 @@ export type PullRequest = {
   title: string;
   url: string;
   isDraft: boolean;
-  createdAt: string;
   updatedAt: string;
   mergedAt: string | null;
-  additions: number;
-  deletions: number;
-  changedFiles: number;
   reviewDecision: ReviewDecision;
   checkState: CheckState;
   repo: string;
   repoUrl: string;
   isPrivate: boolean;
   isExternal: boolean;
-  stars: number;
   impact: number;
   tier: ImpactTier;
-  comments: number;
-  reviews: number;
-  labels: { name: string; color: string }[];
-  /** 열린 지 오래됐고 최근 업데이트가 없는 PR */
+  /** 최근 업데이트가 없는 채로 열려 있는 PR */
   isStale: boolean;
 };
 
@@ -234,13 +211,10 @@ export type RepoStat = {
   nameWithOwner: string;
   url: string;
   isPrivate: boolean;
-  stars: number;
-  language: { name: string; color: string | null } | null;
   isExternal: boolean;
   /** 0~100 권위 추정 점수 (lib/impact.ts) */
   impact: number;
   tier: ImpactTier;
-  forks: number;
   commits: number;
   pullRequests: number;
   reviews: number;
@@ -251,23 +225,9 @@ export type RepoStat = {
 export type CalendarDay = { date: string; count: number; weekday: number };
 
 export type DashboardData = {
-  viewer: {
-    login: string;
-    name: string | null;
-    avatarUrl: string;
-    url: string;
-    createdAt: string;
-    followers: number;
-  };
+  viewer: { login: string; name: string | null; avatarUrl: string };
   range: RangeKey;
-  totals: {
-    contributions: number;
-    commits: number;
-    pullRequests: number;
-    reviews: number;
-    issues: number;
-    restricted: number;
-  };
+  totals: { contributions: number; restricted: number };
   external: {
     repos: number;
     contributions: number;
@@ -280,7 +240,6 @@ export type DashboardData = {
     ratio: number;
     topRepo: string | null;
   };
-  streak: { current: number; longest: number };
   weeks: CalendarDay[][];
   repos: RepoStat[];
   openPullRequests: PullRequest[];
@@ -311,7 +270,6 @@ fragment RepoCore on Repository {
   createdAt
   pushedAt
   owner { login }
-  primaryLanguage { name color }
   licenseInfo { spdxId key }
 }`;
 
@@ -328,14 +286,7 @@ query Contributions($from: DateTime!, $to: DateTime!) {
     login
     name
     avatarUrl
-    url
-    createdAt
-    followers { totalCount }
     contributionsCollection(from: $from, to: $to) {
-      totalCommitContributions
-      totalPullRequestContributions
-      totalPullRequestReviewContributions
-      totalIssueContributions
       restrictedContributionsCount
       contributionCalendar {
         totalContributions
@@ -357,18 +308,11 @@ fragment PR on PullRequest {
   title
   url
   isDraft
-  createdAt
   updatedAt
   mergedAt
-  additions
-  deletions
-  changedFiles
   reviewDecision
   repository { ...RepoCore }
-  comments { totalCount }
-  reviews { totalCount }
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
-  labels(first: 4) { nodes { name color } }
 }
 
 query PullRequests($openQuery: String!, $mergedQuery: String!) {
@@ -394,24 +338,16 @@ function toPullRequest(node: PullRequestNode, viewerLogin: string, now: number):
     title: node.title,
     url: node.url,
     isDraft: node.isDraft,
-    createdAt: node.createdAt,
     updatedAt: node.updatedAt,
     mergedAt: node.mergedAt,
-    additions: node.additions,
-    deletions: node.deletions,
-    changedFiles: node.changedFiles,
     reviewDecision: node.reviewDecision,
     checkState: node.commits.nodes[0]?.commit.statusCheckRollup?.state ?? null,
     repo: node.repository.nameWithOwner,
     repoUrl: node.repository.url,
     isPrivate: node.repository.isPrivate,
     isExternal: node.repository.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
-    stars: node.repository.stargazerCount,
     impact,
     tier: tierOf(impact),
-    comments: node.comments.totalCount,
-    reviews: node.reviews.totalCount,
-    labels: node.labels.nodes,
     isStale: !node.mergedAt && updatedDaysAgo >= STALE_DAYS,
   };
 }
@@ -434,12 +370,9 @@ export function aggregateRepos(
         nameWithOwner: repo.nameWithOwner,
         url: repo.url,
         isPrivate: repo.isPrivate,
-        stars: repo.stargazerCount,
-        language: repo.primaryLanguage,
         isExternal: repo.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
         impact,
         tier: tierOf(impact),
-        forks: repo.forkCount,
         commits: 0,
         pullRequests: 0,
         reviews: 0,
@@ -460,28 +393,6 @@ export function aggregateRepos(
   return [...map.values()].sort(
     (a, b) => b.total - a.total || a.nameWithOwner.localeCompare(b.nameWithOwner),
   );
-}
-
-export function computeStreaks(days: CalendarDay[], today = new Date().toISOString().slice(0, 10)) {
-  const past = days.filter((d) => d.date <= today);
-
-  let longest = 0;
-  let run = 0;
-  for (const day of past) {
-    run = day.count > 0 ? run + 1 : 0;
-    if (run > longest) longest = run;
-  }
-
-  // 오늘 아직 기여가 없더라도 어제까지 이어진 스트릭은 살아있는 것으로 본다.
-  let index = past.length - 1;
-  if (index >= 0 && past[index].count === 0) index -= 1;
-  let current = 0;
-  while (index >= 0 && past[index].count > 0) {
-    current += 1;
-    index -= 1;
-  }
-
-  return { current, longest };
 }
 
 /* ------------------------------------------------------------------ 진입점 */
@@ -552,21 +463,10 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
     nodes.filter(isPullRequestNode).map((n) => toPullRequest(n, login, now));
 
   return {
-    viewer: {
-      login,
-      name: viewer.name,
-      avatarUrl: viewer.avatarUrl,
-      url: viewer.url,
-      createdAt: viewer.createdAt,
-      followers: viewer.followers.totalCount,
-    },
+    viewer: { login, name: viewer.name, avatarUrl: viewer.avatarUrl },
     range,
     totals: {
       contributions: collection.contributionCalendar.totalContributions,
-      commits: collection.totalCommitContributions,
-      pullRequests: collection.totalPullRequestContributions,
-      reviews: collection.totalPullRequestReviewContributions,
-      issues: collection.totalIssueContributions,
       restricted: collection.restrictedContributionsCount,
     },
     external: {
@@ -581,7 +481,6 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
       topRepo:
         [...notableRepos].sort((a, b) => b.impact - a.impact)[0]?.nameWithOwner ?? null,
     },
-    streak: computeStreaks(weeks.flat()),
     weeks,
     repos,
     openPullRequests: toPR(pullRequests.open.nodes),
