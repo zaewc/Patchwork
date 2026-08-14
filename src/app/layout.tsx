@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Patchwork — 오픈소스 기여 트래커",
-  description: "GitHub 기여 내역과 진행 중인 PR 상태를 한 화면에서 추적합니다.",
+  title: "Patchwork",
+  description: "GitHub 기여 내역과 진행 중인 PR 상태를 추적합니다.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
