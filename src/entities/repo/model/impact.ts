@@ -10,6 +10,8 @@
  * 0이면 아무리 잘 관리해도 0점이다.
  *
  * 어디까지나 휴리스틱이며, 가중치와 기준선은 아래 WEIGHTS·NOTABLE_MIN에서 조정한다.
+ * 더 엄밀한 지표가 필요하면 deps.dev의 OpenSSF Criticality Score / Scorecard를 붙일 수 있다.
+ * 다만 패키지로 배포된 repository만 커버되고, repository마다 외부 API 호출이 하나씩 늘어난다.
  */
 
 export type RepoSignals = {

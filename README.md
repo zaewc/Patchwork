@@ -2,59 +2,25 @@
 
 <img src="app/icon.svg" width="200">
 
-오픈소스 기여 트래커. GitHub contribution과 진행 중인 pull request 상태를 한 화면에 모아 보여줍니다.
+내 repository가 아닌 곳에 얼마나 기여했는지 보여주는 GitHub 기여 트래커.
 
-흩어진 commit·pull request·review·issue를 patchwork처럼 이어 붙여, **내 repository가 아닌 곳에 얼마나 기여했는지**를 중심으로 보여주는 것이 목표입니다.
+흩어진 commit·pull request·review·issue를 한 화면에 이어 붙이고, 진행 중인 PR이 어디서 막혀 있는지 보여줍니다. merge된 기여만 골라 README에 붙일 Markdown으로 뽑을 수도 있습니다.
 
-## 시작하기
+## 주요 OSS만 골라 보기
 
-```bash
-cp .env.example .env.local   # GitHub OAuth 앱 값을 채운다
-npm install
-npm run dev
-```
+기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. 그래서 repository마다 0~100점을 매기고 **60점 이상만 주요 OSS로 봅니다.** 실질 기준선은 Stars 600개 안팎입니다.
 
-OAuth 앱이 없으면 홈 화면이 준비 절차를 안내합니다. `SESSION_SECRET`은 `openssl rand -hex 32`로 만듭니다.
-
-## 구조
-
-[Feature-Sliced Design](https://feature-sliced.design)을 Next.js App Router에 적용했습니다. 라우팅은 루트 `app/`에 재내보내기 한 줄씩만 두고, 실제 코드는 `src/`의 여섯 레이어에 있습니다.
-
-```text
-app/            Next.js 라우팅
-src/_app/       라우트 핸들러 · 루트 레이아웃 · 전역 스타일
-src/_pages/     화면 (home · dashboard · readme-export)
-src/widgets/    여러 화면이 공유하는 UI 블록
-src/features/   사용자가 하는 일
-src/entities/   도메인 개념 (repo · pull-request · contribution · viewer)
-src/shared/     업무 지식이 없는 토대
-```
-
-레이어 규칙과 예외, 코드를 넣을 자리를 고르는 기준은 [AGENTS.md](AGENTS.md)에 있습니다.
-
-## 검사
-
-```bash
-npm run test:all      # 아래 전부
-npm run typecheck     # tsc
-npm run lint          # eslint
-npm run lint:arch     # steiger — FSD 레이어·공개 API 위반
-npm run test:coverage # vitest (4개 지표 100% 미만이면 실패)
-npm run test:e2e      # playwright
-```
-
-E2E는 GitHub 대역 서버를 띄우고 앱을 그쪽으로 물려 실제 OAuth 흐름까지 통과시킵니다. 개발 서버와 산출물이 섞이지 않도록 `.next-e2e`에 따로 빌드합니다.
-
-## 주요 OSS 판별
-
-기여 건수만 세면 star 3개짜리 토이 프로젝트 commit과 널리 쓰이는 프로젝트의 patch가 같은 무게로 잡힙니다. Patchwork는 repository마다 0~100점의 추정 점수를 매기고, **60점(`NOTABLE_MIN`) 이상만 주요 OSS로 봅니다** ([src/entities/repo/model/impact.ts](src/entities/repo/model/impact.ts)). 실질적인 기준선은 Stars 600개 안팎입니다.
-
-대시보드는 기본으로 주요 OSS만 보여줍니다. Repositories·Open pull requests·Recently merged 세 목록이 모두 이 기준으로 걸러지고, 상단의 `전체` 탭(`?scope=all`)을 누르면 일반 프로젝트까지 나옵니다. 목록 자체가 주요 OSS로 걸러지므로 행마다 등급 배지를 달지는 않습니다.
-
-점수는 두 덩어리로 나뉘고, 그냥 더하지 않습니다.
-
-```
-score = audience + min(trust, audience)
+```mermaid
+flowchart TD
+    A{비공개인가} -->|예| Z[0점]
+    A -->|아니오| B{"Stars 30개 이상이고 License가 있는가"}
+    B -->|아니오| C[59점 상한]
+    B -->|예| D["score = audience + min(trust, audience)"]
+    D --> E{60점 이상인가}
+    E -->|예| F([주요 OSS])
+    E -->|아니오| G([일반 프로젝트])
+    C --> G
+    Z --> G
 ```
 
 | 덩어리 | 신호 | 배점 |
@@ -66,17 +32,45 @@ score = audience + min(trust, audience)
 | | 최근 push (90일 내 16 / 1년 내 8) | 16 |
 | 감점 | Fork / Archived | −25 / −20 |
 
-`trust`가 `audience`를 넘지 못하게 묶은 것이 핵심입니다. 이렇게 하지 않으면 아무도 쓰지 않는 사내 프로젝트가 "org 소유 + License + 최근 push"만으로 주요 OSS에 올라옵니다. 외부 관심이 0이면 아무리 잘 관리해도 0점입니다.
+`trust`는 `audience`를 넘겨 받지 못합니다. 외부 관심이 0이면 아무리 잘 관리해도 0점입니다. 이렇게 묶지 않으면 아무도 쓰지 않는 사내 프로젝트가 "org 소유 + 최근 push"만으로 올라옵니다.
 
-점수와 별개로 **자격 조건**이 둘 있습니다. 하나라도 못 채우면 점수가 59점(= 주요 OSS 미만)으로 묶입니다.
+대시보드는 기본으로 주요 OSS만 보여주고, `전체` 탭을 누르면 일반 프로젝트까지 나옵니다. 가중치와 경계는 [impact.ts](src/entities/repo/model/impact.ts)에서 바꿉니다.
 
-- **Stars 30개 이상** (`MIN_STARS`) — 하한선. fork만 많은 강의·템플릿 repository를 거르는 역할도 합니다.
-- **License 선언** — 없으면 정의상 오픈소스가 아닙니다. GitHub이 분류하지 못한 커스텀 License(`key: other`)는 "선언은 했다"로 보고 통과시킵니다.
+## 시작하기
 
-자격 조건을 넘겨도 점수 계산까지 통과해야 주요 OSS로 잡힙니다.
+```bash
+cp .env.example .env.local   # GitHub OAuth 앱 값을 채웁니다
+npm install
+npm run dev
+```
 
-Private repository는 공개 생태계의 권위 척도 대상이 아니므로 0점으로 둡니다.
+`SESSION_SECRET`은 `openssl rand -hex 32`로 만듭니다. OAuth 앱이 없으면 홈 화면이 만드는 방법을 알려줍니다.
 
-GitHub GraphQL에는 contributor count가 없습니다. `mentionableUsers.totalCount` 가 참여 폭에 더 가깝지만, repository마다 사용자를 세느라 집계 쿼리 전체를 타임아웃(502)시켜서 스칼라 필드인 `forkCount` 를 대용치로 씁니다. 신호는 전부 기존 응답에 필드만 추가해 계산하므로 API 요청 수는 늘지 않습니다.
+## 구조
 
-어디까지나 휴리스틱입니다. 가중치와 등급 경계는 `src/entities/repo/model/impact.ts` 의 `WEIGHTS`, `NOTABLE_MIN`, `MIN_STARS` 에서 바로 조정할 수 있습니다. 더 엄밀한 지표가 필요하면 [deps.dev](https://deps.dev) 의 OpenSSF Criticality Score / Scorecard 를 연동하는 방법도 있습니다(패키지로 배포된 repository만 커버되고, repository당 외부 API 호출이 추가됩니다).
+[Feature-Sliced Design](https://feature-sliced.design)을 Next.js App Router에 적용했습니다. 라우팅은 루트 `app/`에 재내보내기 한 줄씩만 두고, 실제 코드는 `src/`에 있습니다.
+
+```mermaid
+flowchart TD
+    R["app/ · Next.js 라우팅"] --> AP["_app · 라우트 핸들러 · 레이아웃"]
+    AP --> PG["_pages · 화면"]
+    PG --> WG["widgets · 여러 화면이 쓰는 UI 블록"]
+    WG --> FT["features · 사용자가 하는 일"]
+    FT --> EN["entities · 도메인 개념"]
+    EN --> SH["shared · 업무 지식 없는 토대"]
+```
+
+화살표는 "가져다 쓴다"는 뜻입니다. 위에서 아래로만 흐르고, 아래 어느 레이어든 건너뛰어 쓸 수 있습니다. 레이어 규칙과 예외는 [AGENTS.md](AGENTS.md)에 있습니다.
+
+## 검사
+
+```bash
+npm run test:all      # 아래 전부
+npm run typecheck     # tsc
+npm run lint          # eslint
+npm run lint:arch     # steiger · FSD 레이어·공개 API 위반
+npm run test:coverage # vitest · 4개 지표 100% 미만이면 실패
+npm run test:e2e      # playwright
+```
+
+E2E는 GitHub 대역 서버를 띄우고 앱을 그쪽으로 물려 실제 OAuth 흐름까지 지나갑니다. 개발 서버와 산출물이 섞이지 않도록 `.next-e2e`에 따로 빌드합니다.
