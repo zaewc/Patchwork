@@ -69,4 +69,4 @@ npm run test:performance # Lighthouse · 성능 지표와 전송량 예산
 
 E2E는 GitHub과 deps.dev 대역 서버를 띄우고 앱을 그쪽으로 물려 실제 OAuth 흐름까지 지나갑니다. 개발 서버와 산출물이 섞이지 않도록 `.next-e2e`에 따로 빌드합니다.
 
-성능 검사는 같은 대역 데이터를 쓰는 production build에서 대시보드와 README 내보내기를 각각 3회 측정합니다. 시간 지표는 중앙값으로 판정하고 JavaScript·전체 전송량이 예산을 넘으면 실패합니다. CI의 HTML·JSON 리포트는 `lighthouse-reports` artifact에서 확인할 수 있습니다.
+성능 검사는 같은 대역 데이터를 쓰는 production build에서 대시보드와 README 내보내기를 각각 5회 측정합니다. 시간 지표는 중앙값으로 판정하고 JavaScript·font·전체 전송량이 예산을 넘으면 실패합니다. CI의 HTML·JSON 리포트는 `lighthouse-reports` artifact에서 확인할 수 있습니다.
