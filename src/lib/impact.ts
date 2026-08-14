@@ -12,7 +12,7 @@
  * 어디까지나 휴리스틱이며, 가중치와 등급 경계는 아래 WEIGHTS·TIERS에서 조정한다.
  */
 
-export type ImpactTier = "flagship" | "major" | "community" | "personal";
+export type ImpactTier = "flagship" | "major" | "community" | "unranked";
 
 export type RepoSignals = {
   /** 비공개 Repository는 공개 OSS 권위 척도의 대상이 아니다. */
@@ -44,15 +44,19 @@ export const WEIGHTS = {
   /** 감점. fork는 상류의 명성을 물려받기 쉬워 크게 깎는다. */
   forkPenalty: 25,
   archivedPenalty: 20,
-  /** License가 없으면 정의상 오픈소스가 아니므로 이 점수를 넘지 못한다. */
-  unlicensedCap: 30,
 } as const;
+
+/** 등급을 받기 위한 최소 Stars. 점수와 무관하게 이 아래는 등급이 없다. */
+export const MIN_STARS = 30;
+
+/** 자격 미달 Repository의 점수 상한 — 가장 낮은 등급(커뮤니티 40)에 닿지 못한다. */
+const UNRANKED_CAP = 39;
 
 export const TIERS: { tier: ImpactTier; min: number; label: string; description: string }[] = [
   { tier: "flagship", min: 80, label: "대표 OSS", description: "생태계의 중심이 되는 프로젝트" },
   { tier: "major", min: 60, label: "주요 OSS", description: "널리 쓰이는 프로젝트" },
-  { tier: "community", min: 40, label: "커뮤니티", description: "바깥에서 쓰고 참여하는 프로젝트" },
-  { tier: "personal", min: 0, label: "개인·소규모", description: "사실상 내부용 프로젝트" },
+  { tier: "community", min: 34, label: "커뮤니티", description: "바깥에서 쓰고 참여하는 프로젝트" },
+  { tier: "unranked", min: 0, label: "", description: "" },
 ];
 
 const YEAR = 365 * 86_400_000;
@@ -72,8 +76,6 @@ export function scoreRepo(signals: RepoSignals, now: number = Date.now()): numbe
     logScore(signals.stars, 100_000, WEIGHTS.stars) +
     logScore(signals.forks, 20_000, WEIGHTS.forks);
 
-  // 잘 관리되고 있다는 신호. org 소유·업력·활성도만으로는 사내 프로젝트도 만점을 받으므로,
-  // audience를 초과해서 받아갈 수 없게 묶는다. audience가 0이면 이 점수도 0이다.
   let trust = 0;
   if (signals.isInOrganization) trust += WEIGHTS.organization;
   if (now - new Date(signals.createdAt).getTime() >= 2 * YEAR) trust += WEIGHTS.age;
@@ -91,8 +93,10 @@ export function scoreRepo(signals: RepoSignals, now: number = Date.now()): numbe
 
   score = Math.max(0, Math.round(score));
 
-  // License 없는 Repository는 법적으로 오픈소스가 아니다. 등급을 받지 못하게 상한을 둔다.
-  return signals.hasLicense ? score : Math.min(score, WEIGHTS.unlicensedCap);
+  // 자격 조건: Stars 최소선을 못 넘거나 License가 없으면 등급을 주지 않는다.
+  // (License 없는 Repository는 정의상 오픈소스가 아니다)
+  const qualified = signals.stars >= MIN_STARS && signals.hasLicense;
+  return qualified ? score : Math.min(score, UNRANKED_CAP);
 }
 
 export function tierOf(score: number): ImpactTier {
@@ -112,5 +116,5 @@ export const TIER_BADGE_CLASS: Record<ImpactTier, string> = {
   flagship: "bg-accent text-white",
   major: "bg-accent-soft text-accent",
   community: "border border-border text-muted",
-  personal: "text-muted",
+  unranked: "",
 };
