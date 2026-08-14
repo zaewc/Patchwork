@@ -46,7 +46,7 @@ export default async function ExportPage({ searchParams }: PageProps<"/export">)
           <div>
             <h1 className="text-xl font-semibold tracking-tight">README 내보내기</h1>
             <p className="mt-1 text-sm text-muted">
-              내가 연 pull request와 issue를 repository별로 묶어 Markdown으로 만듭니다.
+              merge된 pull request와 완료 처리된 issue를 repository별로 묶어 Markdown으로 만듭니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -84,7 +84,7 @@ export default async function ExportPage({ searchParams }: PageProps<"/export">)
           <p className="mt-3 text-sm text-muted">
             {error
               ? "다시 시도해 주세요."
-              : "이 기간에 내보낼 공개 pull request나 issue가 없습니다. 기간을 넓히거나 전체로 전환해 보세요."}
+              : "이 기간에 merge된 pull request나 완료된 issue가 없습니다. 기간을 넓히거나 전체로 전환해 보세요."}
           </p>
         )}
       </main>

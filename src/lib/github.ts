@@ -487,6 +487,8 @@ type ItemNode = {
   title: string;
   url: string;
   createdAt: string;
+  mergedAt?: string | null;
+  stateReason?: "COMPLETED" | "NOT_PLANNED" | "REOPENED" | "DUPLICATE" | null;
   repository: RepoRef;
 };
 
@@ -501,8 +503,8 @@ const ITEMS_QUERY = `
 ${REPO_CORE_FRAGMENT}
 
 fragment Item on Node {
-  ... on PullRequest { title url createdAt repository { ...RepoCore } }
-  ... on Issue { title url createdAt repository { ...RepoCore } }
+  ... on PullRequest { title url createdAt mergedAt repository { ...RepoCore } }
+  ... on Issue { title url createdAt stateReason repository { ...RepoCore } }
 }
 
 query Items($q: String!, $after: String) {
@@ -515,8 +517,34 @@ query Items($q: String!, $after: String) {
 /** search는 페이지당 100건, 전체 1000건이 상한이다. */
 const MAX_ITEM_PAGES = 5;
 
+function isItemNode(node: ItemNode | Record<string, never>): node is ItemNode {
+  return "repository" in node && Boolean(node.repository);
+}
+
+async function searchItems(token: string, query: string): Promise<ItemNode[]> {
+  const nodes: ItemNode[] = [];
+  let after: string | null = null;
+
+  for (let page = 0; page < MAX_ITEM_PAGES; page++) {
+    const data: ItemsQuery = await graphql<ItemsQuery>(
+      token,
+      ITEMS_QUERY,
+      { q: query, after },
+      "기여 목록",
+    );
+    nodes.push(...data.search.nodes.filter(isItemNode));
+
+    if (!data.search.pageInfo.hasNextPage) break;
+    after = data.search.pageInfo.endCursor;
+  }
+
+  return nodes;
+}
+
 /**
- * 기간 안에 내가 연 PR·Issue를 repository별로 묶는다.
+ * 기간 안의 "결론이 난" 기여만 repository별로 묶는다.
+ *  - PR: merge된 것만. 열려 있거나 반려된 것은 제외.
+ *  - Issue: 메인테이너가 완료로 닫은 것만. not planned로 닫힌 제보는 제외.
  * 공개 저장소만 담는다 — README에 붙일 링크라 비공개는 의미가 없다.
  */
 export async function fetchContributionItems(
@@ -525,33 +553,38 @@ export async function fetchContributionItems(
   now: number = Date.now(),
 ): Promise<ContributionGroup[]> {
   const since = windowsFor(range, now)[0].from.toISOString().slice(0, 10);
-  const q = `author:@me is:public created:>=${since} sort:created-asc`;
+  const scope = `author:@me is:public created:>=${since} sort:created-asc`;
+
+  const [pullRequests, issues] = await Promise.all([
+    searchItems(token, `${scope} is:pr is:merged`),
+    searchItems(token, `${scope} is:issue is:closed reason:completed`),
+  ]);
+
   const groups = new Map<string, ContributionGroup>();
-  let after: string | null = null;
 
-  for (let page = 0; page < MAX_ITEM_PAGES; page++) {
-    const data: ItemsQuery = await graphql<ItemsQuery>(token, ITEMS_QUERY, { q, after }, "기여 목록");
+  for (const node of [...pullRequests, ...issues]) {
+    const isPullRequest = node.__typename === "PullRequest";
+    // 검색 한정자를 GitHub이 무시하는 경우까지 대비해 응답 값으로 한 번 더 거른다.
+    if (isPullRequest ? !node.mergedAt : node.stateReason !== "COMPLETED") continue;
 
-    for (const node of data.search.nodes) {
-      if (!("repository" in node) || !node.repository) continue;
-      const type = node.__typename === "PullRequest" ? "PR" : "Issue";
-      const repo = node.repository;
-      let group = groups.get(repo.nameWithOwner);
-      if (!group) {
-        group = {
-          name: repo.name,
-          nameWithOwner: repo.nameWithOwner,
-          url: repo.url,
-          impact: scoreRepo(signalsOf(repo), now),
-          items: [],
-        };
-        groups.set(repo.nameWithOwner, group);
-      }
-      group.items.push({ type, title: node.title, url: node.url, createdAt: node.createdAt });
+    const repo = node.repository;
+    let group = groups.get(repo.nameWithOwner);
+    if (!group) {
+      group = {
+        name: repo.name,
+        nameWithOwner: repo.nameWithOwner,
+        url: repo.url,
+        impact: scoreRepo(signalsOf(repo), now),
+        items: [],
+      };
+      groups.set(repo.nameWithOwner, group);
     }
-
-    if (!data.search.pageInfo.hasNextPage) break;
-    after = data.search.pageInfo.endCursor;
+    group.items.push({
+      type: isPullRequest ? "PR" : "Issue",
+      title: node.title,
+      url: node.url,
+      createdAt: node.createdAt,
+    });
   }
 
   // 기여가 많은 repository부터. 목록 안은 시간순.
