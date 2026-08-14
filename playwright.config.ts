@@ -30,6 +30,9 @@ export default defineConfig({
   use: {
     baseURL: APP_URL,
     trace: "on-first-retry",
+    // 방금 빌드한 서버의 첫 요청은 느릴 수 있다.
+    navigationTimeout: 30_000,
+    actionTimeout: 15_000,
     locale: "ko-KR",
     timezoneId: "Asia/Seoul",
     permissions: ["clipboard-read", "clipboard-write"],

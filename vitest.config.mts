@@ -16,12 +16,13 @@ export default defineConfig({
       reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/**/__fixtures__/**"],
+      // 테스트 지원 코드와 라우팅 재내보내기는 측정 대상이 아니다.
+      exclude: ["src/**/*.test.{ts,tsx}", "src/**/*.fixtures.ts"],
       thresholds: {
-        statements: 99,
-        lines: 99,
-        functions: 99,
-        branches: 99,
+        statements: 100,
+        lines: 100,
+        functions: 100,
+        branches: 100,
       },
     },
   },
