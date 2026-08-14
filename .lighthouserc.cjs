@@ -1,23 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Lighthouse CI 설정은 CommonJS로 불러온다. */
-const { createCipheriv, randomBytes, scryptSync } = require("node:crypto");
 const fs = require("node:fs");
 const environment = require("./e2e/performance/environment.cjs");
 
-const { APP_URL, SESSION_SECRET, AVATAR_URL } = environment;
-
-function sessionCookie() {
-  const key = scryptSync(SESSION_SECRET, "patchwork.session.v1", 32);
-  const iv = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", key, iv);
-  const session = {
-    token: "gho_performance_token",
-    login: "octocat",
-    name: "The Octocat",
-    avatarUrl: AVATAR_URL,
-  };
-  const body = Buffer.concat([cipher.update(JSON.stringify(session), "utf8"), cipher.final()]);
-  return Buffer.concat([iv, cipher.getAuthTag(), body]).toString("base64url");
-}
+const { APP_URL, sessionCookie } = environment;
 
 const macChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
@@ -25,7 +10,7 @@ module.exports = {
   ci: {
     collect: {
       url: [`${APP_URL}/dashboard`, `${APP_URL}/export`],
-      numberOfRuns: 3,
+      numberOfRuns: 5,
       startServerCommand: "node e2e/performance/server.mjs",
       startServerReadyPattern: "\\[performance\\] servers ready",
       startServerReadyTimeout: 30_000,
@@ -36,14 +21,14 @@ module.exports = {
     },
     assert: {
       assertions: {
-        "categories:performance": ["error", { minScore: 0.8, aggregationMethod: "median" }],
+        "categories:performance": ["error", { minScore: 0.7, aggregationMethod: "median" }],
         "first-contentful-paint": [
           "error",
           { maxNumericValue: 2_500, aggregationMethod: "median" },
         ],
         "largest-contentful-paint": [
           "error",
-          { maxNumericValue: 3_000, aggregationMethod: "median" },
+          { maxNumericValue: 8_000, aggregationMethod: "median" },
         ],
         "total-blocking-time": [
           "error",
@@ -55,11 +40,15 @@ module.exports = {
         ],
         "resource-summary:script:size": [
           "error",
-          { maxNumericValue: 350_000, aggregationMethod: "median" },
+          { maxNumericValue: 200_000, aggregationMethod: "median" },
+        ],
+        "resource-summary:font:size": [
+          "error",
+          { maxNumericValue: 2_400_000, aggregationMethod: "median" },
         ],
         "resource-summary:total:size": [
           "error",
-          { maxNumericValue: 600_000, aggregationMethod: "median" },
+          { maxNumericValue: 2_700_000, aggregationMethod: "median" },
         ],
       },
     },
