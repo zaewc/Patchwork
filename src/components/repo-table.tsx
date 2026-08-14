@@ -2,9 +2,15 @@ import type { RepoStat } from "@/lib/github";
 import { formatNumber } from "@/lib/format";
 import { TierBadge } from "@/components/tier-badge";
 
-export function RepoTable({ repos }: { repos: RepoStat[] }) {
+export function RepoTable({
+  repos,
+  emptyMessage = "이 기간에 기여한 repository가 없습니다.",
+}: {
+  repos: RepoStat[];
+  emptyMessage?: string;
+}) {
   if (repos.length === 0) {
-    return <p className="text-sm text-muted">이 기간에 기여한 repository가 없습니다.</p>;
+    return <p className="text-sm text-muted">{emptyMessage}</p>;
   }
 
   return (

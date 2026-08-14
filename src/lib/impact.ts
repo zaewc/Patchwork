@@ -12,7 +12,7 @@
  * 어디까지나 휴리스틱이며, 가중치와 등급 경계는 아래 WEIGHTS·TIERS에서 조정한다.
  */
 
-export type ImpactTier = "flagship" | "major" | "community" | "unranked";
+export type ImpactTier = "flagship" | "major" | "unranked";
 
 export type RepoSignals = {
   /** 비공개 Repository는 공개 OSS 권위 척도의 대상이 아니다. */
@@ -49,13 +49,13 @@ export const WEIGHTS = {
 /** 등급을 받기 위한 최소 Stars. 점수와 무관하게 이 아래는 등급이 없다. */
 export const MIN_STARS = 30;
 
-/** 자격 미달 Repository의 점수 상한 — 가장 낮은 등급(커뮤니티 40)에 닿지 못한다. */
-const UNRANKED_CAP = 39;
+/** 자격 미달 Repository의 점수 상한 — 가장 낮은 등급(주요 OSS 60)에 닿지 못한다. */
+const UNRANKED_CAP = 59;
 
 export const TIERS: { tier: ImpactTier; min: number; label: string; description: string }[] = [
   { tier: "flagship", min: 80, label: "대표 OSS", description: "생태계의 중심이 되는 프로젝트" },
   { tier: "major", min: 60, label: "주요 OSS", description: "널리 쓰이는 프로젝트" },
-  { tier: "community", min: 34, label: "커뮤니티", description: "바깥에서 쓰고 참여하는 프로젝트" },
+  // 그 아래는 등급을 주지 않는다. 일반 프로젝트까지 표시되면 구분의 의미가 없다.
   { tier: "unranked", min: 0, label: "", description: "" },
 ];
 
@@ -115,6 +115,5 @@ export function isNotableTier(tier: ImpactTier): boolean {
 export const TIER_BADGE_CLASS: Record<ImpactTier, string> = {
   flagship: "bg-accent text-white",
   major: "bg-accent-soft text-accent",
-  community: "border border-border text-muted",
   unranked: "",
 };

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ContributionQuilt } from "@/components/contribution-quilt";
 import { MergedPullRequests, PullRequestBoard } from "@/components/pull-request-board";
@@ -13,14 +14,26 @@ import {
   RANGES,
   type DashboardData,
 } from "@/lib/github";
+import { isNotableTier } from "@/lib/impact";
 import { getSession } from "@/lib/session";
 
 const TOP_REPOS = 10;
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="mt-10">
-      <h2 className="mb-3 text-sm font-medium text-muted">{title}</h2>
+      <div className="mb-3 flex items-baseline justify-between gap-4">
+        <h2 className="text-sm font-medium text-muted">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -48,7 +61,10 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const session = await getSession();
   if (!session) redirect("/");
 
-  const range = parseRange((await searchParams).range);
+  const params = await searchParams;
+  const range = parseRange(params.range);
+  // 기본은 주요 OSS 이상만. 일반 프로젝트까지 보려면 ?repos=all
+  const showAllRepos = params.repos === "all";
 
   let data: DashboardData;
   try {
@@ -76,6 +92,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const { viewer, totals, external, notable, repos, openPullRequests, mergedPullRequests } = data;
   const staleCount = openPullRequests.filter((pr) => pr.isStale).length;
+  const notableRepos = repos.filter((repo) => isNotableTier(repo.tier));
 
   return (
     <>
@@ -83,7 +100,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-xl font-semibold tracking-tight">{viewer.name ?? viewer.login}</h1>
-          <RangeTabs current={range} />
+          <RangeTabs current={range} showAllRepos={showAllRepos} />
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -126,8 +143,25 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <PullRequestBoard pullRequests={openPullRequests} />
         </Section>
 
-        <Section title="Repositories">
-          <RepoTable repos={repos.slice(0, TOP_REPOS)} />
+        <Section
+          title={`Repositories · ${showAllRepos ? "전체" : "주요 OSS"}`}
+          action={
+            <Link
+              href={`/dashboard?range=${range}${showAllRepos ? "" : "&repos=all"}`}
+              className="text-xs text-muted underline-offset-2 hover:text-accent hover:underline"
+            >
+              {showAllRepos ? `주요 OSS만 (${notableRepos.length}곳)` : `전체 보기 (${repos.length}곳)`}
+            </Link>
+          }
+        >
+          <RepoTable
+            repos={(showAllRepos ? repos : notableRepos).slice(0, TOP_REPOS)}
+            emptyMessage={
+              showAllRepos
+                ? "이 기간에 기여한 repository가 없습니다."
+                : "이 기간에 주요 OSS 기여가 없습니다. 전체 보기로 확인하세요."
+            }
+          />
         </Section>
 
         <Section title="Recently merged">
