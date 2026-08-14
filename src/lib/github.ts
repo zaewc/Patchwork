@@ -102,7 +102,27 @@ export const RANGES = {
   "30d": { label: "30일", days: 30 },
   "90d": { label: "90일", days: 90 },
   "1y": { label: "1년", days: 365 },
+  "5y": { label: "5년", days: 365 * 5 },
 } as const;
+
+const MAX_WINDOW_DAYS = 365;
+const DAY_MS = 86_400_000;
+
+export function windowsFor(range: RangeKey, now: number): { from: Date; to: Date }[] {
+  const windows: { from: Date; to: Date }[] = [];
+  let end = now;
+  let remaining = RANGES[range].days;
+
+  while (remaining > 0) {
+    const span = Math.min(remaining, MAX_WINDOW_DAYS);
+    const start = end - span * DAY_MS;
+    windows.push({ from: new Date(start), to: new Date(end) });
+    end = start - 1;
+    remaining -= span;
+  }
+
+  return windows.reverse();
+}
 
 export type RangeKey = keyof typeof RANGES;
 
@@ -123,7 +143,7 @@ type RepoRef = {
   isInOrganization: boolean;
   createdAt: string;
   pushedAt: string | null;
-  owner: { login: string };
+  owner: { login: string; avatarUrl: string };
   licenseInfo: { key: string } | null;
 };
 
@@ -194,6 +214,7 @@ export type PullRequest = {
   checkState: CheckState;
   repo: string;
   repoUrl: string;
+  ownerAvatarUrl: string;
   isPrivate: boolean;
   isExternal: boolean;
   impact: number;
@@ -204,6 +225,8 @@ export type PullRequest = {
 export type RepoStat = {
   nameWithOwner: string;
   url: string;
+  /** owner(사용자·조직)의 avatar. 사실상 프로젝트 로고 역할을 한다. */
+  ownerAvatarUrl: string;
   isPrivate: boolean;
   isExternal: boolean;
   /** 0~100 권위 추정 점수 (lib/impact.ts) */
@@ -241,6 +264,8 @@ export type DashboardData = {
   mergedCount: number;
   /** PR 조회만 실패한 경우의 사유. 나머지 지표는 정상이다. */
   pullRequestsError: string | null;
+  /** 여러 해를 나눠 부를 때 일부 구간만 실패한 경우의 안내. */
+  contributionsWarning: string | null;
 };
 
 /* ------------------------------------------------------------------ 쿼리 */
@@ -262,7 +287,7 @@ fragment RepoCore on Repository {
   isInOrganization
   createdAt
   pushedAt
-  owner { login }
+  owner { login avatarUrl(size: 64) }
   licenseInfo { key }
 }`;
 
@@ -337,6 +362,7 @@ function toPullRequest(node: PullRequestNode, viewerLogin: string, now: number):
     checkState: node.commits.nodes[0]?.commit.statusCheckRollup?.state ?? null,
     repo: node.repository.nameWithOwner,
     repoUrl: node.repository.url,
+    ownerAvatarUrl: node.repository.owner.avatarUrl,
     isPrivate: node.repository.isPrivate,
     isExternal: node.repository.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
     impact,
@@ -348,10 +374,9 @@ function isPullRequestNode(node: PullRequestNode | Record<string, never>): node 
   return typeof (node as PullRequestNode).number === "number";
 }
 
-export function aggregateRepos(
-  collection: ContributionsQuery["viewer"]["contributionsCollection"],
-  viewerLogin: string,
-): RepoStat[] {
+type Collection = ContributionsQuery["viewer"]["contributionsCollection"];
+
+export function aggregateRepos(collections: Collection[], viewerLogin: string): RepoStat[] {
   const map = new Map<string, RepoStat>();
 
   const merge = (entries: ByRepository, field: "commits" | "pullRequests" | "reviews" | "issues") => {
@@ -361,6 +386,7 @@ export function aggregateRepos(
       const existing = map.get(repo.nameWithOwner) ?? {
         nameWithOwner: repo.nameWithOwner,
         url: repo.url,
+        ownerAvatarUrl: repo.owner.avatarUrl,
         isPrivate: repo.isPrivate,
         isExternal: repo.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
         impact,
@@ -376,45 +402,93 @@ export function aggregateRepos(
     }
   };
 
-  merge(collection.commitContributionsByRepository, "commits");
-  merge(collection.pullRequestContributionsByRepository, "pullRequests");
-  merge(collection.pullRequestReviewContributionsByRepository, "reviews");
-  merge(collection.issueContributionsByRepository, "issues");
+  for (const collection of collections) {
+    merge(collection.commitContributionsByRepository, "commits");
+    merge(collection.pullRequestContributionsByRepository, "pullRequests");
+    merge(collection.pullRequestReviewContributionsByRepository, "reviews");
+    merge(collection.issueContributionsByRepository, "issues");
+  }
 
   return [...map.values()].sort(
     (a, b) => b.total - a.total || a.nameWithOwner.localeCompare(b.nameWithOwner),
   );
 }
 
+/**
+ * 여러 조회 창의 달력을 하나로 잇는다. 창 경계의 주는 양쪽에 걸쳐 들어오므로
+ * 날짜로 중복을 제거한 뒤 일요일 기준으로 다시 주 단위로 묶는다.
+ */
+export function mergeCalendars(collections: Collection[]): CalendarDay[][] {
+  const byDate = new Map<string, CalendarDay>();
+  for (const collection of collections) {
+    for (const week of collection.contributionCalendar.weeks) {
+      for (const day of week.contributionDays) {
+        byDate.set(day.date, {
+          date: day.date,
+          count: day.contributionCount,
+          weekday: day.weekday,
+        });
+      }
+    }
+  }
+
+  const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const weeks: CalendarDay[][] = [];
+  for (const day of days) {
+    if (weeks.length === 0 || day.weekday === 0) weeks.push([]);
+    weeks[weeks.length - 1].push(day);
+  }
+  return weeks;
+}
+
 /* ------------------------------------------------------------------ 진입점 */
 
 export async function fetchDashboard(token: string, range: RangeKey): Promise<DashboardData> {
   const now = Date.now();
-  const to = new Date(now);
-  const from = new Date(now - RANGES[range].days * 86_400_000);
-  const mergedSince = new Date(now - RANGES[range].days * 86_400_000).toISOString().slice(0, 10);
+  const windows = windowsFor(range, now);
+  const mergedSince = new Date(now - RANGES[range].days * DAY_MS).toISOString().slice(0, 10);
 
-  const [contributionsResult, pullRequestsResult] = await Promise.allSettled([
-    graphql<ContributionsQuery>(
-      token,
-      CONTRIBUTIONS_QUERY,
-      { from: from.toISOString(), to: to.toISOString() },
-      "기여 집계",
+  const [contributionResults, pullRequestSettled] = await Promise.all([
+    Promise.allSettled(
+      windows.map((window, index) =>
+        graphql<ContributionsQuery>(
+          token,
+          CONTRIBUTIONS_QUERY,
+          { from: window.from.toISOString(), to: window.to.toISOString() },
+          windows.length > 1 ? `기여 집계 ${index + 1}/${windows.length}` : "기여 집계",
+        ),
+      ),
     ),
-    graphql<PullRequestsQuery>(
-      token,
-      PULL_REQUESTS_QUERY,
-      {
-        openQuery: "is:pr author:@me is:open archived:false sort:updated-desc",
-        mergedQuery: `is:pr author:@me is:merged merged:>=${mergedSince} sort:updated-desc`,
-      },
-      "PR 조회",
-    ),
+    Promise.allSettled([
+      graphql<PullRequestsQuery>(
+        token,
+        PULL_REQUESTS_QUERY,
+        {
+          openQuery: "is:pr author:@me is:open archived:false sort:updated-desc",
+          mergedQuery: `is:pr author:@me is:merged merged:>=${mergedSince} sort:updated-desc`,
+        },
+        "PR 조회",
+      ),
+    ]),
   ]);
+  const pullRequestsResult = pullRequestSettled[0];
 
-  // 기여 집계는 대시보드의 뼈대라 실패하면 렌더할 것이 없다.
-  if (contributionsResult.status === "rejected") throw contributionsResult.reason;
-  const contributions = contributionsResult.value;
+  const rejected = contributionResults.filter((r) => r.status === "rejected");
+  const authError = rejected.find((r) => r.reason instanceof GitHubAuthError);
+  if (authError) throw authError.reason;
+
+  const fulfilled = contributionResults.filter((r) => r.status === "fulfilled");
+  // 기여 집계는 대시보드의 뼈대라 전부 실패하면 렌더할 것이 없다.
+  if (fulfilled.length === 0) throw rejected[0].reason;
+
+  // 여러 해를 나눠 부르는 경우, 일부 구간만 실패하면 나머지로 그린다.
+  const contributionsWarning =
+    rejected.length > 0
+      ? `${windows.length}개 구간 중 ${rejected.length}개를 불러오지 못해 일부 기간이 빠져 있습니다.`
+      : null;
+
+  const contributions = fulfilled[0].value;
+  const collections = fulfilled.map((r) => r.value.viewer.contributionsCollection);
 
   // PR 조회만 실패했다면 나머지는 그대로 보여주고 그 구역만 비운다.
   if (pullRequestsResult.status === "rejected" && pullRequestsResult.reason instanceof GitHubAuthError) {
@@ -432,18 +506,10 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
       : null;
 
   const viewer = contributions.viewer;
-  const collection = viewer.contributionsCollection;
   const login = viewer.login;
 
-  const weeks: CalendarDay[][] = collection.contributionCalendar.weeks.map((week) =>
-    week.contributionDays.map((day) => ({
-      date: day.date,
-      count: day.contributionCount,
-      weekday: day.weekday,
-    })),
-  );
-
-  const repos = aggregateRepos(collection, login);
+  const weeks = mergeCalendars(collections);
+  const repos = aggregateRepos(collections, login);
   const externalRepos = repos.filter((r) => r.isExternal);
   const externalContributions = externalRepos.reduce((sum, r) => sum + r.total, 0);
   const allContributions = repos.reduce((sum, r) => sum + r.total, 0);
@@ -457,8 +523,9 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
     viewer: { login, name: viewer.name, avatarUrl: viewer.avatarUrl },
     range,
     totals: {
-      contributions: collection.contributionCalendar.totalContributions,
-      restricted: collection.restrictedContributionsCount,
+      // 창 경계의 중복을 이미 걷어낸 달력에서 세는 편이 합계를 두 번 더하지 않는다.
+      contributions: weeks.flat().reduce((sum, day) => sum + day.count, 0),
+      restricted: collections.reduce((sum, c) => sum + c.restrictedContributionsCount, 0),
     },
     external: {
       repos: externalRepos.length,
@@ -479,6 +546,7 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
     openCount: pullRequests.open.issueCount,
     mergedCount: pullRequests.merged.issueCount,
     pullRequestsError,
+    contributionsWarning,
   };
 }
 
