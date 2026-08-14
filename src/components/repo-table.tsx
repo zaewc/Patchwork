@@ -1,5 +1,6 @@
 import type { RepoStat } from "@/lib/github";
 import { formatNumber } from "@/lib/format";
+import { RepoLogo } from "@/components/repo-logo";
 
 export function RepoTable({
   repos,
@@ -30,6 +31,7 @@ export function RepoTable({
             <tr key={repo.nameWithOwner}>
               <td className="px-4 py-2.5">
                 <div className="flex items-center gap-2">
+                  <RepoLogo src={repo.ownerAvatarUrl} alt="" />
                   <a href={repo.url} className="truncate hover:text-accent hover:underline">
                     {repo.nameWithOwner}
                   </a>
