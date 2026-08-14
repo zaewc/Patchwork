@@ -3,8 +3,8 @@ import type { CalendarDay } from "@/lib/github";
 const CELL = 12;
 const GAP = 3;
 const STEP = CELL + GAP;
-const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
-const WEEKDAY_LABELS: Record<number, string> = { 1: "월", 3: "수", 5: "금" };
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 3: "Wed", 5: "Fri" };
 
 function levelsFrom(days: CalendarDay[]): (count: number) => number {
   const active = days
@@ -27,8 +27,7 @@ function levelsFrom(days: CalendarDay[]): (count: number) => number {
 }
 
 export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
-  const flat = weeks.flat();
-  const level = levelsFrom(flat);
+  const level = levelsFrom(weeks.flat());
 
   // 주 단위 격자를 요일 슬롯(0~6)에 맞춰 정렬한다. 첫/마지막 주는 비어 있을 수 있다.
   const grid = weeks.map((week) => {
@@ -53,7 +52,7 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
     <div className="overflow-x-auto pb-1">
       <div className="inline-block min-w-full">
         <div className="flex gap-2">
-          <div className="w-6 shrink-0" />
+          <div className="w-7 shrink-0" />
           <div className="relative h-4" style={{ width: grid.length * STEP }}>
             {monthLabels.map(({ index, label }) => (
               <span
@@ -69,11 +68,11 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
 
         <div className="flex gap-2">
           <div
-            className="grid w-6 shrink-0 text-[10px] text-muted"
+            className="grid w-7 shrink-0 text-[10px] text-muted"
             style={{ gridTemplateRows: `repeat(7, ${CELL}px)`, rowGap: GAP }}
           >
             {Array.from({ length: 7 }, (_, weekday) => (
-              <span key={weekday} className="leading-[12px]">
+              <span key={weekday} className="leading-3">
                 {WEEKDAY_LABELS[weekday] ?? ""}
               </span>
             ))}
@@ -92,8 +91,8 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
                 day ? (
                   <span
                     key={day.date}
-                    title={`${day.date} · 기여 ${day.count}건`}
-                    className={`patch-${level(day.count)} rounded-[2px] ring-1 ring-black/5 dark:ring-white/5`}
+                    title={`${day.date} · ${day.count} contributions`}
+                    className={`patch-${level(day.count)} rounded-xs`}
                     style={{ width: CELL, height: CELL }}
                   />
                 ) : (
@@ -104,16 +103,16 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 pl-8 text-[11px] text-muted">
-          <span>적음</span>
+        <div className="mt-3 flex items-center gap-1.5 pl-9 text-[11px] text-muted">
+          <span>Less</span>
           {[0, 1, 2, 3, 4].map((l) => (
             <span
               key={l}
-              className={`patch-${l} rounded-[2px] ring-1 ring-black/5 dark:ring-white/5`}
+              className={`patch-${l} rounded-xs`}
               style={{ width: CELL, height: CELL }}
             />
           ))}
-          <span>많음</span>
+          <span>More</span>
         </div>
       </div>
     </div>
