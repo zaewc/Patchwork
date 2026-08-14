@@ -20,7 +20,7 @@ OAuth 앱이 없으면 홈 화면이 준비 절차를 안내합니다. `SESSION_
 
 [Feature-Sliced Design](https://feature-sliced.design)을 Next.js App Router에 적용했습니다. 라우팅은 루트 `app/`에 재내보내기 한 줄씩만 두고, 실제 코드는 `src/`의 여섯 레이어에 있습니다.
 
-```
+```text
 app/            Next.js 라우팅
 src/_app/       라우트 핸들러 · 루트 레이아웃 · 전역 스타일
 src/_pages/     화면 (home · dashboard · readme-export)
@@ -30,7 +30,7 @@ src/entities/   도메인 개념 (repo · pull-request · contribution · viewer
 src/shared/     업무 지식이 없는 토대
 ```
 
-레이어를 이렇게 나눈 이유, 규칙을 지키지 않은 곳과 그 근거는 [ARCHITECTURE.md](ARCHITECTURE.md)에 있습니다.
+레이어 규칙과 예외, 코드를 넣을 자리를 고르는 기준은 [AGENTS.md](AGENTS.md)에 있습니다.
 
 ## 검사
 
