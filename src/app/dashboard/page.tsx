@@ -126,6 +126,12 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           />
         </div>
 
+        {data.contributionsWarning ? (
+          <p className="mt-6 rounded-lg border border-warn/40 bg-warn/10 px-4 py-2.5 text-sm text-warn">
+            {data.contributionsWarning}
+          </p>
+        ) : null}
+
         {data.pullRequestsError ? (
           <p className="mt-6 rounded-lg border border-warn/40 bg-warn/10 px-4 py-2.5 text-sm text-warn">
             Pull request 목록만 불러오지 못했습니다 — {data.pullRequestsError}
