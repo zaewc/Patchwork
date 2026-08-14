@@ -1,3 +1,4 @@
+import { daysSince, percent } from "@/lib/format";
 import { isNotable, scoreRepo, type RepoSignals } from "@/lib/impact";
 
 const GITHUB_GRAPHQL = "https://api.github.com/graphql";
@@ -213,10 +214,8 @@ export type PullRequest = {
   reviewDecision: ReviewDecision;
   checkState: CheckState;
   repo: string;
-  repoUrl: string;
   ownerAvatarUrl: string;
   isPrivate: boolean;
-  isExternal: boolean;
   impact: number;
   /** 최근 업데이트가 없는 채로 열려 있는 PR */
   isStale: boolean;
@@ -242,26 +241,15 @@ export type CalendarDay = { date: string; count: number; weekday: number };
 
 export type DashboardData = {
   viewer: { login: string; name: string | null; avatarUrl: string };
-  range: RangeKey;
   totals: { contributions: number; restricted: number };
-  external: {
-    repos: number;
-    contributions: number;
-    ratio: number;
-  };
-  /** 주요 OSS 이상 등급이면서 내 소유가 아닌 Repository에 대한 기여 */
-  notable: {
-    repos: number;
-    contributions: number;
-    ratio: number;
-    topRepo: string | null;
-  };
+  external: { contributions: number; ratio: number };
+  /** 주요 OSS이면서 내 소유가 아닌 Repository에 대한 기여 */
+  notable: { repos: number; contributions: number };
   weeks: CalendarDay[][];
   repos: RepoStat[];
   openPullRequests: PullRequest[];
   mergedPullRequests: PullRequest[];
   openCount: number;
-  mergedCount: number;
   /** PR 조회만 실패한 경우의 사유. 나머지 지표는 정상이다. */
   pullRequestsError: string | null;
   /** 여러 해를 나눠 부를 때 일부 구간만 실패한 경우의 안내. */
@@ -297,6 +285,12 @@ fragment RepoCore on Repository {
  */
 const MAX_REPOSITORIES = 100;
 
+/**
+ * PR·review·issue는 커밋만큼 저장소가 많지 않다. 100으로 두면 창 5개 × 4항목에서
+ * 같은 repository 정보가 최대 20번 반복돼 응답이 수백 KiB로 불어나고 502 위험이 커진다.
+ */
+const MAX_REPOSITORIES_SECONDARY = 50;
+
 const REPO_FIELDS = `
   repository { ...RepoCore }
   contributions { totalCount }
@@ -317,9 +311,9 @@ query Contributions($from: DateTime!, $to: DateTime!) {
         weeks { contributionDays { date contributionCount weekday } }
       }
       commitContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
-      pullRequestContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
-      pullRequestReviewContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
-      issueContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
+      pullRequestContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES_SECONDARY}) { ${REPO_FIELDS} }
+      pullRequestReviewContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES_SECONDARY}) { ${REPO_FIELDS} }
+      issueContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES_SECONDARY}) { ${REPO_FIELDS} }
     }
   }
 }`;
@@ -354,8 +348,7 @@ query PullRequests($openQuery: String!, $mergedQuery: String!) {
 
 const STALE_DAYS = 14;
 
-function toPullRequest(node: PullRequestNode, viewerLogin: string, now: number): PullRequest {
-  const updatedDaysAgo = (now - new Date(node.updatedAt).getTime()) / 86_400_000;
+function toPullRequest(node: PullRequestNode, now: number): PullRequest {
   const impact = scoreRepo(signalsOf(node.repository), now);
   return {
     number: node.number,
@@ -367,12 +360,10 @@ function toPullRequest(node: PullRequestNode, viewerLogin: string, now: number):
     reviewDecision: node.reviewDecision,
     checkState: node.commits.nodes[0]?.commit.statusCheckRollup?.state ?? null,
     repo: node.repository.nameWithOwner,
-    repoUrl: node.repository.url,
     ownerAvatarUrl: node.repository.owner.avatarUrl,
     isPrivate: node.repository.isPrivate,
-    isExternal: node.repository.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
     impact,
-    isStale: !node.mergedAt && updatedDaysAgo >= STALE_DAYS,
+    isStale: !node.mergedAt && daysSince(node.updatedAt, now) >= STALE_DAYS,
   };
 }
 
@@ -382,41 +373,48 @@ function isPullRequestNode(node: PullRequestNode | Record<string, never>): node 
 
 type Collection = ContributionsQuery["viewer"]["contributionsCollection"];
 
-export function aggregateRepos(collections: Collection[], viewerLogin: string): RepoStat[] {
+export function aggregateRepos(
+  collections: Collection[],
+  viewerLogin: string,
+  now: number = Date.now(),
+): RepoStat[] {
   const map = new Map<string, RepoStat>();
-  const fields = ["commits", "pullRequests", "reviews", "issues"] as const;
-  type Field = (typeof fields)[number];
+  type Field = "commits" | "pullRequests" | "reviews" | "issues";
 
-  // 어떤 항목이 상한에 걸려 잘렸는지, 그리고 repository별로 어떤 항목이 실제로 응답에 있었는지 추적한다.
-  const truncated = new Set<Field>();
-  const present = new Map<string, Set<Field>>();
+  /**
+   * 상한에 걸려 잘린 (조회 창, 항목) 하나하나가 "구멍"이다. 그 목록에 없던 repository는
+   * 해당 항목의 수를 알 수 없다. 창 단위로 기록해야 5년처럼 창이 여러 개일 때
+   * "창 하나에서만 잘린" 경우를 놓치지 않는다.
+   */
+  const gaps: { field: Field; listed: Set<string> }[] = [];
 
   const merge = (entries: ByRepository, field: Field) => {
-    if (entries.length >= MAX_REPOSITORIES) truncated.add(field);
+    const cap = field === "commits" ? MAX_REPOSITORIES : MAX_REPOSITORIES_SECONDARY;
+    if (entries.length >= cap) {
+      gaps.push({ field, listed: new Set(entries.map((e) => e.repository.nameWithOwner)) });
+    }
 
     for (const entry of entries) {
       const repo = entry.repository;
-      const impact = scoreRepo(signalsOf(repo));
-      const existing = map.get(repo.nameWithOwner) ?? {
-        nameWithOwner: repo.nameWithOwner,
-        url: repo.url,
-        ownerAvatarUrl: repo.owner.avatarUrl,
-        isPrivate: repo.isPrivate,
-        isExternal: repo.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
-        impact,
-        commits: 0,
-        pullRequests: 0,
-        reviews: 0,
-        issues: 0,
-        total: 0,
-      };
+      let existing = map.get(repo.nameWithOwner);
+      if (!existing) {
+        existing = {
+          nameWithOwner: repo.nameWithOwner,
+          url: repo.url,
+          ownerAvatarUrl: repo.owner.avatarUrl,
+          isPrivate: repo.isPrivate,
+          isExternal: repo.owner.login.toLowerCase() !== viewerLogin.toLowerCase(),
+          impact: scoreRepo(signalsOf(repo), now),
+          commits: 0,
+          pullRequests: 0,
+          reviews: 0,
+          issues: 0,
+          total: 0,
+        };
+        map.set(repo.nameWithOwner, existing);
+      }
       existing[field] = (existing[field] ?? 0) + entry.contributions.totalCount;
       existing.total += entry.contributions.totalCount;
-      map.set(repo.nameWithOwner, existing);
-
-      const seen = present.get(repo.nameWithOwner) ?? new Set<Field>();
-      seen.add(field);
-      present.set(repo.nameWithOwner, seen);
     }
   };
 
@@ -427,11 +425,9 @@ export function aggregateRepos(collections: Collection[], viewerLogin: string): 
     merge(collection.issueContributionsByRepository, "issues");
   }
 
-  // 응답에 없던 항목은, 상한에 걸린 경우에만 "모름"(null)이다. 그렇지 않으면 진짜 0이다.
-  for (const [name, repo] of map) {
-    const seen = present.get(name)!;
-    for (const field of fields) {
-      if (!seen.has(field) && truncated.has(field)) repo[field] = null;
+  for (const repo of map.values()) {
+    for (const gap of gaps) {
+      if (!gap.listed.has(repo.nameWithOwner)) repo[gap.field] = null;
     }
   }
 
@@ -458,7 +454,7 @@ export function mergeCalendars(collections: Collection[]): CalendarDay[][] {
     }
   }
 
-  const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const days = [...byDate.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
   const weeks: CalendarDay[][] = [];
   for (const day of days) {
     if (weeks.length === 0 || day.weekday === 0) weeks.push([]);
@@ -472,9 +468,9 @@ export function mergeCalendars(collections: Collection[]): CalendarDay[][] {
 export async function fetchDashboard(token: string, range: RangeKey): Promise<DashboardData> {
   const now = Date.now();
   const windows = windowsFor(range, now);
-  const mergedSince = new Date(now - RANGES[range].days * DAY_MS).toISOString().slice(0, 10);
+  const mergedSince = windows[0].from.toISOString().slice(0, 10);
 
-  const [contributionResults, pullRequestSettled] = await Promise.all([
+  const [contributionResults, [pullRequestsResult]] = await Promise.all([
     Promise.allSettled(
       windows.map((window, index) =>
         graphql<ContributionsQuery>(
@@ -497,7 +493,6 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
       ),
     ]),
   ]);
-  const pullRequestsResult = pullRequestSettled[0];
 
   const rejected = contributionResults.filter((r) => r.status === "rejected");
   const authError = rejected.find((r) => r.reason instanceof GitHubAuthError);
@@ -535,7 +530,7 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
   const login = viewer.login;
 
   const weeks = mergeCalendars(collections);
-  const repos = aggregateRepos(collections, login);
+  const repos = aggregateRepos(collections, login, now);
   const externalRepos = repos.filter((r) => r.isExternal);
   const externalContributions = externalRepos.reduce((sum, r) => sum + r.total, 0);
   const allContributions = repos.reduce((sum, r) => sum + r.total, 0);
@@ -543,34 +538,25 @@ export async function fetchDashboard(token: string, range: RangeKey): Promise<Da
   const notableContributions = notableRepos.reduce((sum, r) => sum + r.total, 0);
 
   const toPR = (nodes: (PullRequestNode | Record<string, never>)[]) =>
-    nodes.filter(isPullRequestNode).map((n) => toPullRequest(n, login, now));
+    nodes.filter(isPullRequestNode).map((n) => toPullRequest(n, now));
 
   return {
     viewer: { login, name: viewer.name, avatarUrl: viewer.avatarUrl },
-    range,
     totals: {
       // 창 경계의 중복을 이미 걷어낸 달력에서 세는 편이 합계를 두 번 더하지 않는다.
       contributions: weeks.flat().reduce((sum, day) => sum + day.count, 0),
       restricted: collections.reduce((sum, c) => sum + c.restrictedContributionsCount, 0),
     },
     external: {
-      repos: externalRepos.length,
       contributions: externalContributions,
-      ratio: allContributions > 0 ? Math.round((externalContributions / allContributions) * 100) : 0,
+      ratio: percent(externalContributions, allContributions),
     },
-    notable: {
-      repos: notableRepos.length,
-      contributions: notableContributions,
-      ratio: allContributions > 0 ? Math.round((notableContributions / allContributions) * 100) : 0,
-      topRepo:
-        [...notableRepos].sort((a, b) => b.impact - a.impact)[0]?.nameWithOwner ?? null,
-    },
+    notable: { repos: notableRepos.length, contributions: notableContributions },
     weeks,
     repos,
     openPullRequests: toPR(pullRequests.open.nodes),
     mergedPullRequests: toPR(pullRequests.merged.nodes),
     openCount: pullRequests.open.issueCount,
-    mergedCount: pullRequests.merged.issueCount,
     pullRequestsError,
     contributionsWarning,
   };

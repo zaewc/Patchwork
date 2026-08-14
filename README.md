@@ -38,4 +38,4 @@ Private repository는 공개 생태계의 권위 척도 대상이 아니므로 0
 
 GitHub GraphQL에는 contributor count가 없습니다. `mentionableUsers.totalCount` 가 참여 폭에 더 가깝지만, repository마다 사용자를 세느라 집계 쿼리 전체를 타임아웃(502)시켜서 스칼라 필드인 `forkCount` 를 대용치로 씁니다. 신호는 전부 기존 응답에 필드만 추가해 계산하므로 API 요청 수는 늘지 않습니다.
 
-어디까지나 휴리스틱입니다. 가중치와 등급 경계는 `src/lib/impact.ts` 의 `WEIGHTS`, `TIERS` 에서 바로 조정할 수 있습니다. 더 엄밀한 지표가 필요하면 [deps.dev](https://deps.dev) 의 OpenSSF Criticality Score / Scorecard 를 연동하는 방법도 있습니다(패키지로 배포된 repository만 커버되고, repository당 외부 API 호출이 추가됩니다).
+어디까지나 휴리스틱입니다. 가중치와 등급 경계는 `src/lib/impact.ts` 의 `WEIGHTS`, `NOTABLE_MIN`, `MIN_STARS` 에서 바로 조정할 수 있습니다. 더 엄밀한 지표가 필요하면 [deps.dev](https://deps.dev) 의 OpenSSF Criticality Score / Scorecard 를 연동하는 방법도 있습니다(패키지로 배포된 repository만 커버되고, repository당 외부 API 호출이 추가됩니다).
