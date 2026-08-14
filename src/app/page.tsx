@@ -26,7 +26,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           오픈소스 기여를 한 장의 Patchwork로
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          GitHub contribution과 진행 중인 pull request 상태를 한 화면에서 추적합니다.
+          GitHub contribution과 진행 중인 pull request 상태를 추적합니다.
         </p>
 
         {errorKey ? (
