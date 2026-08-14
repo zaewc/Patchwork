@@ -231,10 +231,10 @@ export type RepoStat = {
   isExternal: boolean;
   /** 0~100 권위 추정 점수 (lib/impact.ts) */
   impact: number;
-  commits: number;
-  pullRequests: number;
-  reviews: number;
-  issues: number;
+  commits: number | null;
+  pullRequests: number | null;
+  reviews: number | null;
+  issues: number | null;
   total: number;
 };
 
@@ -291,6 +291,12 @@ fragment RepoCore on Repository {
   licenseInfo { key }
 }`;
 
+/**
+ * contributionsCollection의 *ByRepository는 기여 수 상위 N곳만 돌려준다(GitHub 최대 100).
+ * 이 상한에 걸려 잘리면 "커밋이 적은 repository"의 커밋 수가 통째로 빠져 0으로 집계된다.
+ */
+const MAX_REPOSITORIES = 100;
+
 const REPO_FIELDS = `
   repository { ...RepoCore }
   contributions { totalCount }
@@ -310,10 +316,10 @@ query Contributions($from: DateTime!, $to: DateTime!) {
         totalContributions
         weeks { contributionDays { date contributionCount weekday } }
       }
-      commitContributionsByRepository(maxRepositories: 25) { ${REPO_FIELDS} }
-      pullRequestContributionsByRepository(maxRepositories: 25) { ${REPO_FIELDS} }
-      pullRequestReviewContributionsByRepository(maxRepositories: 25) { ${REPO_FIELDS} }
-      issueContributionsByRepository(maxRepositories: 25) { ${REPO_FIELDS} }
+      commitContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
+      pullRequestContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
+      pullRequestReviewContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
+      issueContributionsByRepository(maxRepositories: ${MAX_REPOSITORIES}) { ${REPO_FIELDS} }
     }
   }
 }`;
@@ -378,8 +384,16 @@ type Collection = ContributionsQuery["viewer"]["contributionsCollection"];
 
 export function aggregateRepos(collections: Collection[], viewerLogin: string): RepoStat[] {
   const map = new Map<string, RepoStat>();
+  const fields = ["commits", "pullRequests", "reviews", "issues"] as const;
+  type Field = (typeof fields)[number];
 
-  const merge = (entries: ByRepository, field: "commits" | "pullRequests" | "reviews" | "issues") => {
+  // 어떤 항목이 상한에 걸려 잘렸는지, 그리고 repository별로 어떤 항목이 실제로 응답에 있었는지 추적한다.
+  const truncated = new Set<Field>();
+  const present = new Map<string, Set<Field>>();
+
+  const merge = (entries: ByRepository, field: Field) => {
+    if (entries.length >= MAX_REPOSITORIES) truncated.add(field);
+
     for (const entry of entries) {
       const repo = entry.repository;
       const impact = scoreRepo(signalsOf(repo));
@@ -396,9 +410,13 @@ export function aggregateRepos(collections: Collection[], viewerLogin: string): 
         issues: 0,
         total: 0,
       };
-      existing[field] += entry.contributions.totalCount;
+      existing[field] = (existing[field] ?? 0) + entry.contributions.totalCount;
       existing.total += entry.contributions.totalCount;
       map.set(repo.nameWithOwner, existing);
+
+      const seen = present.get(repo.nameWithOwner) ?? new Set<Field>();
+      seen.add(field);
+      present.set(repo.nameWithOwner, seen);
     }
   };
 
@@ -407,6 +425,14 @@ export function aggregateRepos(collections: Collection[], viewerLogin: string): 
     merge(collection.pullRequestContributionsByRepository, "pullRequests");
     merge(collection.pullRequestReviewContributionsByRepository, "reviews");
     merge(collection.issueContributionsByRepository, "issues");
+  }
+
+  // 응답에 없던 항목은, 상한에 걸린 경우에만 "모름"(null)이다. 그렇지 않으면 진짜 0이다.
+  for (const [name, repo] of map) {
+    const seen = present.get(name)!;
+    for (const field of fields) {
+      if (!seen.has(field) && truncated.has(field)) repo[field] = null;
+    }
   }
 
   return [...map.values()].sort(

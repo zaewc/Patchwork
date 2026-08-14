@@ -2,6 +2,8 @@ import type { RepoStat } from "@/lib/github";
 import { formatNumber } from "@/lib/format";
 import { RepoLogo } from "@/components/repo-logo";
 
+const UNKNOWN_HINT = "기여 수 상위 100곳까지만 집계되어 정확한 수를 알 수 없습니다.";
+
 export function RepoTable({
   repos,
   emptyMessage = "이 기간에 기여한 repository가 없습니다.",
@@ -40,18 +42,17 @@ export function RepoTable({
                   ) : null}
                 </div>
               </td>
-              <td className="px-3 py-2.5 text-right tabular-nums text-muted">
-                {repo.commits || "—"}
-              </td>
-              <td className="px-3 py-2.5 text-right tabular-nums text-muted">
-                {repo.pullRequests || "—"}
-              </td>
-              <td className="px-3 py-2.5 text-right tabular-nums text-muted">
-                {repo.reviews || "—"}
-              </td>
-              <td className="px-3 py-2.5 text-right tabular-nums text-muted">
-                {repo.issues || "—"}
-              </td>
+              {([repo.commits, repo.pullRequests, repo.reviews, repo.issues] as const).map(
+                (value, index) => (
+                  <td
+                    key={index}
+                    title={value === null ? UNKNOWN_HINT : undefined}
+                    className="px-3 py-2.5 text-right tabular-nums text-muted"
+                  >
+                    {value ?? "—"}
+                  </td>
+                ),
+              )}
               <td className="px-4 py-2.5 text-right font-medium tabular-nums">
                 {formatNumber(repo.total)}
               </td>
