@@ -67,18 +67,9 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-/* 기여 캘린더 = 조각보. 단계별 천 색상. */
+/* 기여 캘린더 = Patchwork. 단계별 천 색상. */
 .patch-0 { background-color: var(--patch-0); }
 .patch-1 { background-color: var(--patch-1); }
 .patch-2 { background-color: var(--patch-2); }
 .patch-3 { background-color: var(--patch-3); }
 .patch-4 { background-color: var(--patch-4); }
-
-.quilt-backdrop {
-  background-image:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, transparent) 25%, transparent 25%),
-    linear-gradient(225deg, color-mix(in srgb, var(--accent) 5%, transparent) 25%, transparent 25%),
-    linear-gradient(45deg, color-mix(in srgb, var(--accent) 5%, transparent) 25%, transparent 25%),
-    linear-gradient(315deg, color-mix(in srgb, var(--accent) 5%, transparent) 25%, transparent 25%);
-  background-size: 44px 44px;
-}
