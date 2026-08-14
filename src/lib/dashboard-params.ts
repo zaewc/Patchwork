@@ -16,9 +16,10 @@ export function parseDashboardParams(
 export function dashboardHref(
   current: DashboardParams,
   overrides: Partial<DashboardParams> = {},
+  path = "/dashboard",
 ): string {
   const { range, showAll } = { ...current, ...overrides };
   const query = new URLSearchParams({ range });
   if (showAll) query.set("scope", "all");
-  return `/dashboard?${query}`;
+  return `${path}?${query}`;
 }

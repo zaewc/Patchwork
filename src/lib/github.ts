@@ -134,6 +134,7 @@ export function parseRange(value: unknown): RangeKey {
 /* ------------------------------------------------------------------ 타입 */
 
 type RepoRef = {
+  name: string;
   nameWithOwner: string;
   url: string;
   isPrivate: boolean;
@@ -265,6 +266,7 @@ export type DashboardData = {
  */
 const REPO_CORE_FRAGMENT = `
 fragment RepoCore on Repository {
+  name
   nameWithOwner
   url
   isPrivate
@@ -461,6 +463,104 @@ export function mergeCalendars(collections: Collection[]): CalendarDay[][] {
     weeks[weeks.length - 1].push(day);
   }
   return weeks;
+}
+
+/* ------------------------------------------------------------------ README 내보내기 */
+
+export type ContributionItem = {
+  type: "PR" | "Issue";
+  title: string;
+  url: string;
+  createdAt: string;
+};
+
+export type ContributionGroup = {
+  name: string;
+  nameWithOwner: string;
+  url: string;
+  impact: number;
+  items: ContributionItem[];
+};
+
+type ItemNode = {
+  __typename: "PullRequest" | "Issue" | string;
+  title: string;
+  url: string;
+  createdAt: string;
+  repository: RepoRef;
+};
+
+type ItemsQuery = {
+  search: {
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    nodes: (ItemNode | Record<string, never>)[];
+  };
+};
+
+const ITEMS_QUERY = `
+${REPO_CORE_FRAGMENT}
+
+fragment Item on Node {
+  ... on PullRequest { title url createdAt repository { ...RepoCore } }
+  ... on Issue { title url createdAt repository { ...RepoCore } }
+}
+
+query Items($q: String!, $after: String) {
+  search(query: $q, type: ISSUE, first: 100, after: $after) {
+    pageInfo { hasNextPage endCursor }
+    nodes { __typename ...Item }
+  }
+}`;
+
+/** search는 페이지당 100건, 전체 1000건이 상한이다. */
+const MAX_ITEM_PAGES = 5;
+
+/**
+ * 기간 안에 내가 연 PR·Issue를 repository별로 묶는다.
+ * 공개 저장소만 담는다 — README에 붙일 링크라 비공개는 의미가 없다.
+ */
+export async function fetchContributionItems(
+  token: string,
+  range: RangeKey,
+  now: number = Date.now(),
+): Promise<ContributionGroup[]> {
+  const since = windowsFor(range, now)[0].from.toISOString().slice(0, 10);
+  const q = `author:@me is:public created:>=${since} sort:created-asc`;
+  const groups = new Map<string, ContributionGroup>();
+  let after: string | null = null;
+
+  for (let page = 0; page < MAX_ITEM_PAGES; page++) {
+    const data: ItemsQuery = await graphql<ItemsQuery>(token, ITEMS_QUERY, { q, after }, "기여 목록");
+
+    for (const node of data.search.nodes) {
+      if (!("repository" in node) || !node.repository) continue;
+      const type = node.__typename === "PullRequest" ? "PR" : "Issue";
+      const repo = node.repository;
+      let group = groups.get(repo.nameWithOwner);
+      if (!group) {
+        group = {
+          name: repo.name,
+          nameWithOwner: repo.nameWithOwner,
+          url: repo.url,
+          impact: scoreRepo(signalsOf(repo), now),
+          items: [],
+        };
+        groups.set(repo.nameWithOwner, group);
+      }
+      group.items.push({ type, title: node.title, url: node.url, createdAt: node.createdAt });
+    }
+
+    if (!data.search.pageInfo.hasNextPage) break;
+    after = data.search.pageInfo.endCursor;
+  }
+
+  // 기여가 많은 repository부터. 목록 안은 시간순.
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      items: group.items.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)),
+    }))
+    .sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name));
 }
 
 /* ------------------------------------------------------------------ 진입점 */

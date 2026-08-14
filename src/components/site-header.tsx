@@ -26,6 +26,12 @@ export function SiteHeader({
 
         {user ? (
           <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="text-sm text-muted hover:text-accent">
+              Dashboard
+            </Link>
+            <Link href="/export" className="text-sm text-muted hover:text-accent">
+              README
+            </Link>
             <a
               href={`https://github.com/${user.login}`}
               className="flex items-center gap-2 text-sm hover:text-accent"

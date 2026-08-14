@@ -21,6 +21,10 @@ export function formatNumber(value: number): string {
   return value.toLocaleString("ko-KR");
 }
 
+export function shortDate(iso: string): string {
+  return iso.slice(2, 10);
+}
+
 export function percent(part: number, whole: number): number {
   if (whole <= 0) return 0;
   return Math.round((part / whole) * 100);
