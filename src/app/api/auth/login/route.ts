@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
+import { GITHUB_OAUTH_AUTHORIZE_URL } from "@/lib/config";
 import { appOrigin, cookieOptions, STATE_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   const state = randomBytes(16).toString("base64url");
-  const authorize = new URL("https://github.com/login/oauth/authorize");
+  const authorize = new URL(GITHUB_OAUTH_AUTHORIZE_URL);
   authorize.searchParams.set("client_id", clientId);
   authorize.searchParams.set("redirect_uri", `${origin}/api/auth/callback`);
   authorize.searchParams.set("scope", process.env.GITHUB_OAUTH_SCOPES ?? "read:user");

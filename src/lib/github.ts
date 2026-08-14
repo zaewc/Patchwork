@@ -1,7 +1,6 @@
+import { GITHUB_GRAPHQL_URL } from "@/lib/config";
 import { daysSince, percent } from "@/lib/format";
 import { isNotable, scoreRepo, type RepoSignals } from "@/lib/impact";
-
-const GITHUB_GRAPHQL = "https://api.github.com/graphql";
 
 export class GitHubAuthError extends Error {
   constructor(message = "GitHub 토큰이 만료되었거나 유효하지 않습니다.") {
@@ -42,7 +41,7 @@ async function graphql<T>(
 
     let res: Response;
     try {
-      res = await fetch(GITHUB_GRAPHQL, {
+      res = await fetch(GITHUB_GRAPHQL_URL, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

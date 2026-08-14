@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
+import { GITHUB_OAUTH_TOKEN_URL } from "@/lib/config";
 import { fetchViewerIdentity } from "@/lib/github";
 import {
   appOrigin,
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
     return fail(origin, "invalid_state");
   }
 
-  const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+  const tokenResponse = await fetch(GITHUB_OAUTH_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({

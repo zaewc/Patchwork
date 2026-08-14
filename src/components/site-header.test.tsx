@@ -18,6 +18,16 @@ describe("Logo", () => {
     const { container } = render(<Logo size={40} />);
     expect(container.querySelector("svg")).toHaveAttribute("width", "40");
   });
+
+  it("네 개의 패치 중앙을 열쇠구멍 형태로 비운다", () => {
+    const { container } = render(<Logo />);
+    const mask = container.querySelector("mask");
+
+    expect(container.querySelectorAll("g > rect")).toHaveLength(4);
+    expect(mask?.querySelector("circle")).toBeInTheDocument();
+    expect(mask?.querySelector("path")).toBeInTheDocument();
+    expect(container.querySelector("g")).toHaveAttribute("mask", `url(#${mask?.id})`);
+  });
 });
 
 describe("SiteHeader", () => {
