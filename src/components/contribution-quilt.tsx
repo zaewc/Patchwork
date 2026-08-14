@@ -1,8 +1,5 @@
 import type { CalendarDay } from "@/lib/github";
 
-const CELL = 12;
-const GAP = 3;
-const STEP = CELL + GAP;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 3: "Wed", 5: "Fri" };
 
@@ -29,6 +26,13 @@ function levelsFrom(days: CalendarDay[]): (count: number) => number {
 export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
   const level = levelsFrom(weeks.flat());
 
+  // 5년치(약 260주)를 12px 셀로 그리면 4,000px가 넘는다. 긴 기간은 셀을 줄이고
+  // 월 이름 대신 연도만 찍는다.
+  const dense = weeks.length > 60;
+  const CELL = dense ? 8 : 12;
+  const GAP = dense ? 2 : 3;
+  const STEP = CELL + GAP;
+
   // 주 단위 격자를 요일 슬롯(0~6)에 맞춰 정렬한다. 첫/마지막 주는 비어 있을 수 있다.
   const grid = weeks.map((week) => {
     const slots: (CalendarDay | null)[] = Array.from({ length: 7 }, () => null);
@@ -41,11 +45,16 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
   grid.forEach((week, index) => {
     const first = week.find(Boolean);
     if (!first) return;
-    const month = new Date(first.date).getUTCMonth();
-    if (month !== lastMonth && index < grid.length - 1) {
-      monthLabels.push({ index, label: MONTHS[month] });
+    const date = new Date(first.date);
+    const month = date.getUTCMonth();
+    if (month === lastMonth || index >= grid.length - 1) return;
+    // 조밀한 모드에서는 1월(연 경계)에만 연도를 찍는다.
+    if (dense && month !== 0) {
       lastMonth = month;
+      return;
     }
+    monthLabels.push({ index, label: dense ? String(date.getUTCFullYear()) : MONTHS[month] });
+    lastMonth = month;
   });
 
   return (
@@ -72,7 +81,7 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
             style={{ gridTemplateRows: `repeat(7, ${CELL}px)`, rowGap: GAP }}
           >
             {Array.from({ length: 7 }, (_, weekday) => (
-              <span key={weekday} className="leading-3">
+              <span key={weekday} style={{ lineHeight: `${CELL}px` }}>
                 {WEEKDAY_LABELS[weekday] ?? ""}
               </span>
             ))}
@@ -92,7 +101,7 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
                   <span
                     key={day.date}
                     title={`${day.date} · ${day.count} contributions`}
-                    className={`patch-${level(day.count)} rounded-xs`}
+                    className={`patch-${level(day.count)} ${dense ? "rounded-[1px]" : "rounded-xs"}`}
                     style={{ width: CELL, height: CELL }}
                   />
                 ) : (
