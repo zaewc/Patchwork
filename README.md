@@ -1,5 +1,7 @@
 # Patchwork
 
+<img src="src/app/icon.svg" width="200">
+
 오픈소스 기여 트래커. GitHub contribution과 진행 중인 pull request 상태를 한 화면에 모아 보여줍니다.
 
 흩어진 commit·pull request·review·issue를 patchwork처럼 이어 붙여, **내 repository가 아닌 곳에 얼마나 기여했는지**를 중심으로 보여주는 것이 목표입니다.

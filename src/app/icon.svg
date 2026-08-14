@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <style>
+    .patch-top-left { fill: #a5461f; }
+    .patch-top-right { fill: #e29a64; }
+    .patch-bottom-left { fill: #f0c9a8; }
+    .patch-bottom-right { fill: #cb6f37; }
+
+    @media (prefers-color-scheme: dark) {
+      .patch-top-left { fill: #ef975a; }
+      .patch-top-right { fill: #8c5327; }
+      .patch-bottom-left { fill: #5c3a22; }
+      .patch-bottom-right { fill: #c07138; }
+    }
+  </style>
+  <defs>
+    <mask id="keyhole" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+      <rect width="24" height="24" fill="white" />
+      <circle cx="12" cy="9.25" r="4.25" fill="black" />
+      <path d="M10.25 11.5 7.5 23h9l-2.75-11.5Z" fill="black" />
+    </mask>
+  </defs>
+  <g mask="url(#keyhole)">
+    <rect class="patch-top-left" x="1" y="1" width="10" height="10" rx="2" />
+    <rect class="patch-top-right" x="13" y="1" width="10" height="10" rx="2" />
+    <rect class="patch-bottom-left" x="1" y="13" width="10" height="10" rx="2" />
+    <rect class="patch-bottom-right" x="13" y="13" width="10" height="10" rx="2" />
+  </g>
+</svg>
