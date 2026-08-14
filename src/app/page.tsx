@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Banner } from "@/components/banner";
 import { Logo, SiteHeader } from "@/components/site-header";
 import { getSession, isConfigured } from "@/lib/session";
 
@@ -29,9 +30,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </p>
 
         {errorKey ? (
-          <p className="mt-6 w-full rounded-lg border border-danger/40 bg-danger/10 px-4 py-2.5 text-sm text-danger">
+          <Banner tone="danger" className="mt-6 w-full">
             {ERROR_MESSAGES[errorKey] ?? "로그인 중 문제가 발생했습니다."}
-          </p>
+          </Banner>
         ) : null}
 
         {isConfigured() ? (
