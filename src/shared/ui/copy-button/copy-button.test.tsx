@@ -19,7 +19,11 @@ describe("CopyButton", () => {
   const setup = (text: string) => {
     render(<CopyButton text={text} />);
     const button = screen.getByRole("button");
-    const click = () => act(async () => void fireEvent.click(button));
+    const click = () =>
+      act(async () => {
+        fireEvent.click(button);
+        await Promise.resolve();
+      });
     return { button, click };
   };
 

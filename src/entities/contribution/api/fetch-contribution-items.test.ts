@@ -20,14 +20,14 @@ const ok = (data: unknown) => new Response(JSON.stringify({ data }));
 function mockSearch(
   reply: (isPullRequestSearch: boolean, page: number) => ReturnType<typeof searchItemsResponse>,
 ) {
-  fetchMock.mockImplementation(async (_url, init) => {
+  fetchMock.mockImplementation((_url, init) => {
     const body = JSON.parse(String(init?.body)) as { query: string; variables: { q: string } };
     const isPullRequestSearch = body.variables.q.includes("is:pr");
     const page = requests.filter(
       (r) => String(r.variables.q).includes("is:pr") === isPullRequestSearch,
     ).length;
     requests.push(body);
-    return ok(reply(isPullRequestSearch, page));
+    return Promise.resolve(ok(reply(isPullRequestSearch, page)));
   });
 }
 

@@ -42,8 +42,10 @@ function replyFromDepsDev(url: string): Response {
 }
 
 function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
-  fetchMock.mockImplementation(async (url, init) => {
-    if (String(url).includes("/projects/")) return replyFromDepsDev(String(url));
+  fetchMock.mockImplementation((url, init) => {
+    if (String(url).includes("/projects/")) {
+      return Promise.resolve(replyFromDepsDev(String(url)));
+    }
 
     const body = JSON.parse(String(init?.body)) as {
       query: string;
@@ -54,8 +56,10 @@ function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
     requests.push(body);
 
     const handler = handlers[operation];
-    if (!handler) return graphQLErrors([`테스트: ${operation} 핸들러가 없습니다`]);
-    return handler(body.variables, callIndex);
+    if (!handler) {
+      return Promise.resolve(graphQLErrors([`테스트: ${operation} 핸들러가 없습니다`]));
+    }
+    return Promise.resolve(handler(body.variables, callIndex));
   });
 }
 
@@ -244,8 +248,10 @@ describe("Scorecard 점수", () => {
     const warn = vi.spyOn(console, "error").mockImplementation(() => {});
     mockGraphQL(handlers());
     const original = fetchMock.getMockImplementation()!;
-    fetchMock.mockImplementation(async (url, init) => {
-      if (String(url).includes("/projects/")) return new Response("", { status: 503 });
+    fetchMock.mockImplementation((url, init) => {
+      if (String(url).includes("/projects/")) {
+        return Promise.resolve(new Response("", { status: 503 }));
+      }
       return original(url, init);
     });
 

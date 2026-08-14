@@ -8,7 +8,7 @@ import { GITHUB_OAUTH_AUTHORIZE_URL, ROUTES, appOrigin, oauthApp } from "@/share
 import { cookieOptions } from "@/shared/lib/cookie";
 
 /** GitHub 인가 화면으로 보낸다. 돌아올 때 확인할 state를 쿠키에 함께 심는다. */
-export async function handleLogin(request: Request) {
+export function handleLogin(request: Request) {
   const origin = appOrigin(request);
   const app = oauthApp();
 

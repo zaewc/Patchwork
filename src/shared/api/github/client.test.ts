@@ -164,11 +164,13 @@ describe("재시도", () => {
 
   it("계속 TIMEOUT이면 GitHub이 준 메시지를 모아 올린다", async () => {
     // 세 번 읽히므로 호출마다 새 Response를 만들어야 한다.
-    fetchMock.mockImplementation(async () =>
-      graphQLErrors([
-        { message: "첫 번째", type: "TIMEOUT" },
-        { message: "두 번째", type: "TIMEOUT" },
-      ]),
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(
+        graphQLErrors([
+          { message: "첫 번째", type: "TIMEOUT" },
+          { message: "두 번째", type: "TIMEOUT" },
+        ]),
+      ),
     );
 
     await expect(call()).rejects.toThrow("첫 번째; 두 번째");

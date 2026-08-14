@@ -21,8 +21,8 @@ beforeEach(() => {
 
 describe("loadScorecards", () => {
   it("repository별 Scorecard 총점을 모아 온다", async () => {
-    vi.mocked(fetchDepsDevProject).mockImplementation(async (key) =>
-      project(key === "vercel/next.js" ? 6.2 : 3.8),
+    vi.mocked(fetchDepsDevProject).mockImplementation((key) =>
+      Promise.resolve(project(key === "vercel/next.js" ? 6.2 : 3.8)),
     );
 
     const scorecards = await loadScorecards([scoring("vercel/next.js"), scoring("org/small")]);
@@ -74,9 +74,11 @@ describe("loadScorecards", () => {
   });
 
   it("한 곳이 실패해도 나머지는 그대로 받는다", async () => {
-    vi.mocked(fetchDepsDevProject).mockImplementation(async (key) => {
-      if (key === "flaky/repo") throw new Error("deps.dev 조회 실패 (HTTP 503)");
-      return project(8);
+    vi.mocked(fetchDepsDevProject).mockImplementation((key) => {
+      if (key === "flaky/repo") {
+        return Promise.reject(new Error("deps.dev 조회 실패 (HTTP 503)"));
+      }
+      return Promise.resolve(project(8));
     });
     const warn = vi.spyOn(console, "error").mockImplementation(() => {});
 
