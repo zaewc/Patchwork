@@ -121,6 +121,24 @@ test.describe("조회 범위", () => {
   });
 });
 
+test.describe("새로고침", () => {
+  test("페이지를 다시 열지 않고 바뀐 데이터를 가져온다", async ({ page, scenario }) => {
+    await expect(
+      section(page, "Repositories").getByRole("link", { name: "vercel/next.js" }),
+    ).toBeVisible();
+    await scenario("empty");
+
+    const response = page.waitForResponse(
+      (candidate) => new URL(candidate.url()).pathname === "/api/dashboard",
+    );
+    await page.getByRole("button", { name: "새로고침" }).click();
+
+    expect((await response).status()).toBe(200);
+    await expect(page.getByText("이 기간에 기여한 repository가 없습니다.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "새로고침" })).toBeEnabled();
+  });
+});
+
 test.describe("Repositories", () => {
   test("주요 OSS만 남긴다", async ({ page }) => {
     const table = section(page, "Repositories");

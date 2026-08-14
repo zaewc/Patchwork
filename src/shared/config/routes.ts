@@ -2,6 +2,7 @@
 export const ROUTES = {
   home: "/",
   dashboard: "/dashboard",
+  dashboardData: "/api/dashboard",
   export: "/export",
   login: "/api/auth/login",
   logout: "/api/auth/logout",
