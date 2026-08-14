@@ -21,14 +21,6 @@ export function formatNumber(value: number): string {
   return value.toLocaleString("ko-KR");
 }
 
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 export function percent(part: number, whole: number): number {
   if (whole <= 0) return 0;
   return Math.round((part / whole) * 100);
