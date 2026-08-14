@@ -57,7 +57,9 @@ FSD의 `app`·`pages` 레이어를 `_app`·`_pages`로 둔 것은 의도된 것�
 
 - 기본은 서버 컴포넌트입니다. `"use client"`는 브라우저 API가 꼭 필요할 때만 (현재 `shared/ui/copy-button` 한 곳).
 - 렌더 중에 `Date.now()` 같은 비순수 함수를 부르지 않습니다. 데이터 로딩 함수 쪽으로 옮기세요 (`_pages/readme-export/api/load-contribution-items.ts` 참고).
-- 데이터 읽기는 두 단계입니다. `entities/*/api`는 GitHub에 한 가지를 묻고, `_pages/*/api`는 그 결과를 한 화면 분량으로 조립하며 부분 실패를 어떻게 다룰지 정합니다.
+- 데이터 읽기는 두 단계입니다. `entities/*/api`는 바깥에 한 가지를 묻고, `_pages/*/api`는 그 결과를 한 화면 분량으로 조립하며 부분 실패를 어떻게 다룰지 정합니다.
+- **repository 점수(`impact`)는 GitHub 응답을 옮기는 자리에서 매기지 않습니다.** deps.dev의 OpenSSF Scorecard를 받아야 알 수 있으므로 `Unscored<T>`로 꼬리표만 달아 두고, 화면 로더가 `loadScorecards` → `withImpact`로 완성합니다. 화면 한 번에 조회 한 번입니다.
+- deps.dev 조회는 곁가지입니다. 실패하면 점수 없이 진행하고 화면은 그대로 그립니다. 이 성질을 깨지 마세요.
 
 ### 새 코드를 넣을 자리
 
