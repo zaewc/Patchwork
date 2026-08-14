@@ -32,6 +32,7 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
   const CELL = dense ? 8 : 12;
   const GAP = dense ? 2 : 3;
   const STEP = CELL + GAP;
+  const cellClass = dense ? "quilt-cell-dense" : "quilt-cell";
 
   // 주 단위 격자를 요일 슬롯(0~6)에 맞춰 정렬한다. 첫/마지막 주는 비어 있을 수 있다.
   const grid = weeks.map((week) => {
@@ -48,13 +49,10 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
     const date = new Date(first.date);
     const month = date.getUTCMonth();
     if (month === lastMonth || index >= grid.length - 1) return;
-    // 조밀한 모드에서는 1월(연 경계)에만 연도를 찍는다.
-    if (dense && month !== 0) {
-      lastMonth = month;
-      return;
-    }
-    monthLabels.push({ index, label: dense ? String(date.getUTCFullYear()) : MONTHS[month] });
     lastMonth = month;
+    // 조밀한 모드에서는 1월(연 경계)에만 연도를 찍는다.
+    if (dense && month !== 0) return;
+    monthLabels.push({ index, label: dense ? String(date.getUTCFullYear()) : MONTHS[month] });
   });
 
   return (
@@ -101,11 +99,10 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
                   <span
                     key={day.date}
                     title={`${day.date} · ${day.count} contributions`}
-                    className={`patch-${level(day.count)} ${dense ? "rounded-[1px]" : "rounded-xs"}`}
-                    style={{ width: CELL, height: CELL }}
+                    className={`patch-${level(day.count)} ${cellClass}`}
                   />
                 ) : (
-                  <span key={`${weekIndex}-${weekday}`} style={{ width: CELL, height: CELL }} />
+                  <span key={`${weekIndex}-${weekday}`} className={cellClass} />
                 ),
               ),
             )}
@@ -115,11 +112,7 @@ export function ContributionQuilt({ weeks }: { weeks: CalendarDay[][] }) {
         <div className="mt-3 flex items-center gap-1.5 pl-9 text-[11px] text-muted">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((l) => (
-            <span
-              key={l}
-              className={`patch-${l} rounded-xs`}
-              style={{ width: CELL, height: CELL }}
-            />
+            <span key={l} className={`patch-${l} ${cellClass}`} />
           ))}
           <span>More</span>
         </div>
