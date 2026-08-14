@@ -61,7 +61,7 @@ beforeEach(() => {
   vi.mocked(redirect).mockReset();
   vi.mocked(redirect).mockImplementation((() => {
     throw new RedirectSignal();
-  }) as never);
+  }));
   vi.mocked(getSession).mockResolvedValue(SESSION);
 });
 

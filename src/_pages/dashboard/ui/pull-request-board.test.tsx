@@ -14,7 +14,7 @@ const countOf = (title: string) =>
   Number(
     screen
       .getByRole("heading", { name: new RegExp(`^${title}`) })
-      .textContent!.match(/\d+$/)![0],
+      .textContent.match(/\d+$/)![0],
   );
 
 beforeEach(() => {

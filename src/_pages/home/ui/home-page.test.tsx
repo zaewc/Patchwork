@@ -33,7 +33,7 @@ beforeEach(() => {
   vi.mocked(redirect).mockReset();
   vi.mocked(redirect).mockImplementation(((url: string) => {
     throw new RedirectSignal(url);
-  }) as never);
+  }));
   vi.mocked(getSession).mockResolvedValue(null);
   vi.mocked(isOAuthConfigured).mockReturnValue(true);
 });

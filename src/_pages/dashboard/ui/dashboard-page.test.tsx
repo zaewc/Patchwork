@@ -51,7 +51,7 @@ beforeEach(() => {
   vi.mocked(redirect).mockReset();
   vi.mocked(redirect).mockImplementation((() => {
     throw new RedirectSignal();
-  }) as never);
+  }));
   vi.mocked(getSession).mockResolvedValue(SESSION);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse("2026-08-15T00:00:00Z"));

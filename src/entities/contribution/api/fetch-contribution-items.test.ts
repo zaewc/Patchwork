@@ -6,7 +6,6 @@ import {
   repoRef,
   searchItemsResponse,
   toyRepoRef,
-  type ItemNodeFixture,
 } from "@/shared/api/github/response.fixtures";
 
 const SINCE = "2025-08-15";
@@ -171,7 +170,7 @@ describe("걸러내기", () => {
   });
 
   it("repository가 없는 검색 결과는 걸러낸다", async () => {
-    mockSearch(() => searchItemsResponse([{} as unknown as ItemNodeFixture]));
+    mockSearch(() => searchItemsResponse([{}]));
 
     await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
   });
