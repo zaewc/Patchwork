@@ -29,6 +29,16 @@ const graphQLErrors = (messages: string[]) =>
   new Response(JSON.stringify({ errors: messages.map((message) => ({ message })) }));
 const httpError = (status: number) => new Response("", { status });
 
+const requestUrl = (input: string | URL | Request): string => {
+  if (typeof input === "string") return input;
+  return input instanceof URL ? input.href : input.url;
+};
+
+const bodyText = (body: BodyInit | null | undefined): string => {
+  if (typeof body !== "string") throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
+  return body;
+};
+
 /** repository 이름 → Scorecard 총점. 여기 없는 repository는 deps.dev가 모르는 것으로 본다. */
 let scorecards: Record<string, number> = {};
 
@@ -43,11 +53,12 @@ function replyFromDepsDev(url: string): Response {
 
 function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
   fetchMock.mockImplementation((url, init) => {
-    if (String(url).includes("/projects/")) {
-      return Promise.resolve(replyFromDepsDev(String(url)));
+    const href = requestUrl(url);
+    if (href.includes("/projects/")) {
+      return Promise.resolve(replyFromDepsDev(href));
     }
 
-    const body = JSON.parse(String(init?.body)) as {
+    const body = JSON.parse(bodyText(init?.body)) as {
       query: string;
       variables: Record<string, unknown>;
     };
@@ -64,7 +75,7 @@ function mockGraphQL(handlers: Partial<Record<Operation, Handler>>) {
 }
 
 const depsDevRequests = () =>
-  fetchMock.mock.calls.filter(([url]) => String(url).includes("/projects/"));
+  fetchMock.mock.calls.filter(([url]) => requestUrl(url).includes("/projects/"));
 
 const requestsFor = (operation: Operation) =>
   requests.filter((r) => operationOf(r.query) === operation);
@@ -249,7 +260,7 @@ describe("Scorecard 점수", () => {
     mockGraphQL(handlers());
     const original = fetchMock.getMockImplementation()!;
     fetchMock.mockImplementation((url, init) => {
-      if (String(url).includes("/projects/")) {
+      if (requestUrl(url).includes("/projects/")) {
         return Promise.resolve(new Response("", { status: 503 }));
       }
       return original(url, init);

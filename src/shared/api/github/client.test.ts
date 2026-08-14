@@ -7,6 +7,17 @@ const QUERY = `query Probe { viewer { login } }`;
 
 const fetchMock = vi.fn<typeof fetch>();
 
+const bodyText = (body: BodyInit | null | undefined): string => {
+  if (typeof body !== "string") throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
+  return body;
+};
+
+const requestBody = (): { query: string; variables: Record<string, unknown> } =>
+  JSON.parse(bodyText(fetchMock.mock.calls[0]![1]?.body)) as {
+    query: string;
+    variables: Record<string, unknown>;
+  };
+
 const json = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), {
     status: 200,
@@ -64,7 +75,7 @@ describe("요청 모양", () => {
 
     await settle(githubGraphQL("t", QUERY, { from: "2026-01-01" }));
 
-    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body))).toEqual({
+    expect(requestBody()).toEqual({
       query: QUERY,
       variables: { from: "2026-01-01" },
     });
@@ -75,7 +86,7 @@ describe("요청 모양", () => {
 
     await settle(githubGraphQL("t", QUERY));
 
-    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body)).variables).toEqual({});
+    expect(requestBody().variables).toEqual({});
   });
 
   it("제한 시간 안에 끝내라고 신호를 붙인다", async () => {

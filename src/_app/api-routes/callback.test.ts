@@ -23,6 +23,11 @@ const fetchMock = vi.fn<typeof fetch>();
 const json = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), { status: 200, ...init });
 
+const bodyText = (body: BodyInit | null | undefined): string => {
+  if (typeof body !== "string") throw new TypeError("JSON 요청 본문이 문자열이 아닙니다.");
+  return body;
+};
+
 /** 콜백 요청. state 쿠키가 있는 상태를 기본으로 한다. */
 function request({
   code = "oauth-code",
@@ -104,7 +109,7 @@ describe("GET /api/auth/callback · 토큰 교환", () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(TOKEN_URL);
     expect(init).toMatchObject({ method: "POST", cache: "no-store" });
-    expect(JSON.parse(String(init?.body))).toEqual({
+    expect(JSON.parse(bodyText(init?.body))).toEqual({
       client_id: "client-id",
       client_secret: "client-secret",
       code: "oauth-code",
@@ -190,7 +195,10 @@ describe("GET /api/auth/callback · 성공", () => {
 
     const response = await handleCallback(request());
     expect(response.headers.get("location")).toBe("https://patchwork.example.com/dashboard");
-    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body)).redirect_uri).toBe(
+    const payload = JSON.parse(bodyText(fetchMock.mock.calls[0]![1]?.body)) as {
+      redirect_uri: string;
+    };
+    expect(payload.redirect_uri).toBe(
       "https://patchwork.example.com/api/auth/callback",
     );
   });

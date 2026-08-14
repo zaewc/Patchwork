@@ -16,12 +16,17 @@ const requests: { query: string; variables: Record<string, unknown> }[] = [];
 
 const ok = (data: unknown) => new Response(JSON.stringify({ data }));
 
+const bodyText = (body: BodyInit | null | undefined): string => {
+  if (typeof body !== "string") throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
+  return body;
+};
+
 /** PR 검색과 issue 검색에 각각 다른 결과를 준다. */
 function mockSearch(
   reply: (isPullRequestSearch: boolean, page: number) => ReturnType<typeof searchItemsResponse>,
 ) {
   fetchMock.mockImplementation((_url, init) => {
-    const body = JSON.parse(String(init?.body)) as { query: string; variables: { q: string } };
+    const body = JSON.parse(bodyText(init?.body)) as { query: string; variables: { q: string } };
     const isPullRequestSearch = body.variables.q.includes("is:pr");
     const page = requests.filter(
       (r) => String(r.variables.q).includes("is:pr") === isPullRequestSearch,

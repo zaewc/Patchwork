@@ -4,6 +4,11 @@ import { VIEWER } from "@/shared/api/github/response.fixtures";
 
 const fetchMock = vi.fn<typeof fetch>();
 
+const bodyText = (body: BodyInit | null | undefined): string => {
+  if (typeof body !== "string") throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
+  return body;
+};
+
 beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
@@ -21,7 +26,9 @@ describe("fetchViewerIdentity", () => {
 
     await fetchViewerIdentity("gho_token");
 
-    const { query } = JSON.parse(String(fetchMock.mock.calls[0]![1]?.body));
+    const { query } = JSON.parse(bodyText(fetchMock.mock.calls[0]![1]?.body)) as {
+      query: string;
+    };
     expect(query).toContain("viewer");
     expect(query).toContain("login");
     expect(query).toContain("avatarUrl");
