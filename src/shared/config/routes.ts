@@ -4,6 +4,7 @@ export const ROUTES = {
   dashboard: "/dashboard",
   dashboardData: "/api/dashboard",
   export: "/export",
+  locale: "/api/locale",
   login: "/api/auth/login",
   logout: "/api/auth/logout",
   callback: "/api/auth/callback",

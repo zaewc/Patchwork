@@ -66,6 +66,15 @@ export function CopyIcon(props: IconProps) {
   );
 }
 
+/** 아래를 가리키는 꺾쇠. 펼치면 더 있다. */
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </Icon>
+  );
+}
+
 /** 체크 표시. 방금 끝난 일. */
 export function CheckIcon(props: IconProps) {
   return (

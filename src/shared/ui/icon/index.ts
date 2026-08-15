@@ -1,5 +1,6 @@
 export {
   CheckIcon,
+  ChevronDownIcon,
   CopyIcon,
   RefreshIcon,
   SignOutIcon,

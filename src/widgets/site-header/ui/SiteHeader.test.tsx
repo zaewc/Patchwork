@@ -98,4 +98,9 @@ describe("SiteHeader", () => {
       screen.getByRole("button", { name: "Sign out" }),
     ).toBeInTheDocument();
   });
+
+  it("언어 전환은 로그인 전에도 늘 있다", () => {
+    render(<SiteHeader dict={KO} />);
+    expect(screen.getByRole("form", { name: "언어" })).toBeInTheDocument();
+  });
 });
