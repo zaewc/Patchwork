@@ -52,7 +52,8 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   return (
     <DashboardQueryProvider>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <DashboardContent params={params} />
+        {/* 첫 화면은 서버가 채워 주고, 이후 조회 조건은 브라우저가 들고 간다. */}
+        <DashboardContent initialParams={params} />
       </HydrationBoundary>
     </DashboardQueryProvider>
   );
