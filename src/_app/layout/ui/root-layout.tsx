@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { QueryProvider } from "@/_app/layout/ui/query-provider";
 import "../../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -11,9 +10,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

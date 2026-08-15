@@ -2,83 +2,20 @@
 
 @font-face {
   font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2")
-    format("woff2");
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2")
-    format("woff2");
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2")
-    format("woff2");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2")
+  src: url("/fonts/pretendard-1.3.9/Pretendard-Regular.subset.woff2")
     format("woff2");
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  font-display: optional;
 }
 
 @font-face {
   font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2")
+  src: url("/fonts/pretendard-1.3.9/Pretendard-SemiBold.subset.woff2")
     format("woff2");
-  font-weight: 500;
+  font-weight: 500 600;
   font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2")
-    format("woff2");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2")
-    format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2")
-    format("woff2");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2")
-    format("woff2");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
+  font-display: optional;
 }
 
 :root {
@@ -114,7 +51,7 @@
     --ok: #5cbf83;
     --warn: #d9a640;
     --danger: #e2705c;
-  
+
     --patch-0: #232019;
     --patch-1: #5c3a22;
     --patch-2: #8c5327;
@@ -135,23 +72,49 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
-  --font-sans: "Pretendard", system-ui, sans-serif;
-  --font-mono: "Pretendard", system-ui, sans-serif;
+  --font-sans:
+    "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
   background-color: var(--bg);
   color: var(--fg);
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    "Segoe UI",
+    sans-serif;
 }
 
 /* 기여 캘린더 = Patchwork. 단계별 천 색상. */
-.patch-0 { background-color: var(--patch-0); }
-.patch-1 { background-color: var(--patch-1); }
-.patch-2 { background-color: var(--patch-2); }
-.patch-3 { background-color: var(--patch-3); }
-.patch-4 { background-color: var(--patch-4); }
+.patch-0 {
+  background-color: var(--patch-0);
+}
+.patch-1 {
+  background-color: var(--patch-1);
+}
+.patch-2 {
+  background-color: var(--patch-2);
+}
+.patch-3 {
+  background-color: var(--patch-3);
+}
+.patch-4 {
+  background-color: var(--patch-4);
+}
 
 /* 셀 크기는 두 종류뿐이라, 인라인 style 대신 클래스로 둔다 (5년이면 셀이 1,800개가 넘는다). */
-.quilt-cell { width: 12px; height: 12px; border-radius: 2px; }
-.quilt-cell-dense { width: 8px; height: 8px; border-radius: 1px; }
+.quilt-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.quilt-cell-dense {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+}

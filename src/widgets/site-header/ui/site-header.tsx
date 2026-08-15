@@ -11,6 +11,7 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
         <Link
           href={ROUTES.home}
+          prefetch={false}
           className="flex items-center gap-2 font-semibold tracking-tight"
         >
           <Logo />
@@ -21,12 +22,14 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
           <div className="flex items-center gap-3">
             <Link
               href={ROUTES.dashboard}
+              prefetch={false}
               className="text-sm text-muted hover:text-accent"
             >
               Dashboard
             </Link>
             <Link
               href={ROUTES.export}
+              prefetch={false}
               className="text-sm text-muted hover:text-accent"
             >
               README
