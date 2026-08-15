@@ -1,33 +1,24 @@
-import { scopeHref, type ScopeParams } from "@/features/contribution-scope/model/params";
-import { RANGES, type RangeKey } from "@/shared/config";
+import type { ScopeParams } from "@/features/contribution-scope/model/params";
+import { scopeTabGroups } from "@/features/contribution-scope/model/tabs";
 import { TabBar } from "@/shared/ui/tab-bar";
 
-const SCOPES = [
-  { showAll: false, label: "주요 OSS" },
-  { showAll: true, label: "전체" },
-];
-
 /**
- * 조회 조건을 바꾸는 탭 묶음. 대시보드와 내보내기 화면이 같은 것을 쓴다.
- * 링크만 바뀌므로 클라이언트 상태 없이 서버 컴포넌트로 그린다.
+ * 조회 조건을 바꾸는 탭 묶음. 누르면 서버를 다시 다녀온다.
+ * 화면 내용이 서버에서 만들어지는 곳(내보내기)이 이것을 쓴다.
+ * 이미 받아 둔 데이터로 자리에서 바꿀 수 있으면 `LiveScopeTabs`를 쓴다.
  */
-export function ScopeTabs({ params, path }: { params: ScopeParams; path: string }) {
+export function ScopeTabs({
+  params,
+  path,
+}: {
+  params: ScopeParams;
+  path: string;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <TabBar
-        items={SCOPES.map(({ showAll, label }) => ({
-          href: scopeHref(params, { showAll }, path),
-          label,
-          active: showAll === params.showAll,
-        }))}
-      />
-      <TabBar
-        items={(Object.keys(RANGES) as RangeKey[]).map((range) => ({
-          href: scopeHref(params, { range }, path),
-          label: RANGES[range].label,
-          active: range === params.range,
-        }))}
-      />
+      {scopeTabGroups(params, path).map((items) => (
+        <TabBar key={items[0]!.href} items={items} />
+      ))}
     </div>
   );
 }
