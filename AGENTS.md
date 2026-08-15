@@ -77,6 +77,27 @@ FSD의 `app`·`pages` 레이어를 `_app`·`_pages`로 둔 것은 의도된 것�
 
 `steiger.config.ts`에서 끈 규칙 네 개는 파일에 근거를 적어 두었습니다. **다시 켜려 하지 마세요** — 세 개는 steiger가 `_app`·`_pages` 접두어와 모듈별 공개 API를 아직 모르기 때문이고, 나머지 하나(`insignificant-slice` on `entities/pull-request`)는 GitHub 응답을 도메인 모양으로 옮기는 경계를 화면 안에 넣지 않기로 한 판단입니다.
 
+## 이름
+
+이름 하나에 형식 하나입니다. 고민할 자리를 없애려고 정한 것이므로 파일마다 다시 정하지 마세요.
+
+| 대상                         | 형식           | 예                                       |
+| ---------------------------- | -------------- | ---------------------------------------- |
+| 디렉토리 · 파일              | kebab-case     | `contribution-scope/` · `scope-tabs.tsx` |
+| 타입 · 인터페이스 · 컴포넌트 | PascalCase     | `ScopeParams` · `TabBar`                 |
+| 변수 · 함수                  | lowerCamelCase | `scopeTabGroups` · `loadScorecards`      |
+| 모듈 상수                    | UPPER_CASE     | `MAX_REPOSITORIES` · `SESSION_COOKIE`    |
+
+`npm run lint`이 검사합니다. 파일·폴더는 [check-file](https://github.com/dukeluo/eslint-plugin-check-file)이, 코드 안의 이름은 `@typescript-eslint/naming-convention`이 봅니다.
+
+예외는 규칙에 적어 두었습니다.
+
+- `_app`·`_pages`·`@x` 세 폴더는 `ignoreWords`로 빠집니다. 앞의 둘은 Next와의 충돌을 피한 접두어, `@x`는 FSD의 교차 공개 API라 kebab-case로 적을 수 없습니다.
+- `scope-tabs.test.tsx`·`dashboard.fixtures.ts`의 가운데 확장자는 이름이 아니므로 `ignoreMiddleExtensions`로 건너뜁니다.
+- **바깥에서 받은 이름은 우리가 정하지 않습니다.** GitHub·deps.dev 응답의 `snake_case`가 그대로 흘러 들어오므로 객체 속성과 구조 분해 변수에는 형식을 걸지 않았습니다. 이 예외를 좁히지 마세요.
+
+파일명은 kebab-case를 씁니다. `app/`의 `page.tsx`·`layout.tsx`·`route.ts`가 Next의 예약어라 다른 형식을 못 쓰고, `shared/ui/copy-button/copy-button.tsx`처럼 폴더와 파일 이름을 맞춰 두었기 때문입니다.
+
 ## 테스트
 
 - 테스트는 대상 파일 옆에 둡니다: `impact.ts` → `impact.test.ts`. 모듈이 이사하면 테스트도 같이 갑니다.
