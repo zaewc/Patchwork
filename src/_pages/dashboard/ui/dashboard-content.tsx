@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardQueryOptions } from "@/_pages/dashboard/api/dashboard-query";
 import { DashboardQueryError } from "@/_pages/dashboard/api/fetch-dashboard";
 import { ContributionQuilt } from "@/_pages/dashboard/ui/contribution-quilt";
@@ -13,8 +13,9 @@ import { RepoTable } from "@/_pages/dashboard/ui/repo-table";
 import { Section } from "@/_pages/dashboard/ui/section";
 import {
   filterByScope,
-  ScopeTabs,
+  LiveScopeTabs,
   scopeHref,
+  useScopeParams,
   type ScopeParams,
 } from "@/features/contribution-scope";
 import { SiteHeader } from "@/widgets/site-header";
@@ -26,10 +27,26 @@ import { RefreshIcon } from "@/shared/ui/icon";
 /** 전체 보기에서만 목록을 자른다. 주요 OSS 모드는 이미 걸러진 목록이라 다 보여준다. */
 const TOP_REPOS = 10;
 
-export function DashboardContent({ params }: { params: ScopeParams }) {
-  const { data, error, isFetching, refetch } = useQuery(
+/** 같은 버튼이 두 가지를 기다린다. 지금 보고 있는 것을 다시 받는 중인지, 다른 범위를 받는 중인지. */
+function label(isFetching: boolean, isPlaceholderData: boolean) {
+  if (isPlaceholderData) return "불러오는 중…";
+  return isFetching ? "새로고침 중…" : "새로고침";
+}
+
+export function DashboardContent({
+  initialParams,
+}: {
+  initialParams: ScopeParams;
+}) {
+  const [params, selectScope] = useScopeParams(initialParams, ROUTES.dashboard);
+  const queryClient = useQueryClient();
+  const { data, error, isFetching, isPlaceholderData, refetch } = useQuery(
     dashboardQueryOptions(params.range),
   );
+
+  /** 탭에 포인터가 닿는 순간 그 범위를 미리 받아 둔다. 이미 있으면 아무 일도 하지 않는다. */
+  const prefetchScope = ({ range }: ScopeParams) =>
+    void queryClient.prefetchQuery(dashboardQueryOptions(range));
 
   if (error instanceof DashboardQueryError && error.status === 401) {
     return (
@@ -89,7 +106,11 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
             {viewer.name ?? viewer.login}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
-            <ScopeTabs params={params} path={ROUTES.dashboard} />
+            <LiveScopeTabs
+              params={params}
+              path={ROUTES.dashboard}
+              inPlace={{ select: selectScope, prefetch: prefetchScope }}
+            />
             <button
               type="button"
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
@@ -100,62 +121,68 @@ export function DashboardContent({ params }: { params: ScopeParams }) {
               <RefreshIcon
                 className={isFetching ? "motion-safe:animate-spin" : ""}
               />
-              {isFetching ? "새로고침 중…" : "새로고침"}
+              {label(isFetching, isPlaceholderData)}
             </button>
           </div>
         </div>
 
-        <DashboardStats
-          totals={data.totals}
-          notable={data.notable}
-          external={data.external}
-          openCount={params.showAll ? data.openCount : visibleOpen.length}
-          staleCount={visibleOpen.filter((pr) => pr.isStale).length}
-          mergedCount={visibleMerged.length}
-        />
-
-        {warnings.map((warning) => (
-          <Banner key={warning} className="mt-6">
-            {warning}
-          </Banner>
-        ))}
-
-        <Section title={`Contributions · ${RANGES[params.range].label}`}>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <ContributionQuilt weeks={data.weeks} />
-          </div>
-        </Section>
-
-        <Section title="Repositories">
-          <RepoTable
-            repos={
-              params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos
-            }
-            {...filteredAway("기여한 repository", "곳", repos.length)}
+        {/* 아직 못 받은 범위를 기다리는 중이면 직전 범위를 흐려 둔다. 자리는 그대로다. */}
+        <div
+          aria-busy={isPlaceholderData}
+          className={`transition-opacity ${isPlaceholderData ? "opacity-50" : ""}`}
+        >
+          <DashboardStats
+            totals={data.totals}
+            notable={data.notable}
+            external={data.external}
+            openCount={params.showAll ? data.openCount : visibleOpen.length}
+            staleCount={visibleOpen.filter((pr) => pr.isStale).length}
+            mergedCount={visibleMerged.length}
           />
-        </Section>
 
-        <Section title="Open pull requests">
-          <PullRequestBoard
-            pullRequests={visibleOpen}
-            {...filteredAway(
-              "열린 pull request",
-              "건",
-              openPullRequests.length,
-            )}
-          />
-        </Section>
+          {warnings.map((warning) => (
+            <Banner key={warning} className="mt-6">
+              {warning}
+            </Banner>
+          ))}
 
-        <Section title="Recently merged">
-          <MergedPullRequestList
-            pullRequests={visibleMerged}
-            {...filteredAway(
-              "merge된 pull request",
-              "건",
-              mergedPullRequests.length,
-            )}
-          />
-        </Section>
+          <Section title={`Contributions · ${RANGES[params.range].label}`}>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <ContributionQuilt weeks={data.weeks} />
+            </div>
+          </Section>
+
+          <Section title="Repositories">
+            <RepoTable
+              repos={
+                params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos
+              }
+              {...filteredAway("기여한 repository", "곳", repos.length)}
+            />
+          </Section>
+
+          <Section title="Open pull requests">
+            <PullRequestBoard
+              pullRequests={visibleOpen}
+              {...filteredAway(
+                "열린 pull request",
+                "건",
+                openPullRequests.length,
+              )}
+            />
+          </Section>
+
+          <Section title="Recently merged">
+            <MergedPullRequestList
+              pullRequests={visibleMerged}
+              {...filteredAway(
+                "merge된 pull request",
+                "건",
+                mergedPullRequests.length,
+              )}
+            />
+          </Section>
+        </div>
       </main>
     </>
   );
