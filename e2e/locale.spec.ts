@@ -61,6 +61,19 @@ test.describe("로그인 전", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
+  test("일본어로도 바꿀 수 있다", async ({ page }) => {
+    await page.goto("/");
+    await switchTo(page, "日本語");
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "オープンソースへの貢献を一枚のPatchworkに",
+      }),
+    ).toBeVisible();
+  });
+
   test("다시 한국어로 되돌릴 수 있다", async ({ page }) => {
     await page.goto("/");
     await switchTo(page, "English");

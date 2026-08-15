@@ -1,6 +1,7 @@
 import type { Locale } from "@/shared/config";
 import type { Dictionaries, Dictionary } from "@/shared/lib/i18n";
 import { en } from "@/shared/lib/i18n-server/en";
+import { ja } from "@/shared/lib/i18n-server/ja";
 import { ko } from "@/shared/lib/i18n-server/ko";
 
 /**
@@ -10,7 +11,7 @@ import { ko } from "@/shared/lib/i18n-server/ko";
  * `Dictionaries`가 `Record<Locale, Dictionary>`라 언어를 목록에만 넣고 여기를
  * 빠뜨리면 타입 검사에서 걸린다.
  */
-export const DICTIONARIES: Dictionaries = { ko, en };
+export const DICTIONARIES: Dictionaries = { ko, en, ja };
 
 /** 언어 하나의 문구 묶음 */
 export function dictionaryOf(locale: Locale): Dictionary {
