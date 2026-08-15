@@ -2,10 +2,17 @@ import Link from "next/link";
 import { Logo } from "@/widgets/site-header/ui/Logo";
 import type { GitHubViewer } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
+import type { Dictionary } from "@/shared/lib/i18n";
 import { SignOutIcon } from "@/shared/ui/icon";
 
 /** 모든 화면의 머리. 로그인 상태에서만 사용자 메뉴가 붙는다. */
-export function SiteHeader({ user }: { user?: GitHubViewer }) {
+export function SiteHeader({
+  user,
+  dict,
+}: {
+  user?: GitHubViewer;
+  dict: Dictionary;
+}) {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
@@ -56,7 +63,7 @@ export function SiteHeader({ user }: { user?: GitHubViewer }) {
                 className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
               >
                 <SignOutIcon />
-                로그아웃
+                {dict.header.signOut}
               </button>
             </form>
           </div>

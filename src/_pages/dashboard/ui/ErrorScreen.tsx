@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/widgets/site-header";
+import type { Dictionary } from "@/shared/lib/i18n";
 
 /** 대시보드를 아예 그릴 수 없을 때의 화면. 무엇이 잘못됐고 다음에 무엇을 누를지만 남긴다. */
 export function ErrorScreen({
@@ -6,15 +7,17 @@ export function ErrorScreen({
   body,
   action,
   href,
+  dict,
 }: {
   title: string;
   body: string;
   action: string;
   href: string;
+  dict: Dictionary;
 }) {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader dict={dict} />
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-24 text-center">
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>

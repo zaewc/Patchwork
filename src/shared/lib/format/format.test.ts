@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { daysSince, formatNumber, percent, relativeTime, shortDate } from "@/shared/lib/format";
+import {
+  daysSince,
+  formatNumber,
+  percent,
+  relativeTime,
+  shortDate,
+} from "@/shared/lib/format";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 const NOW = Date.parse("2026-08-15T12:00:00Z");
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
+
+const KO = dictionaryOf("ko").time;
+const EN = dictionaryOf("en").time;
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
@@ -23,15 +33,29 @@ describe("relativeTime", () => {
     ["1년 경계", 365 * DAY, "1년 전"],
     ["년 단위", 3 * 365 * DAY, "3년 전"],
   ])("%s", (_label, diff, expected) => {
-    expect(relativeTime(ago(diff), NOW)).toBe(expected);
+    expect(relativeTime(ago(diff), KO, NOW)).toBe(expected);
+  });
+
+  /** 눈금 이름은 Intl이 언어별로 알고 있다. 우리가 정하는 것은 경계와 "방금 전"뿐이다. */
+  it.each([
+    ["1분 미만", 30 * SECOND, "just now"],
+    ["분 단위", 59 * MINUTE, "59 minutes ago"],
+    ["시간 단위", 23 * HOUR, "23 hours ago"],
+    ["일 단위", 29 * DAY, "29 days ago"],
+    ["개월 단위", 364 * DAY, "12 months ago"],
+    ["년 단위", 3 * 365 * DAY, "3 years ago"],
+  ])("영어로도 같은 경계를 쓴다 — %s", (_label, diff, expected) => {
+    expect(relativeTime(ago(diff), EN, NOW)).toBe(expected);
   });
 
   it("미래 시각은 방금 전으로 본다", () => {
-    expect(relativeTime(new Date(NOW + DAY).toISOString(), NOW)).toBe("방금 전");
+    expect(relativeTime(new Date(NOW + DAY).toISOString(), KO, NOW)).toBe(
+      "방금 전",
+    );
   });
 
   it("now를 생략하면 현재 시각을 쓴다", () => {
-    expect(relativeTime(new Date().toISOString())).toBe("방금 전");
+    expect(relativeTime(new Date().toISOString(), KO)).toBe("방금 전");
   });
 });
 
@@ -49,9 +73,13 @@ describe("daysSince", () => {
 
 describe("formatNumber", () => {
   it("천 단위 구분자를 넣는다", () => {
-    expect(formatNumber(0)).toBe("0");
-    expect(formatNumber(999)).toBe("999");
-    expect(formatNumber(1234567)).toBe("1,234,567");
+    expect(formatNumber(0, "ko-KR")).toBe("0");
+    expect(formatNumber(999, "ko-KR")).toBe("999");
+    expect(formatNumber(1234567, "ko-KR")).toBe("1,234,567");
+  });
+
+  it("주어진 언어의 자릿점 규칙을 따른다", () => {
+    expect(formatNumber(1234567, "de-DE")).toBe("1.234.567");
   });
 });
 

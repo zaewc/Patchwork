@@ -2,6 +2,9 @@ import { render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { pullRequest } from "@/_pages/dashboard/api/dashboard.fixtures";
 import { PullRequestBoard } from "@/_pages/dashboard/ui/PullRequestBoard";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const NOW = Date.parse("2026-08-15T00:00:00Z");
 
@@ -30,7 +33,7 @@ afterEach(() => {
 
 describe("PullRequestBoard", () => {
   it("PR이 없으면 기본 안내를 보여준다", () => {
-    render(<PullRequestBoard pullRequests={[]} />);
+    render(<PullRequestBoard dict={KO} pullRequests={[]} />);
     expect(
       screen.getByText("열려 있는 pull request가 없습니다."),
     ).toBeInTheDocument();
@@ -39,6 +42,7 @@ describe("PullRequestBoard", () => {
   it("안내 문구를 바꿀 수 있다", () => {
     render(
       <PullRequestBoard
+        dict={KO}
         pullRequests={[]}
         emptyMessage="모두 주요 OSS가 아닙니다."
       />,
@@ -47,7 +51,7 @@ describe("PullRequestBoard", () => {
   });
 
   it("네 열을 항상 그린다", () => {
-    render(<PullRequestBoard pullRequests={[pullRequest()]} />);
+    render(<PullRequestBoard dict={KO} pullRequests={[pullRequest()]} />);
 
     for (const title of [
       "Changes requested",
@@ -60,7 +64,7 @@ describe("PullRequestBoard", () => {
   });
 
   it("비어 있는 열에는 없음이라고 적는다", () => {
-    render(<PullRequestBoard pullRequests={[pullRequest()]} />);
+    render(<PullRequestBoard dict={KO} pullRequests={[pullRequest()]} />);
 
     expect(within(column("Draft")).getByText("없음")).toBeInTheDocument();
     expect(
@@ -84,7 +88,9 @@ describe("PullRequestBoard", () => {
       ["검토 대기", { reviewDecision: "REVIEW_REQUIRED" }, "Review required"],
       ["검토 상태 없음", { reviewDecision: null }, "Review required"],
     ] as const)("%s", (_label, overrides, expected) => {
-      render(<PullRequestBoard pullRequests={[pullRequest(overrides)]} />);
+      render(
+        <PullRequestBoard dict={KO} pullRequests={[pullRequest(overrides)]} />,
+      );
 
       expect(
         within(column(expected)).getByRole("listitem"),
@@ -95,6 +101,7 @@ describe("PullRequestBoard", () => {
     it("열마다 개수를 센다", () => {
       render(
         <PullRequestBoard
+          dict={KO}
           pullRequests={[
             pullRequest({ number: 1, reviewDecision: "APPROVED" }),
             pullRequest({ number: 2, reviewDecision: "APPROVED" }),
@@ -113,6 +120,7 @@ describe("PullRequestBoard", () => {
     it("repository·번호·제목·링크를 담는다", () => {
       render(
         <PullRequestBoard
+          dict={KO}
           pullRequests={[pullRequest({ number: 42, title: "fix: 무언가" })]}
         />,
       );
@@ -131,6 +139,7 @@ describe("PullRequestBoard", () => {
     it("마지막 업데이트를 상대 시간으로 보여준다", () => {
       render(
         <PullRequestBoard
+          dict={KO}
           pullRequests={[pullRequest({ updatedAt: "2026-08-13T00:00:00Z" })]}
         />,
       );
@@ -138,7 +147,7 @@ describe("PullRequestBoard", () => {
     });
 
     it("owner avatar를 로고로 쓴다", () => {
-      render(<PullRequestBoard pullRequests={[pullRequest()]} />);
+      render(<PullRequestBoard dict={KO} pullRequests={[pullRequest()]} />);
       expect(screen.getByRole("presentation")).toHaveAttribute(
         "src",
         "https://avatars.githubusercontent.com/vercel",
@@ -147,21 +156,30 @@ describe("PullRequestBoard", () => {
 
     it("비공개 repository는 Private으로 표시한다", () => {
       render(
-        <PullRequestBoard pullRequests={[pullRequest({ isPrivate: true })]} />,
+        <PullRequestBoard
+          dict={KO}
+          pullRequests={[pullRequest({ isPrivate: true })]}
+        />,
       );
       expect(screen.getByText("Private")).toBeInTheDocument();
     });
 
     it("공개 repository에는 Private을 붙이지 않는다", () => {
       render(
-        <PullRequestBoard pullRequests={[pullRequest({ isPrivate: false })]} />,
+        <PullRequestBoard
+          dict={KO}
+          pullRequests={[pullRequest({ isPrivate: false })]}
+        />,
       );
       expect(screen.queryByText("Private")).not.toBeInTheDocument();
     });
 
     it("오래 조용한 PR은 Stale로 표시한다", () => {
       render(
-        <PullRequestBoard pullRequests={[pullRequest({ isStale: true })]} />,
+        <PullRequestBoard
+          dict={KO}
+          pullRequests={[pullRequest({ isStale: true })]}
+        />,
       );
       expect(screen.getByText("Stale")).toBeInTheDocument();
     });
@@ -172,7 +190,12 @@ describe("PullRequestBoard", () => {
       ["ERROR", "Checks failed", "text-danger"],
       ["PENDING", "Checks pending", "text-warn"],
     ] as const)("체크 상태 %s 는 %s 로 보여준다", (checkState, text, tone) => {
-      render(<PullRequestBoard pullRequests={[pullRequest({ checkState })]} />);
+      render(
+        <PullRequestBoard
+          dict={KO}
+          pullRequests={[pullRequest({ checkState })]}
+        />,
+      );
 
       const label = screen.getByText(text);
       expect(label).toBeInTheDocument();
@@ -183,7 +206,10 @@ describe("PullRequestBoard", () => {
       "표시할 문구가 없는 체크 상태 %s 는 비워 둔다",
       (checkState) => {
         render(
-          <PullRequestBoard pullRequests={[pullRequest({ checkState })]} />,
+          <PullRequestBoard
+            dict={KO}
+            pullRequests={[pullRequest({ checkState })]}
+          />,
         );
         expect(screen.queryByText(/^Checks/)).not.toBeInTheDocument();
       },

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomePage } from "@/_pages/home/ui/HomePage";
@@ -86,7 +86,10 @@ describe("HomePage", () => {
 
     it("설정 안내는 감춘다", async () => {
       await renderPage();
-      expect(screen.queryByRole("list")).not.toBeInTheDocument();
+      // 머리의 언어 목록과 섞이지 않게 본문만 본다.
+      expect(
+        within(screen.getByRole("main")).queryByRole("list"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -101,7 +104,9 @@ describe("HomePage", () => {
       expect(
         screen.queryByRole("link", { name: "Sign in with GitHub" }),
       ).not.toBeInTheDocument();
-      expect(screen.getAllByRole("listitem")).toHaveLength(3);
+      expect(
+        within(screen.getByRole("main")).getAllByRole("listitem"),
+      ).toHaveLength(3);
     });
 
     it("콜백 URL과 환경변수 파일 이름을 알려준다", async () => {

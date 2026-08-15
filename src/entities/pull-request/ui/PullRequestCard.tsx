@@ -1,10 +1,16 @@
 import { RepoLogo } from "@/entities/repo/@x/pull-request";
 import { checkLabelOf } from "@/entities/pull-request/lib/checks";
 import type { PullRequest } from "@/entities/pull-request/model/types";
-import { relativeTime } from "@/shared/lib/format";
+import { relativeTime, type TimeFormat } from "@/shared/lib/format";
 
 /** 보드에 놓이는 열린 PR 한 장 */
-export function PullRequestCard({ pr }: { pr: PullRequest }) {
+export function PullRequestCard({
+  pr,
+  time,
+}: {
+  pr: PullRequest;
+  time: TimeFormat;
+}) {
   const checks = checkLabelOf(pr.checkState);
 
   return (
@@ -23,7 +29,7 @@ export function PullRequestCard({ pr }: { pr: PullRequest }) {
       </a>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted">
-        <span>{relativeTime(pr.updatedAt)}</span>
+        <span>{relativeTime(pr.updatedAt, time)}</span>
         {checks ? <span className={checks.tone}>{checks.text}</span> : null}
         {pr.isStale ? <span className="text-warn">Stale</span> : null}
       </div>

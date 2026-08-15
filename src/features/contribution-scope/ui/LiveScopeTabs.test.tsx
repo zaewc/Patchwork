@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ScopeParams } from "@/features/contribution-scope/model/params";
 import { LiveScopeTabs } from "@/features/contribution-scope/ui/LiveScopeTabs";
 import { ROUTES } from "@/shared/config";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 /** 고른 조건이 그대로 다시 내려오는, 실제 화면과 같은 흐름을 만든다. */
 function Harness() {
@@ -16,6 +17,7 @@ function Harness() {
     <LiveScopeTabs
       params={params}
       path={ROUTES.dashboard}
+      dict={dictionaryOf("ko")}
       inPlace={{ select: setParams, prefetch: vi.fn() }}
     />
   );

@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { ScopeParams } from "@/features/contribution-scope/model/params";
 import { scopeTabGroups } from "@/features/contribution-scope/model/tabs";
 import { RANGES, ROUTES, type RangeKey } from "@/shared/config";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const groups = (params: ScopeParams = { range: "90d", showAll: false }) =>
-  scopeTabGroups(params, ROUTES.dashboard);
+  scopeTabGroups(params, ROUTES.dashboard, KO);
 
 describe("scopeTabGroups", () => {
   it("보기 범위와 기간을 두 줄로 나눈다", () => {
@@ -16,6 +19,25 @@ describe("scopeTabGroups", () => {
       "90일",
       "1년",
       "5년",
+    ]);
+  });
+
+  it("라벨은 사전에서 온다", () => {
+    const [scopes, ranges] = scopeTabGroups(
+      { range: "90d", showAll: false },
+      ROUTES.dashboard,
+      dictionaryOf("en"),
+    );
+
+    expect(scopes!.items.map((tab) => tab.label)).toEqual([
+      "Notable OSS",
+      "All",
+    ]);
+    expect(ranges!.items.map((tab) => tab.label)).toEqual([
+      "30 days",
+      "90 days",
+      "1 year",
+      "5 years",
     ]);
   });
 

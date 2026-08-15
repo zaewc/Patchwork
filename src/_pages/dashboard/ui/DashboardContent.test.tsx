@@ -11,6 +11,7 @@ import {
 import { DashboardContent } from "@/_pages/dashboard/ui/DashboardContent";
 import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import { ROUTES, type RangeKey } from "@/shared/config";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("@/_pages/dashboard/api/fetchDashboard", async (importOriginal) => {
   const original =
@@ -20,6 +21,7 @@ vi.mock("@/_pages/dashboard/api/fetchDashboard", async (importOriginal) => {
   return { ...original, fetchDashboard: vi.fn() };
 });
 
+const KO = dictionaryOf("ko");
 const PARAMS = { range: "1y" as const, showAll: false };
 
 /** 이미 받아 둔 범위를 캐시에 심어 둔 채로 화면을 띄운다. */
@@ -33,7 +35,7 @@ function renderContent(cached: Partial<Record<RangeKey, DashboardData>> = {}) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <DashboardContent initialParams={PARAMS} />
+      <DashboardContent initialParams={PARAMS} dict={KO} />
     </QueryClientProvider>,
   );
 }

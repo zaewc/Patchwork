@@ -2,6 +2,9 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { RepoTable } from "@/_pages/dashboard/ui/RepoTable";
 import type { RepoStat } from "@/entities/repo";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const repo = (overrides: Partial<RepoStat> = {}): RepoStat => ({
   nameWithOwner: "vercel/next.js",
@@ -26,7 +29,7 @@ const PARTIAL_HINT = "일부 항목을 알 수 없어 실제보다 적을 수 �
 
 describe("RepoTable", () => {
   it("repository가 없으면 기본 안내를 보여준다", () => {
-    render(<RepoTable repos={[]} />);
+    render(<RepoTable dict={KO} repos={[]} />);
     expect(
       screen.getByText("이 기간에 기여한 repository가 없습니다."),
     ).toBeInTheDocument();
@@ -34,12 +37,18 @@ describe("RepoTable", () => {
   });
 
   it("안내 문구를 바꿀 수 있다", () => {
-    render(<RepoTable repos={[]} emptyMessage="모두 주요 OSS가 아닙니다." />);
+    render(
+      <RepoTable
+        dict={KO}
+        repos={[]}
+        emptyMessage="모두 주요 OSS가 아닙니다."
+      />,
+    );
     expect(screen.getByText("모두 주요 OSS가 아닙니다.")).toBeInTheDocument();
   });
 
   it("열 제목을 순서대로 그린다", () => {
-    render(<RepoTable repos={[repo()]} />);
+    render(<RepoTable dict={KO} repos={[repo()]} />);
 
     expect(
       screen.getAllByRole("columnheader").map((th) => th.textContent),
@@ -54,7 +63,7 @@ describe("RepoTable", () => {
   });
 
   it("항목별 기여 수와 합계를 보여준다", () => {
-    render(<RepoTable repos={[repo()]} />);
+    render(<RepoTable dict={KO} repos={[repo()]} />);
 
     const cells = within(rowOf("vercel/next.js")).getAllByRole("cell");
     expect(cells.map((td) => td.textContent)).toEqual([
@@ -68,12 +77,12 @@ describe("RepoTable", () => {
   });
 
   it("합계는 천 단위로 끊는다", () => {
-    render(<RepoTable repos={[repo({ total: 12345 })]} />);
+    render(<RepoTable dict={KO} repos={[repo({ total: 12345 })]} />);
     expect(screen.getByText("12,345")).toBeInTheDocument();
   });
 
   it("repository 이름을 GitHub으로 잇고 권위 점수를 설명으로 붙인다", () => {
-    render(<RepoTable repos={[repo({ impact: 84 })]} />);
+    render(<RepoTable dict={KO} repos={[repo({ impact: 84 })]} />);
 
     const link = screen.getByRole("link", { name: "vercel/next.js" });
     expect(link).toHaveAttribute("href", "https://github.com/vercel/next.js");
@@ -81,7 +90,7 @@ describe("RepoTable", () => {
   });
 
   it("owner avatar를 로고로 쓴다", () => {
-    render(<RepoTable repos={[repo()]} />);
+    render(<RepoTable dict={KO} repos={[repo()]} />);
     expect(screen.getByRole("presentation")).toHaveAttribute(
       "src",
       "https://avatars.githubusercontent.com/vercel",
@@ -89,18 +98,19 @@ describe("RepoTable", () => {
   });
 
   it("비공개 repository는 Private으로 표시한다", () => {
-    render(<RepoTable repos={[repo({ isPrivate: true })]} />);
+    render(<RepoTable dict={KO} repos={[repo({ isPrivate: true })]} />);
     expect(screen.getByText("Private")).toBeInTheDocument();
   });
 
   it("공개 repository에는 Private을 붙이지 않는다", () => {
-    render(<RepoTable repos={[repo()]} />);
+    render(<RepoTable dict={KO} repos={[repo()]} />);
     expect(screen.queryByText("Private")).not.toBeInTheDocument();
   });
 
   it("여러 repository를 준 순서대로 나열한다", () => {
     render(
       <RepoTable
+        dict={KO}
         repos={[
           repo({ nameWithOwner: "a/one" }),
           repo({ nameWithOwner: "b/two" }),
@@ -119,7 +129,7 @@ describe("RepoTable", () => {
 
   describe("알 수 없는 값", () => {
     it("null인 항목은 —로 두고 이유를 설명한다", () => {
-      render(<RepoTable repos={[repo({ commits: null })]} />);
+      render(<RepoTable dict={KO} repos={[repo({ commits: null })]} />);
 
       const cells = within(rowOf("vercel/next.js")).getAllByRole("cell");
       expect(cells[1]).toHaveTextContent("—");
@@ -127,7 +137,7 @@ describe("RepoTable", () => {
     });
 
     it("아는 항목에는 설명을 붙이지 않는다", () => {
-      render(<RepoTable repos={[repo()]} />);
+      render(<RepoTable dict={KO} repos={[repo()]} />);
 
       const cells = within(rowOf("vercel/next.js")).getAllByRole("cell");
       expect(cells[1]).not.toHaveAttribute("title");
@@ -135,7 +145,9 @@ describe("RepoTable", () => {
     });
 
     it("모르는 항목이 하나라도 있으면 합계에 +를 붙인다", () => {
-      render(<RepoTable repos={[repo({ reviews: null, total: 14 })]} />);
+      render(
+        <RepoTable dict={KO} repos={[repo({ reviews: null, total: 14 })]} />,
+      );
 
       const total = within(rowOf("vercel/next.js"))
         .getAllByRole("cell")
@@ -145,7 +157,7 @@ describe("RepoTable", () => {
     });
 
     it("항목이 0이면 확정값으로 본다", () => {
-      render(<RepoTable repos={[repo({ issues: 0 })]} />);
+      render(<RepoTable dict={KO} repos={[repo({ issues: 0 })]} />);
 
       const cells = within(rowOf("vercel/next.js")).getAllByRole("cell");
       expect(cells[4]).toHaveTextContent("0");

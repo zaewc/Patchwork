@@ -17,7 +17,9 @@ describe("CopyButton", () => {
   });
 
   const setup = (text: string) => {
-    render(<CopyButton text={text} />);
+    render(
+      <CopyButton text={text} label="Markdown 복사" copiedLabel="복사됨" />,
+    );
     const button = screen.getByRole("button");
     const click = () =>
       act(async () => {

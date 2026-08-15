@@ -1,5 +1,6 @@
 import { RepoLogo, REPO_COUNT_FIELDS, type RepoStat } from "@/entities/repo";
 import { formatNumber } from "@/shared/lib/format";
+import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 
 const COLUMN_LABELS: Record<(typeof REPO_COUNT_FIELDS)[number], string> = {
   commits: "Commits",
@@ -8,18 +9,20 @@ const COLUMN_LABELS: Record<(typeof REPO_COUNT_FIELDS)[number], string> = {
   issues: "Issues",
 };
 
-const UNKNOWN_HINT = "기여 수 상위 목록에서 잘려 정확한 수를 알 수 없습니다.";
-const PARTIAL_HINT = "일부 항목을 알 수 없어 실제보다 적을 수 있습니다.";
-
 export function RepoTable({
   repos,
-  emptyMessage = "이 기간에 기여한 repository가 없습니다.",
+  dict,
+  emptyMessage,
 }: {
   repos: RepoStat[];
+  dict: Dictionary;
   emptyMessage?: string;
 }) {
+  const { empty, unknownHint, partialHint, impactTitle } =
+    dict.dashboard.repoTable;
+
   if (repos.length === 0) {
-    return <p className="text-sm text-muted">{emptyMessage}</p>;
+    return <p className="text-sm text-muted">{emptyMessage ?? empty}</p>;
   }
 
   return (
@@ -50,7 +53,7 @@ export function RepoTable({
                     <RepoLogo src={repo.ownerAvatarUrl} alt="" />
                     <a
                       href={repo.url}
-                      title={`권위 점수 ${repo.impact}/100`}
+                      title={interpolate(impactTitle, { score: repo.impact })}
                       className="truncate hover:text-accent hover:underline"
                     >
                       {repo.nameWithOwner}
@@ -67,7 +70,7 @@ export function RepoTable({
                   return (
                     <td
                       key={field}
-                      title={value === null ? UNKNOWN_HINT : undefined}
+                      title={value === null ? unknownHint : undefined}
                       className="px-3 py-2.5 text-right tabular-nums text-muted"
                     >
                       {value ?? "—"}
@@ -75,10 +78,10 @@ export function RepoTable({
                   );
                 })}
                 <td
-                  title={partial ? PARTIAL_HINT : undefined}
+                  title={partial ? partialHint : undefined}
                   className="px-4 py-2.5 text-right font-medium tabular-nums"
                 >
-                  {formatNumber(repo.total)}
+                  {formatNumber(repo.total, dict.numberLocale)}
                   {partial ? <span className="text-muted">+</span> : null}
                 </td>
               </tr>

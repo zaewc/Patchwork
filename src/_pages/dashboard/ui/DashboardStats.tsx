@@ -1,5 +1,6 @@
 import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import { formatNumber } from "@/shared/lib/format";
+import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 import { StatCard } from "@/shared/ui/stat-card";
 
 /** 화면 맨 위의 지표 넷. 지금 보고 있는 범위에 맞춰 이미 걸러진 수를 받는다. */
@@ -10,14 +11,23 @@ export function DashboardStats({
   openCount,
   staleCount,
   mergedCount,
+  dict,
 }: Pick<DashboardData, "totals" | "notable" | "external"> & {
   openCount: number;
   staleCount: number;
   mergedCount: number;
+  dict: Dictionary;
 }) {
+  const { numberLocale } = dict;
+  const { stats } = dict.dashboard;
+
   const restrictedHint =
     totals.restricted > 0
-      ? { hint: `Private ${formatNumber(totals.restricted)}건 포함` }
+      ? {
+          hint: interpolate(stats.privateHint, {
+            count: formatNumber(totals.restricted, numberLocale),
+          }),
+        }
       : {};
 
   return (
@@ -25,24 +35,30 @@ export function DashboardStats({
       <StatCard
         label="Contributions"
         value={totals.contributions}
+        numberLocale={numberLocale}
         {...restrictedHint}
       />
       <StatCard
-        label="주요 OSS 기여"
+        label={stats.notable}
         value={notable.contributions}
-        hint={`repository ${notable.repos}곳`}
+        numberLocale={numberLocale}
+        hint={interpolate(stats.notableHint, { count: notable.repos })}
         accent
       />
       <StatCard
-        label="외부 Repository 기여"
+        label={stats.external}
         value={external.contributions}
-        hint={`전체의 ${external.ratio}%`}
+        numberLocale={numberLocale}
+        hint={interpolate(stats.externalHint, { ratio: external.ratio })}
       />
       <StatCard
         label="Open pull requests"
         value={openCount}
+        numberLocale={numberLocale}
         hint={
-          staleCount > 0 ? `Stale ${staleCount}건` : `Merged ${mergedCount}건`
+          staleCount > 0
+            ? interpolate(stats.staleHint, { count: staleCount })
+            : interpolate(stats.mergedHint, { count: mergedCount })
         }
       />
     </div>
