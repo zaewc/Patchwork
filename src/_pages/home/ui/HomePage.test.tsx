@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HomePage } from "@/_pages/home/ui/home-page";
+import { HomePage } from "@/_pages/home/ui/HomePage";
 import { getSession } from "@/entities/viewer";
 import { isOAuthConfigured } from "@/shared/config";
 

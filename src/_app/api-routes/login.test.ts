@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleLogin } from "@/_app/api-routes/login";
-import { STATE_COOKIE } from "@/_app/api-routes/oauth-state";
+import { STATE_COOKIE } from "@/_app/api-routes/oauthState";
 
-const request = (url = "http://localhost:3000/api/auth/login") => new Request(url);
+const request = (url = "http://localhost:3000/api/auth/login") =>
+  new Request(url);
 
 const configure = () => {
   vi.stubEnv("GITHUB_CLIENT_ID", "client-id");
@@ -23,7 +24,9 @@ describe("GET /api/auth/login", () => {
 
     const response = handleLogin(request());
 
-    expect(response.headers.get("location")).toBe("http://localhost:3000/?error=not_configured");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/?error=not_configured",
+    );
     expect(response.cookies.get(STATE_COOKIE)).toBeUndefined();
   });
 
@@ -45,7 +48,9 @@ describe("GET /api/auth/login", () => {
     const response = handleLogin(request());
     const location = new URL(response.headers.get("location")!);
 
-    expect(location.origin + location.pathname).toBe("https://github.com/login/oauth/authorize");
+    expect(location.origin + location.pathname).toBe(
+      "https://github.com/login/oauth/authorize",
+    );
     expect(location.searchParams.get("client_id")).toBe("client-id");
     expect(location.searchParams.get("redirect_uri")).toBe(
       "http://localhost:3000/api/auth/callback",
@@ -56,7 +61,9 @@ describe("GET /api/auth/login", () => {
     configure();
 
     const response = handleLogin(request());
-    expect(new URL(response.headers.get("location")!).searchParams.get("scope")).toBe("read:user");
+    expect(
+      new URL(response.headers.get("location")!).searchParams.get("scope"),
+    ).toBe("read:user");
   });
 
   it("scope를 환경변수로 넓힐 수 있다", () => {
@@ -64,16 +71,18 @@ describe("GET /api/auth/login", () => {
     vi.stubEnv("GITHUB_OAUTH_SCOPES", "read:user,repo");
 
     const response = handleLogin(request());
-    expect(new URL(response.headers.get("location")!).searchParams.get("scope")).toBe(
-      "read:user,repo",
-    );
+    expect(
+      new URL(response.headers.get("location")!).searchParams.get("scope"),
+    ).toBe("read:user,repo");
   });
 
   it("state를 쿠키와 URL에 같은 값으로 심는다", () => {
     configure();
 
     const response = handleLogin(request());
-    const state = new URL(response.headers.get("location")!).searchParams.get("state");
+    const state = new URL(response.headers.get("location")!).searchParams.get(
+      "state",
+    );
     const cookie = response.cookies.get(STATE_COOKIE);
 
     expect(state).toMatch(/^[A-Za-z0-9_-]{22}$/);
@@ -85,7 +94,12 @@ describe("GET /api/auth/login", () => {
 
     const cookie = handleLogin(request()).cookies.get(STATE_COOKIE);
 
-    expect(cookie).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/", maxAge: 600 });
+    expect(cookie).toMatchObject({
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 600,
+    });
   });
 
   it("요청마다 다른 state를 만든다", () => {
@@ -102,8 +116,10 @@ describe("GET /api/auth/login", () => {
     vi.stubEnv("APP_URL", "https://patchwork.example.com");
 
     const response = handleLogin(request());
-    expect(new URL(response.headers.get("location")!).searchParams.get("redirect_uri")).toBe(
-      "https://patchwork.example.com/api/auth/callback",
-    );
+    expect(
+      new URL(response.headers.get("location")!).searchParams.get(
+        "redirect_uri",
+      ),
+    ).toBe("https://patchwork.example.com/api/auth/callback");
   });
 });

@@ -1,19 +1,19 @@
 import { render, screen } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ReadmeExportPage } from "@/_pages/readme-export/ui/readme-export-page";
+import { ReadmeExportPage } from "@/_pages/readme-export/ui/ReadmeExportPage";
 import {
   NOTABLE_IMPACT,
   PLAIN_IMPACT,
 } from "@/_pages/dashboard/api/dashboard.fixtures";
-import { loadContributionItems } from "@/_pages/readme-export/api/load-contribution-items";
+import { loadContributionItems } from "@/_pages/readme-export/api/loadContributionItems";
 import type { ContributionGroup } from "@/entities/contribution";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
-vi.mock("@/_pages/readme-export/api/load-contribution-items", () => ({
+vi.mock("@/_pages/readme-export/api/loadContributionItems", () => ({
   loadContributionItems: vi.fn(),
 }));
 

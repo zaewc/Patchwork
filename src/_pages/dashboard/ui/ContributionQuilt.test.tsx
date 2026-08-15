@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ContributionQuilt } from "@/_pages/dashboard/ui/contribution-quilt";
+import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
 import type { CalendarDay } from "@/entities/contribution";
 
 const DAY_MS = 86_400_000;

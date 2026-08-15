@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchContributionItems } from "@/entities/contribution/api/fetch-contribution-items";
+import { fetchContributionItems } from "@/entities/contribution/api/fetchContributionItems";
 import {
   completedIssueItem,
   mergedPullRequestItem,

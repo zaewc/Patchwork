@@ -1,16 +1,16 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { dashboardQueryOptions } from "@/_pages/dashboard/api/dashboard-query";
-import { DashboardQueryError } from "@/_pages/dashboard/api/fetch-dashboard";
-import { ContributionQuilt } from "@/_pages/dashboard/ui/contribution-quilt";
-import { DashboardLoading } from "@/_pages/dashboard/ui/dashboard-loading";
-import { DashboardStats } from "@/_pages/dashboard/ui/dashboard-stats";
-import { ErrorScreen } from "@/_pages/dashboard/ui/error-screen";
-import { MergedPullRequestList } from "@/_pages/dashboard/ui/merged-pull-request-list";
-import { PullRequestBoard } from "@/_pages/dashboard/ui/pull-request-board";
-import { RepoTable } from "@/_pages/dashboard/ui/repo-table";
-import { Section } from "@/_pages/dashboard/ui/section";
+import { dashboardQueryOptions } from "@/_pages/dashboard/api/dashboardQuery";
+import { DashboardQueryError } from "@/_pages/dashboard/api/fetchDashboard";
+import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
+import { DashboardLoading } from "@/_pages/dashboard/ui/DashboardLoading";
+import { DashboardStats } from "@/_pages/dashboard/ui/DashboardStats";
+import { ErrorScreen } from "@/_pages/dashboard/ui/ErrorScreen";
+import { MergedPullRequestList } from "@/_pages/dashboard/ui/MergedPullRequestList";
+import { PullRequestBoard } from "@/_pages/dashboard/ui/PullRequestBoard";
+import { RepoTable } from "@/_pages/dashboard/ui/RepoTable";
+import { Section } from "@/_pages/dashboard/ui/Section";
 import {
   filterByScope,
   LiveScopeTabs,

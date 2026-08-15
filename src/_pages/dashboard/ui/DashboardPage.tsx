@@ -1,13 +1,13 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
-import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboard-query";
+import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboardQuery";
 import {
   loadDashboard,
   type DashboardData,
-} from "@/_pages/dashboard/api/load-dashboard";
-import { DashboardContent } from "@/_pages/dashboard/ui/dashboard-content";
-import { DashboardQueryProvider } from "@/_pages/dashboard/ui/dashboard-query-provider";
-import { ErrorScreen } from "@/_pages/dashboard/ui/error-screen";
+} from "@/_pages/dashboard/api/loadDashboard";
+import { DashboardContent } from "@/_pages/dashboard/ui/DashboardContent";
+import { DashboardQueryProvider } from "@/_pages/dashboard/ui/DashboardQueryProvider";
+import { ErrorScreen } from "@/_pages/dashboard/ui/ErrorScreen";
 import { getSession } from "@/entities/viewer";
 import { parseScopeParams, scopeHref } from "@/features/contribution-scope";
 import { GitHubAuthError } from "@/shared/api";

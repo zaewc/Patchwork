@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/widgets/site-header/ui/logo";
+import { Logo } from "@/widgets/site-header/ui/Logo";
 import type { GitHubViewer } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { SignOutIcon } from "@/shared/ui/icon";

@@ -56,7 +56,7 @@ FSD의 `app`·`pages` 레이어를 `_app`·`_pages`로 둔 것은 의도된 것�
 ### 서버 컴포넌트
 
 - 기본은 서버 컴포넌트입니다. `"use client"`는 브라우저 API가 꼭 필요할 때만 (현재 `shared/ui/copy-button` 한 곳).
-- 렌더 중에 `Date.now()` 같은 비순수 함수를 부르지 않습니다. 데이터 로딩 함수 쪽으로 옮기세요 (`_pages/readme-export/api/load-contribution-items.ts` 참고).
+- 렌더 중에 `Date.now()` 같은 비순수 함수를 부르지 않습니다. 데이터 로딩 함수 쪽으로 옮기세요 (`_pages/readme-export/api/loadContributionItems.ts` 참고).
 - 데이터 읽기는 두 단계입니다. `entities/*/api`는 바깥에 한 가지를 묻고, `_pages/*/api`는 그 결과를 한 화면 분량으로 조립하며 부분 실패를 어떻게 다룰지 정합니다.
 - **repository 점수(`impact`)는 GitHub 응답을 옮기는 자리에서 매기지 않습니다.** deps.dev의 OpenSSF Scorecard를 받아야 알 수 있으므로 `Unscored<T>`로 꼬리표만 달아 두고, 화면 로더가 `loadScorecards` → `withImpact`로 완성합니다. 화면 한 번에 조회 한 번입니다.
 - deps.dev 조회는 곁가지입니다. 실패하면 점수 없이 진행하고 화면은 그대로 그립니다. 이 성질을 깨지 마세요.
@@ -83,20 +83,31 @@ FSD의 `app`·`pages` 레이어를 `_app`·`_pages`로 둔 것은 의도된 것�
 
 | 대상                         | 형식           | 예                                       |
 | ---------------------------- | -------------- | ---------------------------------------- |
-| 디렉토리 · 파일              | kebab-case     | `contribution-scope/` · `scope-tabs.tsx` |
+| 디렉토리                     | kebab-case     | `contribution-scope/` · `copy-button/`   |
+| `.tsx` 파일                  | PascalCase     | `ScopeTabs.tsx` · `TabBar.tsx`           |
+| `.ts` 파일                   | lowerCamelCase | `loadScorecards.ts` · `filterByScope.ts` |
 | 타입 · 인터페이스 · 컴포넌트 | PascalCase     | `ScopeParams` · `TabBar`                 |
 | 변수 · 함수                  | lowerCamelCase | `scopeTabGroups` · `loadScorecards`      |
 | 모듈 상수                    | UPPER_CASE     | `MAX_REPOSITORIES` · `SESSION_COOKIE`    |
 
 `npm run lint`이 검사합니다. 파일·폴더는 [check-file](https://github.com/dukeluo/eslint-plugin-check-file)이, 코드 안의 이름은 `@typescript-eslint/naming-convention`이 봅니다.
 
+`.tsx`가 PascalCase인 것은 그 파일이 컴포넌트 하나로 완결되기 때문입니다. 파일 이름과 export 이름이 같으면 import 문에서 경로를 다시 읽지 않아도 됩니다.
+
 예외는 규칙에 적어 두었습니다.
 
+**우리가 짓지 않은 이름 두 자리는 규칙 밖입니다.** 둘 다 파일명이 곧 다른 무언가와 맞물리는 약속이라, 형식을 바꾸면 동작이 깨집니다.
+
+- `app/`의 파일명은 Next의 라우팅 규약(`page` `layout` `loading` `route` …)입니다. 그 목록만 허용합니다.
+- `entities/*/@x/<슬라이스>.ts`의 이름은 **참조 대상 슬라이스 폴더명 그 자체**입니다(`@x/pull-request.ts` ↔ `entities/pull-request`). steiger가 이 이름으로 교차 참조를 대조하므로 kebab-case로 둡니다. 별도 config 블록으로 분리해 두었습니다.
+
+나머지 예외 셋:
+
 - `_app`·`_pages`·`@x` 세 폴더는 `ignoreWords`로 빠집니다. 앞의 둘은 Next와의 충돌을 피한 접두어, `@x`는 FSD의 교차 공개 API라 kebab-case로 적을 수 없습니다.
-- `scope-tabs.test.tsx`·`dashboard.fixtures.ts`의 가운데 확장자는 이름이 아니므로 `ignoreMiddleExtensions`로 건너뜁니다.
+- `ScopeTabs.test.tsx`·`dashboard.fixtures.ts`의 가운데 확장자는 이름이 아니므로 `ignoreMiddleExtensions`로 건너뜁니다.
 - **바깥에서 받은 이름은 우리가 정하지 않습니다.** GitHub·deps.dev 응답의 `snake_case`가 그대로 흘러 들어오므로 객체 속성과 구조 분해 변수에는 형식을 걸지 않았습니다. 이 예외를 좁히지 마세요.
 
-파일명은 kebab-case를 씁니다. `app/`의 `page.tsx`·`layout.tsx`·`route.ts`가 Next의 예약어라 다른 형식을 못 쓰고, `shared/ui/copy-button/copy-button.tsx`처럼 폴더와 파일 이름을 맞춰 두었기 때문입니다.
+폴더는 kebab-case, 파일은 PascalCase/camelCase라 `shared/ui/copy-button/CopyButton.tsx`처럼 둘의 형식이 어긋납니다. 의도된 것입니다.
 
 ## 테스트
 

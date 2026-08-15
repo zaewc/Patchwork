@@ -1,4 +1,4 @@
-import { contributionLevels } from "@/_pages/dashboard/lib/contribution-levels";
+import { contributionLevels } from "@/_pages/dashboard/lib/contributionLevels";
 import type { CalendarDay } from "@/entities/contribution";
 
 const MONTHS = [

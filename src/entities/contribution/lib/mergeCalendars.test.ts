@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeCalendars } from "@/entities/contribution/lib/merge-calendars";
+import { mergeCalendars } from "@/entities/contribution/lib/mergeCalendars";
 import {
   calendarWeeks,
   collection,

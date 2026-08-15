@@ -1,1 +1,1 @@
-export { errorMessage } from "@/shared/lib/error-message/error-message";
+export { errorMessage } from "@/shared/lib/error-message/errorMessage";

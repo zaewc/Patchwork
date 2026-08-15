@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { pullRequest } from "@/_pages/dashboard/api/dashboard.fixtures";
-import { PullRequestBoard } from "@/_pages/dashboard/ui/pull-request-board";
+import { PullRequestBoard } from "@/_pages/dashboard/ui/PullRequestBoard";
 
 const NOW = Date.parse("2026-08-15T00:00:00Z");
 

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RepoLogo } from "@/entities/repo/ui/repo-logo";
+import { RepoLogo } from "@/entities/repo/ui/RepoLogo";
 
 describe("RepoLogo", () => {
   it("기본 크기는 16px이다", () => {

@@ -3,4 +3,4 @@ export {
   CopyIcon,
   RefreshIcon,
   SignOutIcon,
-} from "@/shared/ui/icon/icon";
+} from "@/shared/ui/icon/Icon";

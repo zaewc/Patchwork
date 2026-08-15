@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { ScopeParams } from "@/features/contribution-scope/model/params";
-import { LiveScopeTabs } from "@/features/contribution-scope/ui/live-scope-tabs";
+import { LiveScopeTabs } from "@/features/contribution-scope/ui/LiveScopeTabs";
 import { ROUTES } from "@/shared/config";
 
 /** 고른 조건이 그대로 다시 내려오는, 실제 화면과 같은 흐름을 만든다. */

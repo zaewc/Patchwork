@@ -3,7 +3,7 @@ import { dashboardData } from "@/_pages/dashboard/api/dashboard.fixtures";
 import {
   DashboardQueryError,
   fetchDashboard,
-} from "@/_pages/dashboard/api/fetch-dashboard";
+} from "@/_pages/dashboard/api/fetchDashboard";
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());

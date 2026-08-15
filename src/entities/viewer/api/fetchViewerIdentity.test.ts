@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchViewerIdentity } from "@/entities/viewer/api/fetch-viewer-identity";
+import { fetchViewerIdentity } from "@/entities/viewer/api/fetchViewerIdentity";
 import { VIEWER } from "@/shared/api/github/response.fixtures";
 
 const fetchMock = vi.fn<typeof fetch>();

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { loadScorecards } from "@/entities/repo/api/load-scorecards";
+import { loadScorecards } from "@/entities/repo/api/loadScorecards";
 import type { RepoScoring } from "@/entities/repo/model/scoring";
 import { fetchDepsDevProject, type DepsDevProject } from "@/shared/api";
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { loadContributionItems } from "@/_pages/readme-export/api/load-contribution-items";
-import { toMarkdown } from "@/_pages/readme-export/lib/to-markdown";
+import { loadContributionItems } from "@/_pages/readme-export/api/loadContributionItems";
+import { toMarkdown } from "@/_pages/readme-export/lib/toMarkdown";
 import type { ContributionGroup } from "@/entities/contribution";
 import { getSession } from "@/entities/viewer";
 import {

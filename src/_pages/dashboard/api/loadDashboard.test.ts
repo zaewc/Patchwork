@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadDashboard } from "@/_pages/dashboard/api/load-dashboard";
+import { loadDashboard } from "@/_pages/dashboard/api/loadDashboard";
 import { GitHubAuthError } from "@/shared/api";
 import {
   calendarWeeks,

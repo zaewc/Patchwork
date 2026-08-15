@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterByScope } from "@/features/contribution-scope/lib/filter-by-scope";
+import { filterByScope } from "@/features/contribution-scope/lib/filterByScope";
 import { NOTABLE_MIN } from "@/entities/repo";
 
 const items = [

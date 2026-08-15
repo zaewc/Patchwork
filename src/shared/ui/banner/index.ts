@@ -1,1 +1,1 @@
-export { Banner } from "@/shared/ui/banner/banner";
+export { Banner } from "@/shared/ui/banner/Banner";

@@ -7,4 +7,4 @@ export {
 } from "@/entities/viewer/model/session";
 export type { Session } from "@/entities/viewer/model/session";
 
-export { fetchViewerIdentity } from "@/entities/viewer/api/fetch-viewer-identity";
+export { fetchViewerIdentity } from "@/entities/viewer/api/fetchViewerIdentity";

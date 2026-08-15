@@ -1,4 +1,4 @@
-import type { DashboardData } from "@/_pages/dashboard/api/load-dashboard";
+import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import { ROUTES, type RangeKey } from "@/shared/config";
 
 type DashboardResponse = { data: DashboardData } | { error: string };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateRepos } from "@/entities/contribution/lib/aggregate-repos";
+import { aggregateRepos } from "@/entities/contribution/lib/aggregateRepos";
 import {
   collection,
   entry,

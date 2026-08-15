@@ -1,1 +1,1 @@
-export { makeQueryClient } from "@/shared/lib/query-client/query-client";
+export { makeQueryClient } from "@/shared/lib/query-client/queryClient";

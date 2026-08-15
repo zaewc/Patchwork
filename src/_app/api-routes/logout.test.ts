@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleLogout } from "@/_app/api-routes/logout";
-import { STATE_COOKIE } from "@/_app/api-routes/oauth-state";
+import { STATE_COOKIE } from "@/_app/api-routes/oauthState";
 import { SESSION_COOKIE } from "@/entities/viewer";
 
-const request = (url = "http://localhost:3000/api/auth/logout") => new Request(url);
+const request = (url = "http://localhost:3000/api/auth/logout") =>
+  new Request(url);
 
 beforeEach(() => {
   vi.stubEnv("APP_URL", undefined);
@@ -24,7 +25,10 @@ describe.each([["POST"], ["GET"]])("%s /api/auth/logout", () => {
 
     for (const name of [SESSION_COOKIE, STATE_COOKIE]) {
       // 지운 쿠키는 값이 비고 유효기간이 epoch으로 돌아간다.
-      expect(response.cookies.get(name)).toMatchObject({ value: "", expires: new Date(0) });
+      expect(response.cookies.get(name)).toMatchObject({
+        value: "",
+        expires: new Date(0),
+      });
     }
   });
 
@@ -32,6 +36,8 @@ describe.each([["POST"], ["GET"]])("%s /api/auth/logout", () => {
     vi.stubEnv("APP_URL", "https://patchwork.example.com/");
 
     const response = handler(request());
-    expect(response.headers.get("location")).toBe("https://patchwork.example.com/");
+    expect(response.headers.get("location")).toBe(
+      "https://patchwork.example.com/",
+    );
   });
 });

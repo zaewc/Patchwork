@@ -3,19 +3,19 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dashboardData } from "@/_pages/dashboard/api/dashboard.fixtures";
-import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboard-query";
+import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboardQuery";
 import {
   DashboardQueryError,
   fetchDashboard,
-} from "@/_pages/dashboard/api/fetch-dashboard";
-import { DashboardContent } from "@/_pages/dashboard/ui/dashboard-content";
-import type { DashboardData } from "@/_pages/dashboard/api/load-dashboard";
+} from "@/_pages/dashboard/api/fetchDashboard";
+import { DashboardContent } from "@/_pages/dashboard/ui/DashboardContent";
+import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import { ROUTES, type RangeKey } from "@/shared/config";
 
-vi.mock("@/_pages/dashboard/api/fetch-dashboard", async (importOriginal) => {
+vi.mock("@/_pages/dashboard/api/fetchDashboard", async (importOriginal) => {
   const original =
     await importOriginal<
-      typeof import("@/_pages/dashboard/api/fetch-dashboard")
+      typeof import("@/_pages/dashboard/api/fetchDashboard")
     >();
   return { ...original, fetchDashboard: vi.fn() };
 });

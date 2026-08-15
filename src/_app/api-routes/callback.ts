@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
-import { readState, STATE_COOKIE, statesMatch } from "@/_app/api-routes/oauth-state";
-import { fetchViewerIdentity, seal, SESSION_COOKIE, SESSION_MAX_AGE } from "@/entities/viewer";
-import { GITHUB_OAUTH_TOKEN_URL, ROUTES, appOrigin, oauthApp } from "@/shared/config";
+import {
+  readState,
+  STATE_COOKIE,
+  statesMatch,
+} from "@/_app/api-routes/oauthState";
+import {
+  fetchViewerIdentity,
+  seal,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+} from "@/entities/viewer";
+import {
+  GITHUB_OAUTH_TOKEN_URL,
+  ROUTES,
+  appOrigin,
+  oauthApp,
+} from "@/shared/config";
 import { cookieOptions } from "@/shared/lib/cookie";
 
 /** 실패는 모두 홈으로 되돌리고 사유를 쿼리로 남긴다. 쓰던 state는 정리한다. */
 function fail(origin: string, reason: string) {
-  const response = NextResponse.redirect(`${origin}${ROUTES.home}?error=${reason}`);
+  const response = NextResponse.redirect(
+    `${origin}${ROUTES.home}?error=${reason}`,
+  );
   response.cookies.delete(STATE_COOKIE);
   return response;
 }
@@ -32,8 +48,12 @@ async function exchangeCode(
 
   if (!response.ok) return { error: "token_exchange_failed" };
 
-  const payload = (await response.json()) as { access_token?: string; error?: string };
-  if (!payload.access_token) return { error: payload.error ?? "token_exchange_failed" };
+  const payload = (await response.json()) as {
+    access_token?: string;
+    error?: string;
+  };
+  if (!payload.access_token)
+    return { error: payload.error ?? "token_exchange_failed" };
   return { accessToken: payload.access_token };
 }
 

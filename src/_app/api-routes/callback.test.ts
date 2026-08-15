@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleCallback } from "@/_app/api-routes/callback";
 import { fetchViewerIdentity } from "@/entities/viewer";
-import { STATE_COOKIE } from "@/_app/api-routes/oauth-state";
+import { STATE_COOKIE } from "@/_app/api-routes/oauthState";
 import { SESSION_COOKIE, unseal } from "@/entities/viewer";
 
 vi.mock("@/entities/viewer", async (importOriginal) => ({
@@ -24,7 +24,8 @@ const json = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), { status: 200, ...init });
 
 const bodyText = (body: BodyInit | null | undefined): string => {
-  if (typeof body !== "string") throw new TypeError("JSON 요청 본문이 문자열이 아닙니다.");
+  if (typeof body !== "string")
+    throw new TypeError("JSON 요청 본문이 문자열이 아닙니다.");
   return body;
 };
 
@@ -98,7 +99,9 @@ describe("GET /api/auth/callback · 거절", () => {
       request({ cookie: `foo=1; ${STATE_COOKIE}=${STATE}; bar=2` }),
     );
 
-    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/dashboard",
+    );
   });
 });
 
@@ -120,19 +123,25 @@ describe("GET /api/auth/callback · 토큰 교환", () => {
   it("토큰 요청이 실패하면 안내와 함께 홈으로 보낸다", async () => {
     fetchMock.mockResolvedValue(new Response("nope", { status: 500 }));
 
-    expect(errorOf(await handleCallback(request()))).toBe("token_exchange_failed");
+    expect(errorOf(await handleCallback(request()))).toBe(
+      "token_exchange_failed",
+    );
   });
 
   it("GitHub이 준 오류 사유를 그대로 전달한다", async () => {
     fetchMock.mockResolvedValue(json({ error: "bad_verification_code" }));
 
-    expect(errorOf(await handleCallback(request()))).toBe("bad_verification_code");
+    expect(errorOf(await handleCallback(request()))).toBe(
+      "bad_verification_code",
+    );
   });
 
   it("사유 없이 토큰이 비어 있으면 교환 실패로 본다", async () => {
     fetchMock.mockResolvedValue(json({}));
 
-    expect(errorOf(await handleCallback(request()))).toBe("token_exchange_failed");
+    expect(errorOf(await handleCallback(request()))).toBe(
+      "token_exchange_failed",
+    );
   });
 
   it("OAuth 앱 설정이 사라졌으면 교환을 시도하지 않는다", async () => {
@@ -143,7 +152,9 @@ describe("GET /api/auth/callback · 토큰 교환", () => {
   });
 
   it("사용자 정보를 못 가져오면 안내와 함께 홈으로 보낸다", async () => {
-    vi.mocked(fetchViewerIdentity).mockRejectedValue(new Error("토큰이 유효하지 않습니다"));
+    vi.mocked(fetchViewerIdentity).mockRejectedValue(
+      new Error("토큰이 유효하지 않습니다"),
+    );
 
     expect(errorOf(await handleCallback(request()))).toBe("identity_failed");
   });
@@ -152,7 +163,9 @@ describe("GET /api/auth/callback · 토큰 교환", () => {
 describe("GET /api/auth/callback · 성공", () => {
   it("대시보드로 보낸다", async () => {
     const response = await handleCallback(request());
-    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/dashboard",
+    );
   });
 
   it("받은 토큰으로 사용자 정보를 조회한다", async () => {
@@ -168,7 +181,9 @@ describe("GET /api/auth/callback · 성공", () => {
   });
 
   it("세션 쿠키는 30일짜리 httpOnly 쿠키다", async () => {
-    const cookie = (await handleCallback(request())).cookies.get(SESSION_COOKIE);
+    const cookie = (await handleCallback(request())).cookies.get(
+      SESSION_COOKIE,
+    );
 
     expect(cookie).toMatchObject({
       httpOnly: true,
@@ -187,14 +202,18 @@ describe("GET /api/auth/callback · 성공", () => {
     vi.mocked(fetchViewerIdentity).mockResolvedValue({ ...VIEWER, name: null });
 
     const response = await handleCallback(request());
-    expect(unseal(response.cookies.get(SESSION_COOKIE)!.value)?.name).toBeNull();
+    expect(
+      unseal(response.cookies.get(SESSION_COOKIE)!.value)?.name,
+    ).toBeNull();
   });
 
   it("APP_URL이 있으면 그 주소의 대시보드로 보낸다", async () => {
     vi.stubEnv("APP_URL", "https://patchwork.example.com");
 
     const response = await handleCallback(request());
-    expect(response.headers.get("location")).toBe("https://patchwork.example.com/dashboard");
+    expect(response.headers.get("location")).toBe(
+      "https://patchwork.example.com/dashboard",
+    );
     const payload = JSON.parse(bodyText(fetchMock.mock.calls[0]![1]?.body)) as {
       redirect_uri: string;
     };

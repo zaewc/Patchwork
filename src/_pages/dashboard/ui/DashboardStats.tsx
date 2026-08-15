@@ -1,4 +1,4 @@
-import type { DashboardData } from "@/_pages/dashboard/api/load-dashboard";
+import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import { formatNumber } from "@/shared/lib/format";
 import { StatCard } from "@/shared/ui/stat-card";
 

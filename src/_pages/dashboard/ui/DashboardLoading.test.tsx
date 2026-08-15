@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DashboardLoading } from "@/_pages/dashboard/ui/dashboard-loading";
+import { DashboardLoading } from "@/_pages/dashboard/ui/DashboardLoading";
 
 describe("DashboardLoading", () => {
   it("헤더는 실제 화면과 같은 자리에 둔다", () => {

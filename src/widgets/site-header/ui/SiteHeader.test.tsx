@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Logo } from "@/widgets/site-header/ui/logo";
-import { SiteHeader } from "@/widgets/site-header/ui/site-header";
+import { Logo } from "@/widgets/site-header/ui/Logo";
+import { SiteHeader } from "@/widgets/site-header/ui/SiteHeader";
 
 const USER = {
   login: "octocat",

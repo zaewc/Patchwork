@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RepoTable } from "@/_pages/dashboard/ui/repo-table";
+import { RepoTable } from "@/_pages/dashboard/ui/RepoTable";
 import type { RepoStat } from "@/entities/repo";
 
 const repo = (overrides: Partial<RepoStat> = {}): RepoStat => ({

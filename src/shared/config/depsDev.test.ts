@@ -5,7 +5,7 @@ async function loadConfig(env: { url?: string; revalidate?: string } = {}) {
   vi.resetModules();
   vi.stubEnv("DEPS_DEV_API_URL", env.url);
   vi.stubEnv("DEPS_DEV_REVALIDATE_SECONDS", env.revalidate);
-  return import("@/shared/config/deps-dev");
+  return import("@/shared/config/depsDev");
 }
 
 beforeEach(() => {

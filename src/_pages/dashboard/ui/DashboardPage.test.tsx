@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DashboardPage } from "@/_pages/dashboard/ui/dashboard-page";
+import { DashboardPage } from "@/_pages/dashboard/ui/DashboardPage";
 import {
   dashboardData,
   PLAIN_IMPACT,
@@ -11,13 +11,13 @@ import {
 import {
   loadDashboard,
   type DashboardData,
-} from "@/_pages/dashboard/api/load-dashboard";
+} from "@/_pages/dashboard/api/loadDashboard";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
-vi.mock("@/_pages/dashboard/api/load-dashboard", () => ({
+vi.mock("@/_pages/dashboard/api/loadDashboard", () => ({
   loadDashboard: vi.fn(),
 }));
 

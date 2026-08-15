@@ -1,1 +1,1 @@
-export { StatCard } from "@/shared/ui/stat-card/stat-card";
+export { StatCard } from "@/shared/ui/stat-card/StatCard";

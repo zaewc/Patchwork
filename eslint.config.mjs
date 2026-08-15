@@ -38,9 +38,29 @@ const eslintConfig = defineConfig([
       ],
       "check-file/filename-naming-convention": [
         "error",
-        { "{src,app,e2e}/**/*.{ts,tsx}": "KEBAB_CASE" },
-        // `scope-tabs.test.tsx`·`dashboard.fixtures.ts`의 가운데 확장자는 이름이 아니다.
+        {
+          // 모듈 하나가 곧 컴포넌트 하나인 `.tsx`는 그 컴포넌트 이름을 그대로 쓴다.
+          "src/**/*.tsx": "PASCAL_CASE",
+          "src/**/*.ts": "CAMEL_CASE",
+          "e2e/**/*.ts": "CAMEL_CASE",
+          // `app/`은 파일명이 곧 라우팅 규약이다(`page` `layout` `loading` `route`).
+          // 우리가 고를 수 있는 이름이 아니므로 Next가 정한 이름만 허용한다.
+          "app/**/*.{ts,tsx}":
+            "@(page|layout|loading|error|not-found|route|template|default|global-error|sitemap|robots|manifest|opengraph-image|icon|apple-icon)",
+        },
+        // `ScopeTabs.test.tsx`·`dashboard.fixtures.ts`의 가운데 확장자는 이름이 아니다.
         { ignoreMiddleExtensions: true },
+      ],
+    },
+  },
+  {
+    // `@x/<슬라이스>.ts`의 이름은 참조 대상 슬라이스 폴더명 그 자체다.
+    // steiger가 이 이름으로 교차 참조를 대조하므로 kebab-case로 둔다.
+    files: ["src/**/@x/*.ts"],
+    rules: {
+      "check-file/filename-naming-convention": [
+        "error",
+        { "src/**/@x/*.ts": "KEBAB_CASE" },
       ],
     },
   },

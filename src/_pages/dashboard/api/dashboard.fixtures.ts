@@ -1,4 +1,4 @@
-import type { DashboardData } from "@/_pages/dashboard/api/load-dashboard";
+import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
 import type { PullRequest } from "@/entities/pull-request";
 import type { RepoStat } from "@/entities/repo";
 
@@ -45,7 +45,9 @@ export function pullRequest(overrides: Partial<PullRequest> = {}): PullRequest {
   };
 }
 
-export function dashboardData(overrides: Partial<DashboardData> = {}): DashboardData {
+export function dashboardData(
+  overrides: Partial<DashboardData> = {},
+): DashboardData {
   return {
     viewer: {
       login: "octocat",
@@ -58,13 +60,19 @@ export function dashboardData(overrides: Partial<DashboardData> = {}): Dashboard
     weeks: [[{ date: "2026-08-09", count: 4, weekday: 0 }]],
     repos: [
       repoStat({ nameWithOwner: "vercel/next.js", total: 100 }),
-      repoStat({ nameWithOwner: "someone/toy", impact: PLAIN_IMPACT, total: 5 }),
+      repoStat({
+        nameWithOwner: "someone/toy",
+        impact: PLAIN_IMPACT,
+        total: 5,
+      }),
     ],
     openPullRequests: [
       pullRequest({ number: 1 }),
       pullRequest({ number: 2, repo: "someone/toy", impact: PLAIN_IMPACT }),
     ],
-    mergedPullRequests: [pullRequest({ number: 9, mergedAt: "2026-08-14T00:00:00Z" })],
+    mergedPullRequests: [
+      pullRequest({ number: 9, mergedAt: "2026-08-14T00:00:00Z" }),
+    ],
     openCount: 7,
     pullRequestsError: null,
     contributionsWarning: null,

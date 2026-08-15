@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { GitHubMark } from "@/_pages/home/ui/github-mark";
-import { OAuthSetupGuide } from "@/_pages/home/ui/oauth-setup-guide";
-import { loginErrorMessage } from "@/_pages/home/model/login-errors";
+import { GitHubMark } from "@/_pages/home/ui/GitHubMark";
+import { OAuthSetupGuide } from "@/_pages/home/ui/OAuthSetupGuide";
+import { loginErrorMessage } from "@/_pages/home/model/loginErrors";
 import { getSession } from "@/entities/viewer";
 import { Logo, SiteHeader } from "@/widgets/site-header";
 import { ROUTES, isOAuthConfigured } from "@/shared/config";

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useScopeParams } from "@/features/contribution-scope/model/use-scope-params";
+import { useScopeParams } from "@/features/contribution-scope/model/useScopeParams";
 import { ROUTES } from "@/shared/config";
 
 const INITIAL = { range: "1y", showAll: false } as const;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ContributionGroup } from "@/entities/contribution";
-import { toMarkdown } from "@/_pages/readme-export/lib/to-markdown";
+import { toMarkdown } from "@/_pages/readme-export/lib/toMarkdown";
 
 const group = (
   overrides: Partial<ContributionGroup> = {},

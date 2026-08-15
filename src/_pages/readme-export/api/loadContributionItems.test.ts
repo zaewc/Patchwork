@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadContributionItems } from "@/_pages/readme-export/api/load-contribution-items";
+import { loadContributionItems } from "@/_pages/readme-export/api/loadContributionItems";
 import { fetchContributionItems } from "@/entities/contribution";
 import type { ContributionGroup } from "@/entities/contribution";
 import { loadScorecards } from "@/entities/repo";

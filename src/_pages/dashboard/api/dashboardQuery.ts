@@ -1,5 +1,5 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import { fetchDashboard } from "@/_pages/dashboard/api/fetch-dashboard";
+import { fetchDashboard } from "@/_pages/dashboard/api/fetchDashboard";
 import type { RangeKey } from "@/shared/config";
 
 export const dashboardQueryKey = (range: RangeKey) =>

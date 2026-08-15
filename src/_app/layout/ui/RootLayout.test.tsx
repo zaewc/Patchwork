@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import RootLayout, { metadata } from "@/_app/layout/ui/root-layout";
+import RootLayout, { metadata } from "@/_app/layout/ui/RootLayout";
 
 const markup = () =>
   renderToStaticMarkup(
