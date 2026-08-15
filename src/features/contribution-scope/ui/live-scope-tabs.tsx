@@ -13,8 +13,8 @@ export function LiveScopeTabs({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {scopeTabGroups(params, path).map((items) => (
-        <TabBar key={items[0]!.href} items={items} inPlace={inPlace} />
+      {scopeTabGroups(params, path).map((group) => (
+        <TabBar key={group.id} items={group.items} inPlace={inPlace} />
       ))}
     </div>
   );
