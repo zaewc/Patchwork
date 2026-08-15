@@ -15,6 +15,17 @@ export {
 export type { OAuthApp } from "@/shared/config/github";
 
 export {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE,
+  LOCALE_LABELS,
+  LOCALE_MAX_AGE,
+  LOCALES,
+  matchLocale,
+  parseLocale,
+} from "@/shared/config/locale";
+export type { Locale } from "@/shared/config/locale";
+
+export {
   parseRange,
   RANGES,
   rangeStartDate,
