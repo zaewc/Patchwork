@@ -3,12 +3,8 @@ import {
   type ScopeParams,
 } from "@/features/contribution-scope/model/params";
 import { RANGES, type RangeKey } from "@/shared/config";
+import type { Dictionary } from "@/shared/lib/i18n";
 import type { Tab } from "@/shared/ui/tab-bar";
-
-const SCOPES = [
-  { showAll: false, label: "주요 OSS" },
-  { showAll: true, label: "전체" },
-];
 
 function tab(
   current: ScopeParams,
@@ -38,18 +34,20 @@ export type ScopeTabGroup = { id: string; items: Tab<ScopeParams>[] };
 export function scopeTabGroups(
   params: ScopeParams,
   path: string,
+  dict: Dictionary,
 ): ScopeTabGroup[] {
   return [
     {
       id: "scope",
-      items: SCOPES.map(({ showAll, label }) =>
-        tab(params, { showAll }, label, path),
-      ),
+      items: [
+        tab(params, { showAll: false }, dict.scope.notable, path),
+        tab(params, { showAll: true }, dict.scope.all, path),
+      ],
     },
     {
       id: "range",
       items: (Object.keys(RANGES) as RangeKey[]).map((range) =>
-        tab(params, { range }, RANGES[range].label, path),
+        tab(params, { range }, dict.ranges[range], path),
       ),
     },
   ];

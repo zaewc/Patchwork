@@ -5,24 +5,26 @@ import { loginErrorMessage } from "@/_pages/home/model/loginErrors";
 import { getSession } from "@/entities/viewer";
 import { Logo, SiteHeader } from "@/widgets/site-header";
 import { ROUTES, isOAuthConfigured } from "@/shared/config";
+import { getDictionary } from "@/shared/lib/i18n-server";
 import { Banner } from "@/shared/ui/banner";
 
 export async function HomePage({ searchParams }: PageProps<"/">) {
   if (await getSession()) redirect(ROUTES.dashboard);
 
+  const dict = await getDictionary();
   const params = await searchParams;
-  const error = loginErrorMessage(params.error);
+  const error = loginErrorMessage(params.error, dict);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader dict={dict} />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-4 py-24 text-center">
         <Logo size={40} />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-          오픈소스 기여를 한 장의 Patchwork로
+          {dict.home.title}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          GitHub contribution과 진행 중인 pull request 상태를 추적합니다.
+          {dict.home.subtitle}
         </p>
 
         {error ? (
@@ -40,7 +42,7 @@ export async function HomePage({ searchParams }: PageProps<"/">) {
             Sign in with GitHub
           </a>
         ) : (
-          <OAuthSetupGuide />
+          <OAuthSetupGuide dict={dict} />
         )}
       </main>
     </>

@@ -4,6 +4,7 @@ import {
   type PullRequest,
   type ReviewColumn,
 } from "@/entities/pull-request";
+import type { Dictionary } from "@/shared/lib/i18n";
 
 const COLUMNS: { key: ReviewColumn; title: string; tone: string }[] = [
   { key: "changes", title: "Changes requested", tone: "text-danger" },
@@ -15,13 +16,17 @@ const COLUMNS: { key: ReviewColumn; title: string; tone: string }[] = [
 /** 열린 PR을 검토 상태별 열로 늘어놓는다. 어디서 막혀 있는지 한눈에 보이게 하는 것이 목적이다. */
 export function PullRequestBoard({
   pullRequests,
-  emptyMessage = "열려 있는 pull request가 없습니다.",
+  dict,
+  emptyMessage,
 }: {
   pullRequests: PullRequest[];
+  dict: Dictionary;
   emptyMessage?: string;
 }) {
+  const { empty, none } = dict.dashboard.board;
+
   if (pullRequests.length === 0) {
-    return <p className="text-sm text-muted">{emptyMessage}</p>;
+    return <p className="text-sm text-muted">{emptyMessage ?? empty}</p>;
   }
 
   const grouped = new Map<ReviewColumn, PullRequest[]>(
@@ -42,11 +47,11 @@ export function PullRequestBoard({
               </span>
             </h3>
             {items.length === 0 ? (
-              <p className="text-xs text-muted">없음</p>
+              <p className="text-xs text-muted">{none}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {items.map((pr) => (
-                  <PullRequestCard key={pr.url} pr={pr} />
+                  <PullRequestCard key={pr.url} pr={pr} time={dict.time} />
                 ))}
               </ul>
             )}

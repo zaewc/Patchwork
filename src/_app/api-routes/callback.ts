@@ -17,6 +17,7 @@ import {
   oauthApp,
 } from "@/shared/config";
 import { cookieOptions } from "@/shared/lib/cookie";
+import { getDictionary } from "@/shared/lib/i18n-server";
 
 /** 실패는 모두 홈으로 되돌리고 사유를 쿼리로 남긴다. 쓰던 state는 정리한다. */
 function fail(origin: string, reason: string) {
@@ -78,7 +79,8 @@ export async function handleCallback(request: Request) {
   if ("error" in exchanged) return fail(origin, exchanged.error);
 
   try {
-    const viewer = await fetchViewerIdentity(exchanged.accessToken);
+    const { github } = await getDictionary();
+    const viewer = await fetchViewerIdentity(exchanged.accessToken, github);
     const response = NextResponse.redirect(`${origin}${ROUTES.dashboard}`);
     response.cookies.set(
       SESSION_COOKIE,

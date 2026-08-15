@@ -4,9 +4,12 @@ import { loadDashboard } from "@/_pages/dashboard";
 import { dashboardData } from "@/_pages/dashboard/api/dashboard.fixtures";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("@/_pages/dashboard", () => ({ loadDashboard: vi.fn() }));
 vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
+
+const KO = dictionaryOf("ko");
 
 const SESSION = {
   token: "gho_token",
@@ -15,7 +18,8 @@ const SESSION = {
   avatarUrl: "https://avatars.githubusercontent.com/u/583231",
 };
 
-const request = (range = "90d") => new Request(`http://localhost:3000/api/dashboard?range=${range}`);
+const request = (range = "90d") =>
+  new Request(`http://localhost:3000/api/dashboard?range=${range}`);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -30,7 +34,9 @@ describe("GET /api/dashboard", () => {
     const response = await handleDashboard(request());
 
     expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({ error: "로그인이 필요합니다." });
+    await expect(response.json()).resolves.toEqual({
+      error: "로그인이 필요합니다.",
+    });
     expect(loadDashboard).not.toHaveBeenCalled();
   });
 
@@ -40,27 +46,41 @@ describe("GET /api/dashboard", () => {
 
     const response = await handleDashboard(request("5y"));
 
-    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith("gho_token", "5y");
+    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith(
+      "gho_token",
+      "5y",
+      KO,
+    );
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ data });
   });
 
   it("알 수 없는 조회 범위는 기본값으로 고친다", async () => {
     await handleDashboard(request("forever"));
-    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith("gho_token", "1y");
+    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith(
+      "gho_token",
+      "1y",
+      KO,
+    );
   });
 
   it("GitHub 토큰이 만료되면 401로 구분한다", async () => {
-    vi.mocked(loadDashboard).mockRejectedValue(new GitHubAuthError("다시 로그인해 주세요."));
+    vi.mocked(loadDashboard).mockRejectedValue(
+      new GitHubAuthError("다시 로그인해 주세요."),
+    );
 
     const response = await handleDashboard(request());
 
     expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({ error: "다시 로그인해 주세요." });
+    await expect(response.json()).resolves.toEqual({
+      error: "다시 로그인해 주세요.",
+    });
   });
 
   it("그 밖의 실패는 사유와 함께 502로 응답한다", async () => {
-    vi.mocked(loadDashboard).mockRejectedValue(new Error("GitHub API가 응답하지 않습니다."));
+    vi.mocked(loadDashboard).mockRejectedValue(
+      new Error("GitHub API가 응답하지 않습니다."),
+    );
 
     const response = await handleDashboard(request());
 

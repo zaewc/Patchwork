@@ -1,5 +1,6 @@
 import type { ScopeParams } from "@/features/contribution-scope/model/params";
 import { scopeTabGroups } from "@/features/contribution-scope/model/tabs";
+import type { Dictionary } from "@/shared/lib/i18n";
 import { TabBar } from "@/shared/ui/tab-bar";
 
 /**
@@ -10,13 +11,15 @@ import { TabBar } from "@/shared/ui/tab-bar";
 export function ScopeTabs({
   params,
   path,
+  dict,
 }: {
   params: ScopeParams;
   path: string;
+  dict: Dictionary;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {scopeTabGroups(params, path).map((group) => (
+      {scopeTabGroups(params, path, dict).map((group) => (
         <TabBar key={group.id} items={group.items} />
       ))}
     </div>

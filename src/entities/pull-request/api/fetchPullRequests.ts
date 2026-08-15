@@ -4,7 +4,12 @@ import type {
   PullRequest,
   ReviewDecision,
 } from "@/entities/pull-request/model/types";
-import { REPO_CORE_FRAGMENT, githubGraphQL, type RepoRef } from "@/shared/api";
+import {
+  REPO_CORE_FRAGMENT,
+  githubGraphQL,
+  type GitHubMessages,
+  type RepoRef,
+} from "@/shared/api";
 import { daysSince } from "@/shared/lib/format";
 
 const PULL_REQUESTS_QUERY = `
@@ -100,6 +105,7 @@ export async function fetchPullRequests(
   token: string,
   mergedSince: string,
   now: number,
+  messages: GitHubMessages,
 ): Promise<PullRequestBoardData> {
   const data = await githubGraphQL<PullRequestsQuery>(
     token,
@@ -108,7 +114,8 @@ export async function fetchPullRequests(
       openQuery: "is:pr author:@me is:open archived:false sort:updated-desc",
       mergedQuery: `is:pr author:@me is:merged merged:>=${mergedSince} sort:updated-desc`,
     },
-    "PR 조회",
+    messages,
+    messages.labels.pullRequests,
   );
 
   const toList = (nodes: SearchNode[]) =>

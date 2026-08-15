@@ -14,12 +14,15 @@ import {
 } from "@/_pages/dashboard/api/loadDashboard";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
 vi.mock("@/_pages/dashboard/api/loadDashboard", () => ({
   loadDashboard: vi.fn(),
 }));
+
+const KO = dictionaryOf("ko");
 
 class RedirectSignal extends Error {}
 
@@ -76,13 +79,19 @@ describe("접근 제어", () => {
 
   it("세션의 토큰과 조회 범위로 데이터를 가져온다", async () => {
     await renderPage({}, { range: "90d" });
-    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith("gho_token", "90d");
+    expect(loadDashboard).toHaveBeenCalledExactlyOnceWith(
+      "gho_token",
+      "90d",
+      KO,
+    );
   });
 });
 
 describe("조회 실패", () => {
   it("토큰이 만료되면 다시 로그인하도록 안내한다", async () => {
-    vi.mocked(loadDashboard).mockRejectedValue(new GitHubAuthError());
+    vi.mocked(loadDashboard).mockRejectedValue(
+      new GitHubAuthError("GitHub 토큰이 만료되었거나 유효하지 않습니다."),
+    );
     render(await DashboardPage(props()));
 
     expect(

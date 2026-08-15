@@ -19,8 +19,9 @@ import {
   type ScopeParams,
 } from "@/features/contribution-scope";
 import { SiteHeader } from "@/widgets/site-header";
-import { RANGES, ROUTES } from "@/shared/config";
+import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
+import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 import { Banner } from "@/shared/ui/banner";
 import { RefreshIcon } from "@/shared/ui/icon";
 
@@ -28,15 +29,21 @@ import { RefreshIcon } from "@/shared/ui/icon";
 const TOP_REPOS = 10;
 
 /** 같은 버튼이 두 가지를 기다린다. 지금 보고 있는 것을 다시 받는 중인지, 다른 범위를 받는 중인지. */
-function label(isFetching: boolean, isPlaceholderData: boolean) {
-  if (isPlaceholderData) return "불러오는 중…";
-  return isFetching ? "새로고침 중…" : "새로고침";
+function label(
+  dict: Dictionary,
+  isFetching: boolean,
+  isPlaceholderData: boolean,
+) {
+  if (isPlaceholderData) return dict.dashboard.loading;
+  return isFetching ? dict.dashboard.refreshing : dict.dashboard.refresh;
 }
 
 export function DashboardContent({
   initialParams,
+  dict,
 }: {
   initialParams: ScopeParams;
+  dict: Dictionary;
 }) {
   const [params, selectScope] = useScopeParams(initialParams, ROUTES.dashboard);
   const queryClient = useQueryClient();
@@ -51,10 +58,11 @@ export function DashboardContent({
   if (error instanceof DashboardQueryError && error.status === 401) {
     return (
       <ErrorScreen
-        title="세션이 만료되었습니다"
-        body="GitHub 토큰이 더 이상 유효하지 않습니다."
-        action="다시 로그인"
+        title={dict.dashboard.sessionExpired.title}
+        body={dict.dashboard.sessionExpired.body}
+        action={dict.dashboard.sessionExpired.action}
         href={ROUTES.login}
+        dict={dict}
       />
     );
   }
@@ -63,14 +71,15 @@ export function DashboardContent({
     if (error) {
       return (
         <ErrorScreen
-          title="데이터를 불러오지 못했습니다"
-          body={errorMessage(error, "알 수 없는 오류가 발생했습니다.")}
-          action="다시 시도"
+          title={dict.dashboard.loadFailed.title}
+          body={errorMessage(error, dict.dashboard.unknownError)}
+          action={dict.dashboard.loadFailed.action}
           href={scopeHref(params, {}, ROUTES.dashboard)}
+          dict={dict}
         />
       );
     }
-    return <DashboardLoading />;
+    return <DashboardLoading dict={dict} />;
   }
 
   const { viewer, repos, openPullRequests, mergedPullRequests } = data;
@@ -81,25 +90,20 @@ export function DashboardContent({
 
   /** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
   const filteredAway = (
-    noun: string,
-    unit: string,
+    template: string,
     total: number,
   ): { emptyMessage?: string } =>
-    total > 0
-      ? {
-          emptyMessage: `${noun} ${total}${unit}이 모두 주요 OSS가 아닙니다. 위에서 전체로 전환하면 볼 수 있습니다.`,
-        }
-      : {};
+    total > 0 ? { emptyMessage: interpolate(template, { count: total }) } : {};
 
   const warnings = [
-    error ? errorMessage(error, "데이터를 새로 불러오지 못했습니다.") : null,
+    error ? errorMessage(error, dict.dashboard.refreshFailed) : null,
     data.contributionsWarning,
     data.pullRequestsError,
   ].filter((warning): warning is string => Boolean(warning));
 
   return (
     <>
-      <SiteHeader user={viewer} />
+      <SiteHeader user={viewer} dict={dict} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-xl font-semibold tracking-tight">
@@ -109,6 +113,7 @@ export function DashboardContent({
             <LiveScopeTabs
               params={params}
               path={ROUTES.dashboard}
+              dict={dict}
               inPlace={{ select: selectScope, prefetch: prefetchScope }}
             />
             <button
@@ -121,7 +126,7 @@ export function DashboardContent({
               <RefreshIcon
                 className={isFetching ? "motion-safe:animate-spin" : ""}
               />
-              {label(isFetching, isPlaceholderData)}
+              {label(dict, isFetching, isPlaceholderData)}
             </button>
           </div>
         </div>
@@ -138,6 +143,7 @@ export function DashboardContent({
             openCount={params.showAll ? data.openCount : visibleOpen.length}
             staleCount={visibleOpen.filter((pr) => pr.isStale).length}
             mergedCount={visibleMerged.length}
+            dict={dict}
           />
 
           {warnings.map((warning) => (
@@ -146,7 +152,7 @@ export function DashboardContent({
             </Banner>
           ))}
 
-          <Section title={`Contributions · ${RANGES[params.range].label}`}>
+          <Section title={`Contributions · ${dict.ranges[params.range]}`}>
             <div className="rounded-xl border border-border bg-surface p-4">
               <ContributionQuilt weeks={data.weeks} />
             </div>
@@ -157,16 +163,17 @@ export function DashboardContent({
               repos={
                 params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos
               }
-              {...filteredAway("기여한 repository", "곳", repos.length)}
+              dict={dict}
+              {...filteredAway(dict.dashboard.filteredAway.repos, repos.length)}
             />
           </Section>
 
           <Section title="Open pull requests">
             <PullRequestBoard
               pullRequests={visibleOpen}
+              dict={dict}
               {...filteredAway(
-                "열린 pull request",
-                "건",
+                dict.dashboard.filteredAway.open,
                 openPullRequests.length,
               )}
             />
@@ -175,9 +182,9 @@ export function DashboardContent({
           <Section title="Recently merged">
             <MergedPullRequestList
               pullRequests={visibleMerged}
+              dict={dict}
               {...filteredAway(
-                "merge된 pull request",
-                "건",
+                dict.dashboard.filteredAway.merged,
                 mergedPullRequests.length,
               )}
             />

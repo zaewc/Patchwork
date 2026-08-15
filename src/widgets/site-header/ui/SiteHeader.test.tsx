@@ -2,12 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Logo } from "@/widgets/site-header/ui/Logo";
 import { SiteHeader } from "@/widgets/site-header/ui/SiteHeader";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 const USER = {
   login: "octocat",
   name: "The Octocat",
   avatarUrl: "https://avatars.githubusercontent.com/u/583231",
 };
+
+const KO = dictionaryOf("ko");
+const EN = dictionaryOf("en");
 
 describe("Logo", () => {
   it("기본 크기는 20px이다", () => {
@@ -36,7 +40,7 @@ describe("Logo", () => {
 
 describe("SiteHeader", () => {
   it("항상 홈으로 가는 브랜드 링크가 있다", () => {
-    render(<SiteHeader />);
+    render(<SiteHeader dict={KO} />);
     expect(screen.getByRole("link", { name: "Patchwork" })).toHaveAttribute(
       "href",
       "/",
@@ -44,7 +48,7 @@ describe("SiteHeader", () => {
   });
 
   it("로그인 전에는 사용자 메뉴를 감춘다", () => {
-    render(<SiteHeader />);
+    render(<SiteHeader dict={KO} />);
     expect(
       screen.queryByRole("link", { name: "Dashboard" }),
     ).not.toBeInTheDocument();
@@ -54,7 +58,7 @@ describe("SiteHeader", () => {
   });
 
   it("로그인 후에는 대시보드·README 링크를 보여준다", () => {
-    render(<SiteHeader user={USER} />);
+    render(<SiteHeader user={USER} dict={KO} />);
     expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
       "href",
       "/dashboard",
@@ -66,7 +70,7 @@ describe("SiteHeader", () => {
   });
 
   it("사용자 이름과 avatar로 GitHub 프로필을 잇는다", () => {
-    render(<SiteHeader user={USER} />);
+    render(<SiteHeader user={USER} dict={KO} />);
     const profile = screen.getByRole("link", { name: "The Octocat" });
     expect(profile).toHaveAttribute("href", "https://github.com/octocat");
     expect(screen.getByRole("presentation")).toHaveAttribute(
@@ -76,15 +80,27 @@ describe("SiteHeader", () => {
   });
 
   it("이름이 없으면 login을 대신 보여준다", () => {
-    render(<SiteHeader user={{ ...USER, name: null }} />);
+    render(<SiteHeader user={{ ...USER, name: null }} dict={KO} />);
     expect(screen.getByRole("link", { name: "octocat" })).toBeInTheDocument();
   });
 
   it("로그아웃은 POST 폼으로 보낸다", () => {
-    render(<SiteHeader user={USER} />);
+    render(<SiteHeader user={USER} dict={KO} />);
     const button = screen.getByRole("button", { name: "로그아웃" });
     const form = button.closest("form");
     expect(form).toHaveAttribute("action", "/api/auth/logout");
     expect(form).toHaveAttribute("method", "post");
+  });
+
+  it("사전을 바꾸면 문구도 함께 바뀐다", () => {
+    render(<SiteHeader user={USER} dict={EN} />);
+    expect(
+      screen.getByRole("button", { name: "Sign out" }),
+    ).toBeInTheDocument();
+  });
+
+  it("언어 전환은 로그인 전에도 늘 있다", () => {
+    render(<SiteHeader dict={KO} />);
+    expect(screen.getByRole("form", { name: "언어" })).toBeInTheDocument();
   });
 });

@@ -12,6 +12,8 @@ import { SiteHeader } from "@/widgets/site-header";
 import { GitHubAuthError } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
+import { interpolate } from "@/shared/lib/i18n";
+import { getDictionary } from "@/shared/lib/i18n-server";
 import { Banner } from "@/shared/ui/banner";
 import { CopyButton } from "@/shared/ui/copy-button";
 
@@ -19,15 +21,16 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
   const session = await getSession();
   if (!session) redirect(ROUTES.home);
 
+  const dict = await getDictionary();
   const params = parseScopeParams(await searchParams);
 
   let groups: ContributionGroup[] = [];
   let error: string | null = null;
   try {
-    groups = await loadContributionItems(session.token, params.range);
+    groups = await loadContributionItems(session.token, params.range, dict);
   } catch (caught) {
     if (caught instanceof GitHubAuthError) redirect(ROUTES.login);
-    error = errorMessage(caught, "기여 목록을 불러오지 못했습니다.");
+    error = errorMessage(caught, dict.export.loadFailed);
   }
 
   const visible = filterByScope(groups, params.showAll);
@@ -36,28 +39,34 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
 
   return (
     <>
-      <SiteHeader user={session} />
+      <SiteHeader user={session} dict={dict} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
-              README 내보내기
+              {dict.export.title}
             </h1>
-            <p className="mt-1 text-sm text-muted">
-              merge된 pull request와 완료 처리된 issue를 repository별로 묶어
-              Markdown으로 만듭니다.
-            </p>
+            <p className="mt-1 text-sm text-muted">{dict.export.subtitle}</p>
           </div>
-          <ScopeTabs params={params} path={ROUTES.export} />
+          <ScopeTabs params={params} path={ROUTES.export} dict={dict} />
         </div>
 
         {error ? <Banner className="mt-6">{error}</Banner> : null}
 
         <div className="mt-6 flex items-center justify-between gap-4">
           <p className="text-sm text-muted">
-            repository {visible.length}곳 · {itemCount}건
+            {interpolate(dict.export.summary, {
+              repos: visible.length,
+              items: itemCount,
+            })}
           </p>
-          {markdown ? <CopyButton text={markdown} /> : null}
+          {markdown ? (
+            <CopyButton
+              text={markdown}
+              label={dict.export.copy}
+              copiedLabel={dict.export.copied}
+            />
+          ) : null}
         </div>
 
         {markdown ? (
@@ -66,9 +75,7 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
           </pre>
         ) : (
           <p className="mt-3 text-sm text-muted">
-            {error
-              ? "다시 시도해 주세요."
-              : "이 기간에 merge된 pull request나 완료된 issue가 없습니다. 기간을 넓히거나 전체로 전환해 보세요."}
+            {error ? dict.export.retry : dict.export.empty}
           </p>
         )}
       </main>

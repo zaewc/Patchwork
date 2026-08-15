@@ -4,6 +4,7 @@ import {
   MAX_SEARCH_PAGES,
   REPO_CORE_FRAGMENT,
   githubGraphQL,
+  type GitHubMessages,
   type RepoRef,
 } from "@/shared/api";
 
@@ -56,6 +57,7 @@ function isConcluded(node: ItemNode): boolean {
 async function searchAllPages(
   token: string,
   query: string,
+  messages: GitHubMessages,
 ): Promise<ItemNode[]> {
   const nodes: ItemNode[] = [];
   let after: string | null = null;
@@ -65,7 +67,8 @@ async function searchAllPages(
       token,
       ITEMS_QUERY,
       { q: query, after },
-      "기여 목록",
+      messages,
+      messages.labels.items,
     );
     nodes.push(...data.search.nodes.filter(isItemNode));
 
@@ -85,12 +88,17 @@ async function searchAllPages(
 export async function fetchContributionItems(
   token: string,
   since: string,
+  messages: GitHubMessages,
 ): Promise<Unscored<ContributionGroup>[]> {
   const scope = `author:@me is:public created:>=${since} sort:created-asc`;
 
   const [pullRequests, issues] = await Promise.all([
-    searchAllPages(token, `${scope} is:pr is:merged`),
-    searchAllPages(token, `${scope} is:issue is:closed reason:completed`),
+    searchAllPages(token, `${scope} is:pr is:merged`, messages),
+    searchAllPages(
+      token,
+      `${scope} is:issue is:closed reason:completed`,
+      messages,
+    ),
   ]);
 
   const groups = new Map<string, Unscored<ContributionGroup>>();

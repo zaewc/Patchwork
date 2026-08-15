@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchViewerIdentity } from "@/entities/viewer/api/fetchViewerIdentity";
 import { VIEWER } from "@/shared/api/github/response.fixtures";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -21,7 +22,9 @@ describe("fetchViewerIdentity", () => {
       new Response(JSON.stringify({ data: { viewer: VIEWER } })),
     );
 
-    await expect(fetchViewerIdentity("gho_token")).resolves.toEqual(VIEWER);
+    await expect(
+      fetchViewerIdentity("gho_token", dictionaryOf("ko").github),
+    ).resolves.toEqual(VIEWER);
   });
 
   it("헤더를 그리는 데 필요한 필드만 묻는다", async () => {
@@ -29,7 +32,7 @@ describe("fetchViewerIdentity", () => {
       new Response(JSON.stringify({ data: { viewer: VIEWER } })),
     );
 
-    await fetchViewerIdentity("gho_token");
+    await fetchViewerIdentity("gho_token", dictionaryOf("ko").github);
 
     const { query } = JSON.parse(
       bodyText(fetchMock.mock.calls[0]![1]?.body),
@@ -45,8 +48,8 @@ describe("fetchViewerIdentity", () => {
   it("토큰이 죽었으면 실패를 그대로 올린다", async () => {
     fetchMock.mockResolvedValue(new Response("", { status: 401 }));
 
-    await expect(fetchViewerIdentity("gho_token")).rejects.toThrow(
-      /GitHub 토큰/,
-    );
+    await expect(
+      fetchViewerIdentity("gho_token", dictionaryOf("ko").github),
+    ).rejects.toThrow(/GitHub 토큰/);
   });
 });

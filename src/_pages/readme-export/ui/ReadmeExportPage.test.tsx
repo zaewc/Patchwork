@@ -10,12 +10,15 @@ import { loadContributionItems } from "@/_pages/readme-export/api/loadContributi
 import type { ContributionGroup } from "@/entities/contribution";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
 vi.mock("@/_pages/readme-export/api/loadContributionItems", () => ({
   loadContributionItems: vi.fn(),
 }));
+
+const KO = dictionaryOf("ko");
 
 class RedirectSignal extends Error {}
 
@@ -85,11 +88,14 @@ describe("접근 제어", () => {
     expect(loadContributionItems).toHaveBeenCalledExactlyOnceWith(
       "gho_token",
       "5y",
+      KO,
     );
   });
 
   it("토큰이 만료되면 다시 로그인하도록 보낸다", async () => {
-    vi.mocked(loadContributionItems).mockRejectedValue(new GitHubAuthError());
+    vi.mocked(loadContributionItems).mockRejectedValue(
+      new GitHubAuthError("GitHub 토큰이 만료되었거나 유효하지 않습니다."),
+    );
 
     await expect(ReadmeExportPage(props())).rejects.toBeInstanceOf(
       RedirectSignal,

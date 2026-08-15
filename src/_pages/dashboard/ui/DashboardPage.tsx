@@ -14,11 +14,13 @@ import { GitHubAuthError } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { makeQueryClient } from "@/shared/lib/query-client";
+import { getDictionary } from "@/shared/lib/i18n-server";
 
 export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const session = await getSession();
   if (!session) redirect(ROUTES.home);
 
+  const dict = await getDictionary();
   const params = parseScopeParams(await searchParams);
   const { range } = params;
 
@@ -26,25 +28,27 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   try {
     await queryClient.fetchQuery<DashboardData>({
       queryKey: dashboardQueryKey(range),
-      queryFn: () => loadDashboard(session.token, range),
+      queryFn: () => loadDashboard(session.token, range, dict),
     });
   } catch (error) {
     if (error instanceof GitHubAuthError) {
       return (
         <ErrorScreen
-          title="세션이 만료되었습니다"
-          body="GitHub 토큰이 더 이상 유효하지 않습니다."
-          action="다시 로그인"
+          title={dict.dashboard.sessionExpired.title}
+          body={dict.dashboard.sessionExpired.body}
+          action={dict.dashboard.sessionExpired.action}
           href={ROUTES.login}
+          dict={dict}
         />
       );
     }
     return (
       <ErrorScreen
-        title="데이터를 불러오지 못했습니다"
-        body={errorMessage(error, "알 수 없는 오류가 발생했습니다.")}
-        action="다시 시도"
+        title={dict.dashboard.loadFailed.title}
+        body={errorMessage(error, dict.dashboard.unknownError)}
+        action={dict.dashboard.loadFailed.action}
         href={scopeHref(params, {}, ROUTES.dashboard)}
+        dict={dict}
       />
     );
   }
@@ -53,7 +57,7 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
     <DashboardQueryProvider>
       <HydrationBoundary state={dehydrate(queryClient)}>
         {/* 첫 화면은 서버가 채워 주고, 이후 조회 조건은 브라우저가 들고 간다. */}
-        <DashboardContent initialParams={params} />
+        <DashboardContent initialParams={params} dict={dict} />
       </HydrationBoundary>
     </DashboardQueryProvider>
   );

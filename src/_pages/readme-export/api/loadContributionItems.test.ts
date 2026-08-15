@@ -5,12 +5,15 @@ import type { ContributionGroup } from "@/entities/contribution";
 import { loadScorecards } from "@/entities/repo";
 import type { Unscored } from "@/entities/repo";
 import { rangeStartDate } from "@/shared/config";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("@/entities/contribution", () => ({ fetchContributionItems: vi.fn() }));
 vi.mock("@/entities/repo", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/entities/repo")>()),
   loadScorecards: vi.fn(),
 }));
+
+const KO = dictionaryOf("ko");
 
 const NOW = Date.parse("2026-08-15T00:00:00Z");
 
@@ -43,11 +46,12 @@ describe("loadContributionItems", () => {
   it.each(["30d", "90d", "1y", "5y"] as const)(
     "%s 범위를 시작 날짜로 바꿔 넘긴다",
     async (range) => {
-      await loadContributionItems("gho_token", range);
+      await loadContributionItems("gho_token", range, KO);
 
       expect(fetchContributionItems).toHaveBeenCalledExactlyOnceWith(
         "gho_token",
         rangeStartDate(range, NOW),
+        KO.github,
       );
     },
   );
@@ -58,7 +62,7 @@ describe("loadContributionItems", () => {
       group("someone/toy", 2),
     ]);
 
-    await loadContributionItems("t", "1y");
+    await loadContributionItems("t", "1y", KO);
 
     expect(loadScorecards).toHaveBeenCalledExactlyOnceWith([
       {
@@ -77,7 +81,7 @@ describe("loadContributionItems", () => {
       new Map([["vercel/next.js", 8.5]]),
     );
 
-    const groups = await loadContributionItems("t", "1y");
+    const groups = await loadContributionItems("t", "1y", KO);
 
     expect(groups[0]!.impact).toBe(85);
     expect("scoring" in groups[0]!).toBe(false);
@@ -88,18 +92,20 @@ describe("loadContributionItems", () => {
       group("someone/toy", 2),
     ]);
 
-    const groups = await loadContributionItems("t", "1y");
+    const groups = await loadContributionItems("t", "1y", KO);
 
     expect(groups[0]!.impact).toBe(4);
   });
 
   it("내보낼 기여가 없으면 빈 목록이다", async () => {
-    await expect(loadContributionItems("t", "1y")).resolves.toEqual([]);
+    await expect(loadContributionItems("t", "1y", KO)).resolves.toEqual([]);
   });
 
   it("실패는 감추지 않고 그대로 올린다", async () => {
     vi.mocked(fetchContributionItems).mockRejectedValue(new Error("검색 실패"));
 
-    await expect(loadContributionItems("t", "1y")).rejects.toThrow("검색 실패");
+    await expect(loadContributionItems("t", "1y", KO)).rejects.toThrow(
+      "검색 실패",
+    );
   });
 });

@@ -8,6 +8,7 @@ export { fetchDepsDevProject } from "@/shared/api/deps-dev/client";
 export type { DepsDevProject } from "@/shared/api/deps-dev/client";
 
 export { githubGraphQL } from "@/shared/api/github/client";
+export type { GitHubMessages } from "@/shared/api/github/client";
 export { GitHubAuthError, GitHubError } from "@/shared/api/github/errors";
 
 export {

@@ -3,6 +3,7 @@ import { handleCallback } from "@/_app/api-routes/callback";
 import { fetchViewerIdentity } from "@/entities/viewer";
 import { STATE_COOKIE } from "@/_app/api-routes/oauthState";
 import { SESSION_COOKIE, unseal } from "@/entities/viewer";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
 
 vi.mock("@/entities/viewer", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/entities/viewer")>()),
@@ -170,7 +171,10 @@ describe("GET /api/auth/callback · 성공", () => {
 
   it("받은 토큰으로 사용자 정보를 조회한다", async () => {
     await handleCallback(request());
-    expect(fetchViewerIdentity).toHaveBeenCalledExactlyOnceWith("gho_token");
+    expect(fetchViewerIdentity).toHaveBeenCalledExactlyOnceWith(
+      "gho_token",
+      dictionaryOf("ko").github,
+    );
   });
 
   it("토큰과 사용자 정보를 봉인해 세션 쿠키에 담는다", async () => {

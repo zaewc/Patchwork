@@ -1,6 +1,9 @@
-/** 토큰이 더 이상 쓸 수 없는 상태. 화면은 다시 로그인을 안내해야 한다. */
+/**
+ * 토큰이 더 이상 쓸 수 없는 상태. 화면은 다시 로그인을 안내해야 한다.
+ * 문구는 요청의 언어를 아는 쪽이 넣어 준다.
+ */
 export class GitHubAuthError extends Error {
-  constructor(message = "GitHub 토큰이 만료되었거나 유효하지 않습니다.") {
+  constructor(message: string) {
     super(message);
     this.name = "GitHubAuthError";
   }

@@ -1,9 +1,15 @@
 import { RepoLogo } from "@/entities/repo/@x/pull-request";
 import type { PullRequest } from "@/entities/pull-request/model/types";
-import { relativeTime } from "@/shared/lib/format";
+import { relativeTime, type TimeFormat } from "@/shared/lib/format";
 
 /** 목록에 놓이는 merge된 PR 한 줄 */
-export function MergedPullRequestRow({ pr }: { pr: PullRequest }) {
+export function MergedPullRequestRow({
+  pr,
+  time,
+}: {
+  pr: PullRequest;
+  time: TimeFormat;
+}) {
   return (
     <li className="flex items-center gap-2.5 px-4 py-2.5 text-sm">
       <RepoLogo src={pr.ownerAvatarUrl} alt="" />
@@ -15,7 +21,7 @@ export function MergedPullRequestRow({ pr }: { pr: PullRequest }) {
         <span className="text-muted tabular-nums">#{pr.number}</span> {pr.title}
       </a>
       <span className="shrink-0 text-[11px] text-muted">
-        {relativeTime(pr.mergedAt ?? pr.updatedAt)}
+        {relativeTime(pr.mergedAt ?? pr.updatedAt, time)}
       </span>
     </li>
   );
