@@ -82,9 +82,10 @@ shared/lib/i18n-server      사전 데이터 ko·en · getDictionary()          
 1. `shared/config/locale.ts`의 `LOCALES`에 코드를, `LOCALE_LABELS`에 **그 언어로 적은 이름**과 국기를 더합니다. `ko`처럼 언어만 적어도 되고 `pt-BR`·`zh-TW`처럼 지역까지 갈라도 됩니다.
 2. `shared/lib/i18n-server/`에 `en.ts`를 복사해 새 파일을 만들고 `locale`·`numberLocale`·`time.locale`을 그 언어의 BCP 47 태그로 고칩니다.
 3. `dictionaryOf.ts`의 `DICTIONARIES`에 한 줄 더합니다.
-4. `npm run test:all`.
+4. 국기 SVG를 [flag-icons](https://github.com/lipis/flag-icons)(MIT)의 `flags/4x3/`에서 받아 `public/flags/<소문자코드>.svg`로 둡니다.
+5. `npm run test:all`.
 
-1·3을 빠뜨리면 타입 검사가 잡습니다(`Record<Locale, …>`). 번역을 흘리면 `dictionaryOf.test.ts`가 잡습니다 — 키가 맞는지, `{이름}` 자리가 맞는지, 다른 언어와 글자가 똑같은 자리가 남았는지를 **아는 언어 전부에 대해** 봅니다. 화면 코드와 `LocaleSwitch`는 손대지 않습니다.
+1·3을 빠뜨리면 타입 검사가 잡고, 4를 빠뜨리면 `LocaleSwitch.test.tsx`가 잡습니다(빠진 국기는 화면에서 빈칸으로만 보여 눈으로는 놓치기 쉽습니다). 번역을 흘리면 `dictionaryOf.test.ts`가 잡습니다 — 키가 맞는지, `{이름}` 자리가 맞는지, 다른 언어와 글자가 똑같은 자리가 남았는지를 **아는 언어 전부에 대해** 봅니다. 화면 코드와 `LocaleSwitch`는 손대지 않습니다.
 
 #### 지키는 것들
 
@@ -92,7 +93,7 @@ shared/lib/i18n-server      사전 데이터 ko·en · getDictionary()          
 - **언어마다 달라지는 문구만 넣습니다.** `Contributions`·`Repositories`·`Less`/`More`·`Mon`처럼 원래부터 영어인 골격 라벨은 컴포넌트에 그대로 둡니다.
 - **언어 이름은 사전에 넣지 않습니다.** `한국어`·`English`는 어느 언어로 보든 같아야 하므로 `LOCALE_LABELS` 한 벌뿐입니다.
 - **국기는 곁다리입니다.** 나라이지 언어가 아니라서(영어 US/GB, 스페인어 ES/MX, 아랍어 22개국) 뜻은 늘 이름이 집니다. 스크린 리더에는 `aria-hidden`으로 감추고, 국기 없이 이름만으로도 고를 수 있게 둡니다. 나라를 못 고르겠는 언어가 들어오면 `LOCALE_LABELS`의 `countryCode`를 통째로 지우는 것이 답입니다.
-- 국기는 [`react-country-flag`](https://github.com/danalloway/react-country-flag)가 `svg` 모드로 그립니다. 이모지 국기는 Windows에 글꼴이 없어 `KR` 같은 글자로 떨어지기 때문입니다. 그림은 jsdelivr의 flag-icons에서 받아 오는 **바깥 요청**입니다 — 자체 호스팅이 필요하면 `public/flags/`에 받아 두고 `LocaleSwitch`의 `Flag`에 `cdnUrl="/flags/"`만 더하면 됩니다.
+- 국기는 [`react-country-flag`](https://github.com/danalloway/react-country-flag)가 `svg` 모드로 그립니다. 이모지 국기는 Windows에 글꼴이 없어 `KR` 같은 글자로 떨어지기 때문입니다. **그림은 `public/flags/`에서 우리가 직접 냅니다.** 패키지 기본값인 jsdelivr를 쓰면 바깥에서 받아 오는 자원이 생기는데, 이 앱은 그런 것이 하나도 없다는 것을 성능 예산 `resource-summary:third-party:size` 0으로 지켜 오고 있습니다(성능 하네스가 아바타까지 `data:` URI로 바꿔 두는 이유이기도 합니다).
 - `shared/ui`는 업무 지식도 언어도 들지 않습니다. 문구는 `label` 같은 props로 받습니다.
 - 시간·숫자는 사전에 적지 않고 `Intl`에 맡깁니다. 사전은 `time.locale`·`numberLocale` 같은 태그만 들고 있습니다.
 

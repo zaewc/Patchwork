@@ -2,12 +2,18 @@ import ReactCountryFlag from "react-country-flag";
 import { LOCALE_LABELS, LOCALES, ROUTES, type Locale } from "@/shared/config";
 import { ChevronDownIcon } from "@/shared/ui/icon";
 
+/** 국기 SVG를 두는 곳. 파일 이름은 소문자 국가 코드다(`kr.svg`). */
+const FLAG_DIR = "/flags/";
+
 /**
  * 국기 한 장.
  *
  * `svg`를 켜야 이모지 대신 진짜 그림을 받는다. 이모지 국기는 Windows에 글꼴이 없어
- * `KR`·`US` 같은 글자 두 개로 떨어진다. 그림은 jsdelivr의 flag-icons에서 온다 —
- * 바깥 요청이 싫으면 `public/flags/`에 받아 두고 `cdnUrl`만 바꾸면 된다.
+ * `KR`·`US` 같은 글자 두 개로 떨어진다.
+ *
+ * 그림은 `public/flags/`에서 우리가 직접 낸다. 패키지 기본값인 jsdelivr를 쓰면
+ * 바깥에서 받아 오는 자원이 생기는데, 이 앱은 그런 것이 하나도 없다는 것을
+ * 성능 예산(`resource-summary:third-party:size` 0)으로 지켜 오고 있다.
  *
  * 4:3 비율이라 높이는 `auto`로 둔다. 패키지 기본값은 1em 정사각형이라 눌린다.
  * 뜻은 옆의 이름이 이미 말하므로 스크린 리더에는 감춘다.
@@ -15,6 +21,7 @@ import { ChevronDownIcon } from "@/shared/ui/icon";
 const Flag = ({ countryCode }: { countryCode: string }) => (
   <ReactCountryFlag
     svg
+    cdnUrl={FLAG_DIR}
     countryCode={countryCode}
     alt=""
     aria-hidden

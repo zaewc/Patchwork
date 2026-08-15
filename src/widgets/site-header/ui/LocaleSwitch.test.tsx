@@ -1,5 +1,8 @@
 import { render, screen } from "@testing-library/react";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { LOCALE_LABELS, LOCALES } from "@/shared/config";
 import { LocaleSwitch } from "@/widgets/site-header/ui/LocaleSwitch";
 
 const summary = () => screen.getByLabelText(/^언어:|^Language:/);
@@ -63,7 +66,23 @@ describe("LocaleSwitch", () => {
     const srcOf = (name: string) =>
       option(name).querySelector("img")?.getAttribute("src");
 
-    expect(srcOf("한국어")).toContain("kr.svg");
-    expect(srcOf("English")).toContain("us.svg");
+    expect(srcOf("한국어")).toBe("/flags/kr.svg");
+    expect(srcOf("English")).toBe("/flags/us.svg");
+  });
+
+  /**
+   * 국기를 우리가 직접 낸다. 바깥에서 받아 오는 자원이 하나도 없다는 것을
+   * 성능 예산(`resource-summary:third-party:size` 0)으로 지켜 오고 있어서다.
+   * 언어를 늘리면서 SVG를 빠뜨리면 화면에서는 빈칸으로만 보이므로 여기서 잡는다.
+   */
+  it("아는 언어마다 국기 파일이 저장소에 있다", () => {
+    for (const locale of LOCALES) {
+      const file = `${LOCALE_LABELS[locale].countryCode.toLowerCase()}.svg`;
+      expect({
+        locale,
+        file,
+        exists: existsSync(join("public/flags", file)),
+      }).toEqual({ locale, file, exists: true });
+    }
   });
 });
