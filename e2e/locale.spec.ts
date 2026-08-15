@@ -61,18 +61,29 @@ test.describe("로그인 전", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
-  test("일본어로도 바꿀 수 있다", async ({ page }) => {
-    await page.goto("/");
-    await switchTo(page, "日本語");
+  /** 언어를 늘릴 때마다 한 줄 더한다. 목록에 올린 언어가 실제로 그려지는지 본다. */
+  for (const { option, lang, heading } of [
+    {
+      option: "日本語",
+      lang: "ja",
+      heading: "オープンソースへの貢献を一枚のPatchworkに",
+    },
+    {
+      option: "Русский",
+      lang: "ru",
+      heading: "Ваш вклад в открытый код — одним полотном",
+    },
+  ]) {
+    test(`${option}로도 바꿀 수 있다`, async ({ page }) => {
+      await page.goto("/");
+      await switchTo(page, option);
 
-    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
-    await expect(
-      page.getByRole("heading", {
-        level: 1,
-        name: "オープンソースへの貢献を一枚のPatchworkに",
-      }),
-    ).toBeVisible();
-  });
+      await expect(page.locator("html")).toHaveAttribute("lang", lang);
+      await expect(
+        page.getByRole("heading", { level: 1, name: heading }),
+      ).toBeVisible();
+    });
+  }
 
   test("다시 한국어로 되돌릴 수 있다", async ({ page }) => {
     await page.goto("/");
