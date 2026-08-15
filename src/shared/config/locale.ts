@@ -7,7 +7,7 @@
  * **로케일을 늘릴 때 고치는 두 곳 중 하나다.** 다른 하나는
  * `shared/lib/i18n-server`의 `DICTIONARIES`이고, 그쪽은 빠뜨리면 타입 검사가 잡는다.
  */
-export const LOCALES = ["ko", "en"] as const;
+export const LOCALES = ["ko", "en", "ja"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -29,6 +29,7 @@ export const LOCALE_LABELS: Record<
 > = {
   ko: { countryCode: "KR", name: "한국어" },
   en: { countryCode: "US", name: "English" },
+  ja: { countryCode: "JP", name: "日本語" },
 };
 
 /** 사용자가 고른 언어를 담아 두는 쿠키. 세션과 달리 로그인하지 않아도 심는다. */
