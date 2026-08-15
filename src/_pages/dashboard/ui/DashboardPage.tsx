@@ -14,11 +14,13 @@ import { GitHubAuthError } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { makeQueryClient } from "@/shared/lib/query-client";
+import { getDictionary } from "@/shared/lib/i18n-server";
 
 export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const session = await getSession();
   if (!session) redirect(ROUTES.home);
 
+  const dict = await getDictionary();
   const params = parseScopeParams(await searchParams);
   const { range } = params;
 
@@ -26,7 +28,7 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   try {
     await queryClient.fetchQuery<DashboardData>({
       queryKey: dashboardQueryKey(range),
-      queryFn: () => loadDashboard(session.token, range),
+      queryFn: () => loadDashboard(session.token, range, dict),
     });
   } catch (error) {
     if (error instanceof GitHubAuthError) {

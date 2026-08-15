@@ -5,6 +5,7 @@ import {
   REPO_CORE_FRAGMENT,
   VIEWER_FIELDS,
   githubGraphQL,
+  type GitHubMessages,
   type GitHubViewer,
 } from "@/shared/api";
 
@@ -46,12 +47,14 @@ export type ContributionsSnapshot = {
 export async function fetchContributions(
   token: string,
   window: { from: Date; to: Date },
+  messages: GitHubMessages,
   label: string,
 ): Promise<ContributionsSnapshot> {
   const data = await githubGraphQL<ContributionsQuery>(
     token,
     CONTRIBUTIONS_QUERY,
     { from: window.from.toISOString(), to: window.to.toISOString() },
+    messages,
     label,
   );
 

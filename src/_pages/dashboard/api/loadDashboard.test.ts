@@ -12,6 +12,9 @@ import {
   VIEWER,
   type PullRequestNodeFixture,
 } from "@/shared/api/github/response.fixtures";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const NOW = Date.parse("2026-08-15T00:00:00Z");
 
@@ -170,7 +173,7 @@ describe("모아 오기", () => {
   it("기여 집계와 PR을 한 화면 분량으로 합친다", async () => {
     mockGraphQL(handlers());
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
 
     expect(data.viewer).toEqual(VIEWER);
     expect(data.totals).toEqual({ contributions: 6, restricted: 5 });
@@ -194,7 +197,7 @@ describe("모아 오기", () => {
   it("조회 범위에 맞춰 기간 변수를 채운다", async () => {
     mockGraphQL(handlers());
 
-    await settle(loadDashboard("t", "30d"));
+    await settle(loadDashboard("t", "30d", KO));
 
     const [variables] = requestsFor("contributions").map((r) => r.variables);
     expect(variables!.to).toBe(new Date(NOW).toISOString());
@@ -207,7 +210,7 @@ describe("모아 오기", () => {
   it("5년 범위는 창을 나눠 여러 번 부른다", async () => {
     mockGraphQL(handlers());
 
-    await settle(loadDashboard("t", "5y"));
+    await settle(loadDashboard("t", "5y", KO));
 
     expect(requestsFor("contributions")).toHaveLength(5);
     // 여러 창을 부를 때는 어느 구간인지 라벨에 남는다.
@@ -220,7 +223,7 @@ describe("모아 오기", () => {
       pullRequests: () => ok(pullRequestsResponse()),
     });
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
 
     expect(data.external).toEqual({ contributions: 0, ratio: 0 });
     expect(data.notable).toEqual({ repos: 0, contributions: 0 });
@@ -232,7 +235,7 @@ describe("Scorecard 점수", () => {
   it("repository와 PR이 가리키는 곳을 한 번에 묻는다", async () => {
     mockGraphQL(handlers());
 
-    await settle(loadDashboard("t", "1y"));
+    await settle(loadDashboard("t", "1y", KO));
 
     // 기여한 곳 3군데 + PR이 달린 vercel/next.js(이미 포함) → 중복 없이 3번
     expect(depsDevRequests()).toHaveLength(3);
@@ -246,7 +249,7 @@ describe("Scorecard 점수", () => {
     };
     mockGraphQL(handlers());
 
-    const { repos } = await settle(loadDashboard("t", "1y"));
+    const { repos } = await settle(loadDashboard("t", "1y", KO));
 
     expect(repos.map((repo) => [repo.nameWithOwner, repo.impact])).toEqual([
       ["vercel/next.js", 80],
@@ -259,7 +262,7 @@ describe("Scorecard 점수", () => {
     scorecards = { "vercel/next.js": 3.0 };
     mockGraphQL(handlers());
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
 
     expect(data.repos[0]!.impact).toBe(30);
     expect(data.notable).toEqual({ repos: 0, contributions: 0 });
@@ -277,7 +280,7 @@ describe("Scorecard 점수", () => {
       pullRequests: () => ok(pullRequestsResponse()),
     });
 
-    const { repos } = await settle(loadDashboard("t", "1y"));
+    const { repos } = await settle(loadDashboard("t", "1y", KO));
 
     expect(repos[0]!.impact).toBe(0);
     expect(depsDevRequests()).toHaveLength(0);
@@ -287,7 +290,7 @@ describe("Scorecard 점수", () => {
     scorecards = {};
     mockGraphQL(handlers());
 
-    const { repos } = await settle(loadDashboard("t", "1y"));
+    const { repos } = await settle(loadDashboard("t", "1y", KO));
 
     // stars 50,000 / forks 10,000 → 56점
     expect(
@@ -310,7 +313,7 @@ describe("Scorecard 점수", () => {
       return original(url, init);
     });
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
 
     expect(data.totals.contributions).toBe(6);
     expect(
@@ -331,7 +334,7 @@ describe("pull request 가공", () => {
     });
     mockGraphQL(handlers([node], []));
 
-    const [pr] = (await settle(loadDashboard("t", "1y"))).openPullRequests;
+    const [pr] = (await settle(loadDashboard("t", "1y", KO))).openPullRequests;
 
     expect(pr).toEqual({
       number: 42,
@@ -363,7 +366,7 @@ describe("pull request 가공", () => {
       ),
     );
 
-    const { openPullRequests } = await settle(loadDashboard("t", "1y"));
+    const { openPullRequests } = await settle(loadDashboard("t", "1y", KO));
     expect(openPullRequests.map((pr) => pr.isStale)).toEqual([true, false]);
   });
 
@@ -381,7 +384,7 @@ describe("pull request 가공", () => {
       ),
     );
 
-    const { mergedPullRequests } = await settle(loadDashboard("t", "1y"));
+    const { mergedPullRequests } = await settle(loadDashboard("t", "1y", KO));
     expect(mergedPullRequests[0]!.isStale).toBe(false);
   });
 
@@ -394,7 +397,7 @@ describe("pull request 가공", () => {
   ])("%s checkState는 null이다", async (_label, overrides) => {
     mockGraphQL(handlers([pullRequestNode(overrides)], []));
 
-    const { openPullRequests } = await settle(loadDashboard("t", "1y"));
+    const { openPullRequests } = await settle(loadDashboard("t", "1y", KO));
     expect(openPullRequests[0]!.checkState).toBeNull();
   });
 
@@ -408,7 +411,7 @@ describe("pull request 가공", () => {
         }),
     });
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
     expect(data.openPullRequests.map((pr) => pr.number)).toEqual([7]);
     expect(data.mergedPullRequests).toEqual([]);
     // issueCount는 GitHub이 준 값을 그대로 쓴다.
@@ -423,7 +426,7 @@ describe("일부만 실패한 경우", () => {
       pullRequests: () => graphQLErrors(["쿼리가 너무 큽니다"]),
     });
 
-    const data = await settle(loadDashboard("t", "1y"));
+    const data = await settle(loadDashboard("t", "1y", KO));
 
     expect(data.totals.contributions).toBe(6);
     expect(data.openPullRequests).toEqual([]);
@@ -438,7 +441,7 @@ describe("일부만 실패한 경우", () => {
       pullRequests: () => httpError(401),
     });
 
-    await expect(settle(loadDashboard("t", "1y"))).rejects.toBeInstanceOf(
+    await expect(settle(loadDashboard("t", "1y", KO))).rejects.toBeInstanceOf(
       GitHubAuthError,
     );
   });
@@ -450,7 +453,7 @@ describe("일부만 실패한 경우", () => {
       pullRequests: () => ok(pullRequestsResponse()),
     });
 
-    const data = await settle(loadDashboard("t", "5y"));
+    const data = await settle(loadDashboard("t", "5y", KO));
 
     expect(data.contributionsWarning).toBe(
       "5개 구간 중 4개를 불러오지 못해 일부 기간이 빠져 있습니다.",
@@ -464,7 +467,9 @@ describe("일부만 실패한 경우", () => {
       pullRequests: () => ok(pullRequestsResponse()),
     });
 
-    await expect(settle(loadDashboard("t", "1y"))).rejects.toThrow("집계 실패");
+    await expect(settle(loadDashboard("t", "1y", KO))).rejects.toThrow(
+      "집계 실패",
+    );
   });
 
   it("기여 집계가 인증 오류면 인증 오류로 올린다", async () => {
@@ -473,7 +478,7 @@ describe("일부만 실패한 경우", () => {
       pullRequests: () => ok(pullRequestsResponse()),
     });
 
-    await expect(settle(loadDashboard("t", "1y"))).rejects.toBeInstanceOf(
+    await expect(settle(loadDashboard("t", "1y", KO))).rejects.toBeInstanceOf(
       GitHubAuthError,
     );
   });

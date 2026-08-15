@@ -4,6 +4,7 @@ import {
 } from "@/entities/contribution";
 import { loadScorecards, withImpact } from "@/entities/repo";
 import { rangeStartDate, type RangeKey } from "@/shared/config";
+import type { Dictionary } from "@/shared/lib/i18n";
 
 /**
  * 화면이 고른 조회 범위를 GitHub 검색 한정자의 날짜로 바꿔 기여 목록을 가져오고,
@@ -13,10 +14,12 @@ import { rangeStartDate, type RangeKey } from "@/shared/config";
 export async function loadContributionItems(
   token: string,
   range: RangeKey,
+  dict: Dictionary,
 ): Promise<ContributionGroup[]> {
   const groups = await fetchContributionItems(
     token,
     rangeStartDate(range, Date.now()),
+    dict.github,
   );
   const scorecards = await loadScorecards(groups.map((group) => group.scoring));
 

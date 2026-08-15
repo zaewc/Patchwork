@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { githubGraphQL } from "@/shared/api/github/client";
 import { GitHubAuthError, GitHubError } from "@/shared/api/github/errors";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const GITHUB_GRAPHQL = "https://api.github.com/graphql";
 const QUERY = `query Probe { viewer { login } }`;
@@ -8,7 +11,8 @@ const QUERY = `query Probe { viewer { login } }`;
 const fetchMock = vi.fn<typeof fetch>();
 
 const bodyText = (body: BodyInit | null | undefined): string => {
-  if (typeof body !== "string") throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
+  if (typeof body !== "string")
+    throw new TypeError("GraphQL 요청 본문이 문자열이 아닙니다.");
   return body;
 };
 
@@ -26,7 +30,8 @@ const json = (body: unknown, init: ResponseInit = {}) =>
   });
 
 const ok = (data: unknown) => json({ data });
-const graphQLErrors = (errors: { message: string; type?: string }[]) => json({ errors });
+const graphQLErrors = (errors: { message: string; type?: string }[]) =>
+  json({ errors });
 const httpError = (status: number, body = "") =>
   new Response(body, { status, headers: { "x-github-request-id": "req-1" } });
 
@@ -42,7 +47,16 @@ async function settle<T>(promise: Promise<T>): Promise<T> {
   throw settled.error;
 }
 
-const call = () => settle(githubGraphQL<{ viewer: { login: string } }>("gho_token", QUERY, {}, "조회"));
+const call = () =>
+  settle(
+    githubGraphQL<{ viewer: { login: string } }>(
+      "gho_token",
+      QUERY,
+      {},
+      KO.github,
+      "조회",
+    ),
+  );
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -73,20 +87,12 @@ describe("요청 모양", () => {
   it("쿼리와 변수를 본문에 싣는다", async () => {
     fetchMock.mockResolvedValue(ok({ viewer: { login: "octocat" } }));
 
-    await settle(githubGraphQL("t", QUERY, { from: "2026-01-01" }));
+    await settle(githubGraphQL("t", QUERY, { from: "2026-01-01" }, KO.github));
 
     expect(requestBody()).toEqual({
       query: QUERY,
       variables: { from: "2026-01-01" },
     });
-  });
-
-  it("변수를 생략하면 빈 객체를 보낸다", async () => {
-    fetchMock.mockResolvedValue(ok({ viewer: { login: "octocat" } }));
-
-    await settle(githubGraphQL("t", QUERY));
-
-    expect(requestBody().variables).toEqual({});
   });
 
   it("제한 시간 안에 끝내라고 신호를 붙인다", async () => {
@@ -109,7 +115,10 @@ describe("인증 실패", () => {
   it.each([
     ["FORBIDDEN 타입", [{ message: "권한 없음", type: "FORBIDDEN" }]],
     ["Bad credentials 메시지", [{ message: "Bad credentials" }]],
-    ["대소문자가 다른 bad credentials", [{ message: "요청 실패: BAD CREDENTIALS" }]],
+    [
+      "대소문자가 다른 bad credentials",
+      [{ message: "요청 실패: BAD CREDENTIALS" }],
+    ],
   ])("%s 는 인증 오류로 올린다", async (_label, errors) => {
     fetchMock.mockResolvedValue(graphQLErrors(errors));
 
@@ -137,7 +146,9 @@ describe("재시도", () => {
     await expect(call()).rejects.toThrow(/HTTP 503/);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(warn).toHaveBeenCalledTimes(3);
-    expect(warn.mock.calls[0]!.join(" ")).toContain("x-github-request-id=req-1");
+    expect(warn.mock.calls[0]!.join(" ")).toContain(
+      "x-github-request-id=req-1",
+    );
   });
 
   it("request id가 없는 5xx 응답도 기록한다", async () => {
@@ -151,7 +162,9 @@ describe("재시도", () => {
   it("요청 자체가 실패하면 제한 시간을 알려준다", async () => {
     fetchMock.mockRejectedValue(new DOMException("aborted", "TimeoutError"));
 
-    await expect(call()).rejects.toThrow(/조회 요청이 20초 안에 끝나지 않았습니다/);
+    await expect(call()).rejects.toThrow(
+      /조회 요청이 20초 안에 끝나지 않았습니다/,
+    );
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -164,14 +177,17 @@ describe("재시도", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it.each([["TIMEOUT"], ["SERVICE_UNAVAILABLE"]])("%s 오류는 다시 시도한다", async (type) => {
-    fetchMock
-      .mockResolvedValueOnce(graphQLErrors([{ message: "느립니다", type }]))
-      .mockResolvedValueOnce(ok({ viewer: { login: "octocat" } }));
+  it.each([["TIMEOUT"], ["SERVICE_UNAVAILABLE"]])(
+    "%s 오류는 다시 시도한다",
+    async (type) => {
+      fetchMock
+        .mockResolvedValueOnce(graphQLErrors([{ message: "느립니다", type }]))
+        .mockResolvedValueOnce(ok({ viewer: { login: "octocat" } }));
 
-    await expect(call()).resolves.toEqual({ viewer: { login: "octocat" } });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-  });
+      await expect(call()).resolves.toEqual({ viewer: { login: "octocat" } });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it("계속 TIMEOUT이면 GitHub이 준 메시지를 모아 올린다", async () => {
     // 세 번 읽히므로 호출마다 새 Response를 만들어야 한다.
@@ -191,20 +207,30 @@ describe("재시도", () => {
 
 describe("그 밖의 실패", () => {
   it("재시도 대상이 아닌 HTTP 오류는 본문을 붙여 바로 올린다", async () => {
-    fetchMock.mockResolvedValue(new Response("rate limit exceeded", { status: 403 }));
+    fetchMock.mockResolvedValue(
+      new Response("rate limit exceeded", { status: 403 }),
+    );
 
-    await expect(call()).rejects.toThrow("GitHub API 오류 (HTTP 403): rate limit exceeded");
+    await expect(call()).rejects.toThrow(
+      "GitHub API 오류 (HTTP 403): rate limit exceeded",
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("긴 오류 본문은 잘라서 보여준다", async () => {
-    fetchMock.mockResolvedValue(new Response("타".repeat(500), { status: 400 }));
+    fetchMock.mockResolvedValue(
+      new Response("타".repeat(500), { status: 400 }),
+    );
 
-    await expect(call()).rejects.toThrow(`GitHub API 오류 (HTTP 400): ${"타".repeat(300)}`);
+    await expect(call()).rejects.toThrow(
+      `GitHub API 오류 (HTTP 400): ${"타".repeat(300)}`,
+    );
   });
 
   it("그 밖의 GraphQL 오류는 재시도 없이 올린다", async () => {
-    fetchMock.mockResolvedValue(graphQLErrors([{ message: "Field 'foo' doesn't exist" }]));
+    fetchMock.mockResolvedValue(
+      graphQLErrors([{ message: "Field 'foo' doesn't exist" }]),
+    );
 
     await expect(call()).rejects.toThrow("Field 'foo' doesn't exist");
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -219,15 +245,16 @@ describe("그 밖의 실패", () => {
   it("label을 생략하면 기본 이름으로 알린다", async () => {
     fetchMock.mockRejectedValue(new Error("네트워크 단절"));
 
-    await expect(settle(githubGraphQL("t", QUERY))).rejects.toThrow(/^GitHub 요청이/);
+    await expect(
+      settle(githubGraphQL("t", QUERY, {}, KO.github)),
+    ).rejects.toThrow(/^GitHub 요청이/);
   });
 });
 
 describe("오류 종류", () => {
   it("이름으로 구분할 수 있다", () => {
     expect(new GitHubError("x").name).toBe("GitHubError");
-    expect(new GitHubAuthError().name).toBe("GitHubAuthError");
-    expect(new GitHubAuthError().message).toMatch(/GitHub 토큰/);
+    expect(new GitHubAuthError("직접 지정").name).toBe("GitHubAuthError");
     expect(new GitHubAuthError("직접 지정").message).toBe("직접 지정");
   });
 });

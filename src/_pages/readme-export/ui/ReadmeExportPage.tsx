@@ -12,6 +12,7 @@ import { SiteHeader } from "@/widgets/site-header";
 import { GitHubAuthError } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
+import { getDictionary } from "@/shared/lib/i18n-server";
 import { Banner } from "@/shared/ui/banner";
 import { CopyButton } from "@/shared/ui/copy-button";
 
@@ -19,12 +20,13 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
   const session = await getSession();
   if (!session) redirect(ROUTES.home);
 
+  const dict = await getDictionary();
   const params = parseScopeParams(await searchParams);
 
   let groups: ContributionGroup[] = [];
   let error: string | null = null;
   try {
-    groups = await loadContributionItems(session.token, params.range);
+    groups = await loadContributionItems(session.token, params.range, dict);
   } catch (caught) {
     if (caught instanceof GitHubAuthError) redirect(ROUTES.login);
     error = errorMessage(caught, "기여 목록을 불러오지 못했습니다.");

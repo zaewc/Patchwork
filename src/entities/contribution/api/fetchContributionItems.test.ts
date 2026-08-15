@@ -7,6 +7,9 @@ import {
   searchItemsResponse,
   toyRepoRef,
 } from "@/shared/api/github/response.fixtures";
+import { dictionaryOf } from "@/shared/lib/i18n-server";
+
+const KO = dictionaryOf("ko");
 
 const SINCE = "2025-08-15";
 
@@ -54,7 +57,7 @@ describe("검색 한정자", () => {
   it("공개 저장소·기간·정렬을 쿼리에 담는다", async () => {
     mockSearch(() => searchItemsResponse([]));
 
-    await fetchContributionItems("t", SINCE);
+    await fetchContributionItems("t", SINCE, KO.github);
 
     for (const query of queriesOf()) {
       expect(query).toContain("author:@me");
@@ -81,7 +84,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE);
+    const groups = await fetchContributionItems("t", SINCE, KO.github);
 
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
@@ -128,7 +131,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE);
+    const groups = await fetchContributionItems("t", SINCE, KO.github);
     expect(groups[0]!.items.map((item) => item.title)).toEqual([
       "먼저",
       "나중",
@@ -150,7 +153,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE);
+    const groups = await fetchContributionItems("t", SINCE, KO.github);
     expect(groups.map((group) => group.nameWithOwner)).toEqual([
       "org/many",
       "org/alpha",
@@ -167,7 +170,7 @@ describe("묶기", () => {
       ),
     );
 
-    const groups = await fetchContributionItems("t", SINCE);
+    const groups = await fetchContributionItems("t", SINCE, KO.github);
     expect(groups[0]!.scoring.signals).toEqual({
       isPrivate: false,
       stars: 2,
@@ -177,7 +180,9 @@ describe("묶기", () => {
 
   it("결론난 기여가 없으면 빈 목록이다", async () => {
     mockSearch(() => searchItemsResponse([]));
-    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
+    await expect(
+      fetchContributionItems("t", SINCE, KO.github),
+    ).resolves.toEqual([]);
   });
 });
 
@@ -194,13 +199,17 @@ describe("걸러내기", () => {
       ),
     );
 
-    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
+    await expect(
+      fetchContributionItems("t", SINCE, KO.github),
+    ).resolves.toEqual([]);
   });
 
   it("repository가 없는 검색 결과는 걸러낸다", async () => {
     mockSearch(() => searchItemsResponse([{}]));
 
-    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
+    await expect(
+      fetchContributionItems("t", SINCE, KO.github),
+    ).resolves.toEqual([]);
   });
 
   it("PR이나 issue가 아닌 검색 결과는 걸러낸다", async () => {
@@ -208,7 +217,9 @@ describe("걸러내기", () => {
       searchItemsResponse([completedIssueItem({ __typename: "Discussion" })]),
     );
 
-    await expect(fetchContributionItems("t", SINCE)).resolves.toEqual([]);
+    await expect(
+      fetchContributionItems("t", SINCE, KO.github),
+    ).resolves.toEqual([]);
   });
 });
 
@@ -224,7 +235,7 @@ describe("페이지 넘기기", () => {
         : searchItemsResponse([mergedPullRequestItem({ title: "2페이지" })]);
     });
 
-    const groups = await fetchContributionItems("t", SINCE);
+    const groups = await fetchContributionItems("t", SINCE, KO.github);
 
     expect(groups[0]!.items.map((item) => item.title)).toEqual([
       "1페이지",
@@ -244,7 +255,7 @@ describe("페이지 넘기기", () => {
       searchItemsResponse([], { hasNextPage: true, endCursor: "next" }),
     );
 
-    await fetchContributionItems("t", SINCE);
+    await fetchContributionItems("t", SINCE, KO.github);
 
     // PR 검색 5페이지 + issue 검색 5페이지
     expect(requests).toHaveLength(10);

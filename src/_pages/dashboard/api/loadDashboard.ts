@@ -20,6 +20,7 @@ import { GitHubAuthError, type GitHubViewer } from "@/shared/api";
 import { rangeStartDate, windowsFor, type RangeKey } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { percent } from "@/shared/lib/format";
+import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 
 export type DashboardData = {
   viewer: GitHubViewer;
@@ -64,6 +65,7 @@ const failureOf = <T>(
 export async function loadDashboard(
   token: string,
   range: RangeKey,
+  dict: Dictionary,
 ): Promise<DashboardData> {
   const now = Date.now();
   const windows = windowsFor(range, now);
@@ -74,15 +76,19 @@ export async function loadDashboard(
         fetchContributions(
           token,
           window,
+          dict.github,
           windows.length > 1
-            ? `기여 집계 ${index + 1}/${windows.length}`
-            : "기여 집계",
+            ? interpolate(dict.github.labels.contributionsPart, {
+                index: index + 1,
+                total: windows.length,
+              })
+            : dict.github.labels.contributions,
         ),
       ),
     ),
   );
   const pullRequestsOutcome = toOutcome(
-    fetchPullRequests(token, rangeStartDate(range, now), now),
+    fetchPullRequests(token, rangeStartDate(range, now), now, dict.github),
   );
 
   const [contributions, pullRequests] = await Promise.all([
@@ -105,7 +111,7 @@ export async function loadDashboard(
     : EMPTY_PULL_REQUESTS;
   const pullRequestsError = pullRequests.ok
     ? null
-    : errorMessage(pullRequests.error, "PR을 불러오지 못했습니다.");
+    : errorMessage(pullRequests.error, dict.errors.pullRequestsFailed);
 
   const viewer = loaded[0]!.value.viewer;
   const collections = loaded.map((outcome) => outcome.value.collection);
@@ -160,7 +166,10 @@ export async function loadDashboard(
     // 여러 해를 나눠 부르는 경우, 일부 구간만 실패하면 나머지로 그린다.
     contributionsWarning:
       failures.length > 0
-        ? `${windows.length}개 구간 중 ${failures.length}개를 불러오지 못해 일부 기간이 빠져 있습니다.`
+        ? interpolate(dict.errors.contributionsWarning, {
+            total: windows.length,
+            failed: failures.length,
+          })
         : null,
   };
 }
