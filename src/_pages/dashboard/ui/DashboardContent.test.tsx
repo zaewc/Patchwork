@@ -53,7 +53,12 @@ describe("Query 상태", () => {
 
     const { container } = renderContent();
 
-    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(7);
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+    // 골격은 잡혀 있지만 아직 누를 수 있는 것은 없다.
+    expect(
+      screen.getByRole("heading", { name: "Repositories" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("처음 조회가 실패하면 재시도 화면을 보여준다", async () => {
