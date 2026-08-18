@@ -102,6 +102,7 @@ export const ja: Dictionary = {
 
   errors: {
     signInRequired: "ログインが必要です。",
+    badRequest: "リクエストの形式が正しくありません。",
     dashboardFailed: "ダッシュボードのデータを読み込めませんでした。",
     pullRequestsFailed: "プルリクエストを読み込めませんでした。",
     contributionsWarning:

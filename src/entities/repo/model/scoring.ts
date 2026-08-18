@@ -13,6 +13,19 @@ export type Unscored<T extends { impact: number }> = Omit<T, "impact"> & {
   scoring: RepoScoring;
 };
 
+/**
+ * 점수를 물어야 할 repository 이름만 뽑는다. 비공개 repository는 공개 생태계의 척도가
+ * 아니라 애초에 묻지 않고, 같은 곳을 두 번 묻지 않는다.
+ *
+ * 조회(`loadScorecards`)에서 이 판단을 떼어 둔 이유는 브라우저도 이 목록을 만들기
+ * 때문이다. 화면은 점수 없는 데이터를 먼저 받고, 무엇을 물어야 할지 여기서 정해 보낸다.
+ */
+export function scoringKeys(scorings: RepoScoring[]): string[] {
+  return [
+    ...new Set(scorings.filter((s) => !s.signals.isPrivate).map((s) => s.key)),
+  ];
+}
+
 /** repository 이름 → Scorecard 총점(0~10). null은 "deps.dev가 모른다". */
 export type ScorecardIndex = ReadonlyMap<string, number | null>;
 

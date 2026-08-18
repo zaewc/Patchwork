@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleDashboard } from "@/_app/api-routes/dashboard";
 import { loadDashboard } from "@/_pages/dashboard";
-import { dashboardData } from "@/_pages/dashboard/api/dashboard.fixtures";
+import { dashboardFixture } from "@/_pages/dashboard/api/dashboard.fixtures";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
 import { dictionaryOf } from "@/shared/lib/i18n-server";
@@ -24,7 +24,7 @@ const request = (range = "90d") =>
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getSession).mockResolvedValue(SESSION);
-  vi.mocked(loadDashboard).mockResolvedValue(dashboardData());
+  vi.mocked(loadDashboard).mockResolvedValue(dashboardFixture().core);
 });
 
 describe("GET /api/dashboard", () => {
@@ -41,7 +41,7 @@ describe("GET /api/dashboard", () => {
   });
 
   it("세션 토큰과 조회 범위로 대시보드를 불러온다", async () => {
-    const data = dashboardData();
+    const { core: data } = dashboardFixture();
     vi.mocked(loadDashboard).mockResolvedValue(data);
 
     const response = await handleDashboard(request("5y"));

@@ -1,7 +1,4 @@
-import type {
-  RepoScoring,
-  ScorecardIndex,
-} from "@/entities/repo/model/scoring";
+import type { ScorecardIndex } from "@/entities/repo/model/scoring";
 import { fetchDepsDevProject } from "@/shared/api";
 import { mapInBatches } from "@/shared/lib/concurrency";
 
@@ -9,18 +6,13 @@ import { mapInBatches } from "@/shared/lib/concurrency";
 const BATCH_SIZE = 16;
 
 /**
- * 필요한 repository들의 OpenSSF Scorecard를 한 번에 모아 온다.
+ * 건네받은 repository들의 OpenSSF Scorecard를 한 번에 모아 온다.
  *
  * 이 조회는 화면의 곁가지다. deps.dev가 죽어도 대시보드는 떠야 하므로 실패는 "모른다"로
- * 접어 두고, 몇 곳이 실패했는지만 한 줄 남긴다. 비공개 repository는 애초에 묻지 않는다.
+ * 접어 두고, 몇 곳이 실패했는지만 한 줄 남긴다. 무엇을 물을지 고르는 일은 부르는 쪽의
+ * `scoringKeys`가 한다.
  */
-export async function loadScorecards(
-  scorings: RepoScoring[],
-): Promise<ScorecardIndex> {
-  const keys = [
-    ...new Set(scorings.filter((s) => !s.signals.isPrivate).map((s) => s.key)),
-  ];
-
+export async function loadScorecards(keys: string[]): Promise<ScorecardIndex> {
   let failures = 0;
   const entries = await mapInBatches(keys, BATCH_SIZE, async (key) => {
     try {

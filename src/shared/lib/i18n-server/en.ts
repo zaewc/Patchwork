@@ -104,6 +104,7 @@ export const en: Dictionary = {
 
   errors: {
     signInRequired: "Sign-in required.",
+    badRequest: "That request was not valid.",
     dashboardFailed: "Could not load the dashboard data.",
     pullRequestsFailed: "Could not load pull requests.",
     contributionsWarning:
