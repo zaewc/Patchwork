@@ -38,7 +38,6 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
           body={dict.dashboard.sessionExpired.body}
           action={dict.dashboard.sessionExpired.action}
           href={ROUTES.login}
-          dict={dict}
         />
       );
     }
@@ -48,7 +47,6 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
         body={errorMessage(error, dict.dashboard.unknownError)}
         action={dict.dashboard.loadFailed.action}
         href={scopeHref(params, {}, ROUTES.dashboard)}
-        dict={dict}
       />
     );
   }
