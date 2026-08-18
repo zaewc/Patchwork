@@ -8,7 +8,8 @@ export function StatCard({
   accent = false,
 }: {
   label: string;
-  value: number;
+  /** 아직 셀 수 없는 값은 null이다. 그 자리는 숫자 대신 자리만 잡아 둔다. */
+  value: number | null;
   /** 자릿점을 찍을 때 쓸 BCP 47 태그 */
   numberLocale: string;
   hint?: string;
@@ -21,10 +22,19 @@ export function StatCard({
       }`}
     >
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">
-        {formatNumber(value, numberLocale)}
-      </p>
-      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
+      {value === null ? (
+        <>
+          <div className="mt-1 h-8 w-20 animate-pulse rounded bg-surface-2" />
+          <div className="mt-1 h-4 w-28 animate-pulse rounded bg-surface-2" />
+        </>
+      ) : (
+        <>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">
+            {formatNumber(value, numberLocale)}
+          </p>
+          {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
+        </>
+      )}
     </div>
   );
 }

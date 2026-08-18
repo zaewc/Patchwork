@@ -53,4 +53,22 @@ describe("StatCard", () => {
       "bg-accent-soft",
     );
   });
+
+  /** 여럿을 한 줄에 세우는 카드라, 값이 늦게 오는 것 때문에 줄 높이가 바뀌면 안 된다. */
+  it("값이 아직 없으면 이름은 두고 숫자와 덧말 자리만 비운다", () => {
+    const { container } = render(
+      <StatCard
+        label="주요 OSS 기여"
+        value={null}
+        numberLocale="ko-KR"
+        hint="이 덧말은 아직 셀 수 없다"
+      />,
+    );
+
+    expect(screen.getByText("주요 OSS 기여")).toBeInTheDocument();
+    expect(
+      screen.queryByText("이 덧말은 아직 셀 수 없다"),
+    ).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(2);
+  });
 });

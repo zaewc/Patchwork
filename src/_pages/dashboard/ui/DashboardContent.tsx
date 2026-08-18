@@ -8,14 +8,16 @@ import {
 } from "@/_pages/dashboard/api/dashboardQuery";
 import { DashboardQueryError } from "@/_pages/dashboard/api/fetchDashboard";
 import { dashboardView } from "@/_pages/dashboard/lib/dashboardView";
-import { useLastPaired } from "@/_pages/dashboard/lib/useLastPaired";
 import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
 import { DashboardLoading } from "@/_pages/dashboard/ui/DashboardLoading";
 import { DashboardStats } from "@/_pages/dashboard/ui/DashboardStats";
 import { ErrorScreen } from "@/_pages/dashboard/ui/ErrorScreen";
 import { MergedPullRequestList } from "@/_pages/dashboard/ui/MergedPullRequestList";
+import { MergedPullRequestListSkeleton } from "@/_pages/dashboard/ui/MergedPullRequestListSkeleton";
 import { PullRequestBoard } from "@/_pages/dashboard/ui/PullRequestBoard";
+import { PullRequestBoardSkeleton } from "@/_pages/dashboard/ui/PullRequestBoardSkeleton";
 import { RepoTable } from "@/_pages/dashboard/ui/RepoTable";
+import { RepoTableSkeleton } from "@/_pages/dashboard/ui/RepoTableSkeleton";
 import { Section } from "@/_pages/dashboard/ui/Section";
 import {
   filterByScope,
@@ -31,8 +33,10 @@ import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 import { Banner } from "@/shared/ui/banner";
 import { RefreshIcon } from "@/shared/ui/icon";
 
+/** 전체 보기에서만 목록을 자른다. 주요 OSS 모드는 이미 걸러진 목록이라 다 보여준다. */
 const TOP_REPOS = 10;
 
+/** 같은 버튼이 두 가지를 기다린다. 지금 보고 있는 것을 다시 받는 중인지, 다른 범위를 받는 중인지. */
 function label(
   dict: Dictionary,
   isFetching: boolean,
@@ -71,25 +75,21 @@ export function DashboardContent({
   const impact = useQuery(impactQueryOptions(params.range, keys));
 
   /**
-   * 두 조회의 짝이 맞을 때만 화면을 만든다.
+   * 점수까지 짝이 맞은 화면. 아직 아니면 null이고, 점수가 필요한 구역만 자리를 잡는다.
    *
    * 물어본 이름이 점수표에 모두 들어 있어야 짝이다 — 다른 기간의 점수표가 placeholder로
-   * 남아 있는 동안을 이 검사가 걸러낸다. 짝이 아직 아니면 `useLastPaired`가 직전 화면을
-   * 붙들어 준다.
+   * 남아 있는 동안을 이 검사가 걸러낸다. 짝이 아닌 점수로 목록을 걸러 내면 그 기간에 없는
+   * 줄이 잠깐 보인다.
    */
-  const paired = useMemo(() => {
+  const view = useMemo(() => {
     if (!core.data || !impact.data || !keys) return null;
     const scorecards = new Map(impact.data);
     if (!keys.every((key) => scorecards.has(key))) return null;
     return dashboardView(core.data, scorecards);
   }, [core.data, impact.data, keys]);
 
-  const view = useLastPaired(paired);
-
   const error = core.error ?? impact.error;
   const isFetching = core.isFetching || impact.isFetching;
-  /** 자리는 잡혀 있지만 지금 보이는 것이 이 조회 조건의 결과가 아닌 상태 */
-  const isPlaceholderData = core.isPlaceholderData || paired === null;
 
   /** 탭에 포인터가 닿는 순간 그 범위를 미리 받아 둔다. 이미 있으면 아무 일도 하지 않는다. */
   const prefetchScope = ({ range }: ScopeParams) =>
@@ -109,7 +109,8 @@ export function DashboardContent({
     );
   }
 
-  if (!view) {
+  // 기여 집계가 없으면 조회 조건도 사용자 이름도 몰라 그릴 골격이 없다.
+  if (!core.data) {
     if (error) {
       return (
         <ErrorScreen
@@ -123,12 +124,24 @@ export function DashboardContent({
     return <DashboardLoading />;
   }
 
-  const { viewer, repos, openPullRequests, mergedPullRequests } = view;
+  const { viewer, weeks, totals, external, openCount } = core.data;
 
-  const visibleRepos = filterByScope(repos, params.showAll);
-  const visibleOpen = filterByScope(openPullRequests, params.showAll);
-  const visibleMerged = filterByScope(mergedPullRequests, params.showAll);
+  /** 점수가 있어야 걸러낼 수 있는 세 목록. 아직이면 각 구역이 자기 자리를 잡는다. */
+  const scoped = view
+    ? {
+        repos: filterByScope(view.repos, params.showAll),
+        open: filterByScope(view.openPullRequests, params.showAll),
+        merged: filterByScope(view.mergedPullRequests, params.showAll),
+        /** 걸러내기 전의 수. "전체로 전환하면 볼 수 있다"고 안내할 때 쓴다. */
+        before: {
+          repos: view.repos.length,
+          open: view.openPullRequests.length,
+          merged: view.mergedPullRequests.length,
+        },
+      }
+    : null;
 
+  /** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
   const filteredAway = (
     template: string,
     total: number,
@@ -137,8 +150,8 @@ export function DashboardContent({
 
   const warnings = [
     error ? errorMessage(error, dict.dashboard.refreshFailed) : null,
-    view.contributionsWarning,
-    view.pullRequestsError,
+    core.data.contributionsWarning,
+    core.data.pullRequestsError,
   ].filter((warning): warning is string => Boolean(warning));
 
   return (
@@ -164,23 +177,29 @@ export function DashboardContent({
             <RefreshIcon
               className={isFetching ? "motion-safe:animate-spin" : ""}
             />
-            {label(dict, isFetching, isPlaceholderData)}
+            {label(dict, isFetching, core.isPlaceholderData)}
           </button>
         </div>
       </div>
 
-      {/* 아직 못 받은 범위를 기다리는 중이면 직전 범위를 흐려 둔다. 자리는 그대로다. */}
+      {/*
+        아직 못 받은 범위를 기다리는 중이면 직전 범위를 흐려 둔다. 자리는 그대로다.
+        점수를 기다리는 것은 여기서 흐리지 않는다 — 그것은 구역마다 자기 자리로 알린다.
+      */}
       <div
-        aria-busy={isPlaceholderData}
-        className={`transition-opacity ${isPlaceholderData ? "opacity-50" : ""}`}
+        aria-busy={core.isPlaceholderData}
+        className={`transition-opacity ${core.isPlaceholderData ? "opacity-50" : ""}`}
       >
         <DashboardStats
-          totals={view.totals}
-          notable={view.notable}
-          external={view.external}
-          openCount={params.showAll ? view.openCount : visibleOpen.length}
-          staleCount={visibleOpen.filter((pr) => pr.isStale).length}
-          mergedCount={visibleMerged.length}
+          totals={totals}
+          notable={view?.notable ?? null}
+          external={external}
+          // 전체 모드의 열린 PR 수는 GitHub이 준 값이라 점수를 기다리지 않는다.
+          openCount={params.showAll ? openCount : (scoped?.open.length ?? null)}
+          staleCount={
+            scoped ? scoped.open.filter((pr) => pr.isStale).length : null
+          }
+          mergedCount={scoped?.merged.length ?? null}
           dict={dict}
         />
 
@@ -190,42 +209,58 @@ export function DashboardContent({
           </Banner>
         ))}
 
+        {/* 기여 달력은 GitHub 응답만으로 그린다. 점수를 기다릴 이유가 없다. */}
         <Section title={`Contributions · ${dict.ranges[params.range]}`}>
           <div className="rounded-xl border border-border bg-surface p-4">
-            <ContributionQuilt weeks={view.weeks} />
+            <ContributionQuilt weeks={weeks} />
           </div>
         </Section>
 
         <Section title="Repositories">
-          <RepoTable
-            repos={
-              params.showAll ? visibleRepos.slice(0, TOP_REPOS) : visibleRepos
-            }
-            dict={dict}
-            {...filteredAway(dict.dashboard.filteredAway.repos, repos.length)}
-          />
+          {scoped ? (
+            <RepoTable
+              repos={
+                params.showAll ? scoped.repos.slice(0, TOP_REPOS) : scoped.repos
+              }
+              dict={dict}
+              {...filteredAway(
+                dict.dashboard.filteredAway.repos,
+                scoped.before.repos,
+              )}
+            />
+          ) : (
+            <RepoTableSkeleton />
+          )}
         </Section>
 
         <Section title="Open pull requests">
-          <PullRequestBoard
-            pullRequests={visibleOpen}
-            dict={dict}
-            {...filteredAway(
-              dict.dashboard.filteredAway.open,
-              openPullRequests.length,
-            )}
-          />
+          {scoped ? (
+            <PullRequestBoard
+              pullRequests={scoped.open}
+              dict={dict}
+              {...filteredAway(
+                dict.dashboard.filteredAway.open,
+                scoped.before.open,
+              )}
+            />
+          ) : (
+            <PullRequestBoardSkeleton />
+          )}
         </Section>
 
         <Section title="Recently merged">
-          <MergedPullRequestList
-            pullRequests={visibleMerged}
-            dict={dict}
-            {...filteredAway(
-              dict.dashboard.filteredAway.merged,
-              mergedPullRequests.length,
-            )}
-          />
+          {scoped ? (
+            <MergedPullRequestList
+              pullRequests={scoped.merged}
+              dict={dict}
+              {...filteredAway(
+                dict.dashboard.filteredAway.merged,
+                scoped.before.merged,
+              )}
+            />
+          ) : (
+            <MergedPullRequestListSkeleton />
+          )}
         </Section>
       </div>
     </main>

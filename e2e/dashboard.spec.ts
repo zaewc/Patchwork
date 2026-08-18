@@ -292,11 +292,9 @@ test.describe("Open pull requests", () => {
   test("PR을 알맞은 열에 놓는다", async ({ page }) => {
     const board = section(page, "Open pull requests");
     const column = (title: string) =>
-      board
-        .locator("section")
-        .filter({
-          has: page.getByRole("heading", { name: new RegExp(`^${title}`) }),
-        });
+      board.locator("section").filter({
+        has: page.getByRole("heading", { name: new RegExp(`^${title}`) }),
+      });
 
     await expect(column("Review required")).toContainText(
       "fix: hydration mismatch",
@@ -371,6 +369,43 @@ test.describe("기여가 없을 때", () => {
     await expect(
       page.getByText("이 기간에 merge된 pull request가 없습니다."),
     ).toBeVisible();
+  });
+});
+
+test.describe("deps.dev가 느릴 때", () => {
+  /**
+   * 점수 조회는 곁가지다. 실패를 견디는 것만으로는 부족하고, 지연도 화면 전체를 잡지 않아야
+   * 한다. 머리·제목·탭·기여 달력·전체 기여 수는 GitHub 응답만으로 아는 것이라 먼저 나온다.
+   */
+  test("점수를 기다리는 동안에도 달력과 합계는 먼저 그린다", async ({
+    page,
+    scenario,
+  }) => {
+    await scenario("slow-scorecards");
+    await page.goto("/dashboard");
+
+    await expect(page.getByRole("link", { name: "Patchwork" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: "주요 OSS" })).toBeVisible();
+    await expect(
+      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), {
+        exact: true,
+      }),
+    ).toBeVisible();
+
+    // 점수가 있어야 걸러낼 목록은 아직 자리만 잡고 있다.
+    await expect(
+      section(page, "Repositories").getByRole("link", {
+        name: "vercel/next.js",
+      }),
+    ).toHaveCount(0);
+
+    // 도착하면 그 구역만 채워진다.
+    await expect(
+      section(page, "Repositories").getByRole("link", {
+        name: "vercel/next.js",
+      }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });
 

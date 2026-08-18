@@ -53,18 +53,25 @@ function handleGraphQL(res, { query, variables }) {
   const operation = operationOf(query);
 
   if (operation === "viewer") {
-    if (scenario === "identity-failure") return send(res, 401, { message: "Bad credentials" });
+    if (scenario === "identity-failure")
+      return send(res, 401, { message: "Bad credentials" });
     return send(res, 200, { data: { viewer: VIEWER } });
   }
 
-  if (scenario === "token-expired") return send(res, 401, { message: "Bad credentials" });
+  if (scenario === "token-expired")
+    return send(res, 401, { message: "Bad credentials" });
 
   if (operation === "contributions") {
     if (scenario === "contributions-failure") {
-      return graphQLErrors(res, ["기여한 Repository가 많아 집계 쿼리가 제한 시간을 넘겼습니다."]);
+      return graphQLErrors(res, [
+        "기여한 Repository가 많아 집계 쿼리가 제한 시간을 넘겼습니다.",
+      ]);
     }
-    const collection = scenario === "empty" ? emptyCollection() : contributionsCollection();
-    return send(res, 200, { data: { viewer: { ...VIEWER, contributionsCollection: collection } } });
+    const collection =
+      scenario === "empty" ? emptyCollection() : contributionsCollection();
+    return send(res, 200, {
+      data: { viewer: { ...VIEWER, contributionsCollection: collection } },
+    });
   }
 
   if (operation === "pullRequests") {
@@ -87,9 +94,15 @@ function handleGraphQL(res, { query, variables }) {
   }
   const isPullRequestSearch = String(variables.q).includes("is:pr");
   const nodes =
-    scenario === "empty" ? [] : isPullRequestSearch ? MERGED_ITEMS : COMPLETED_ITEMS;
+    scenario === "empty"
+      ? []
+      : isPullRequestSearch
+        ? MERGED_ITEMS
+        : COMPLETED_ITEMS;
   return send(res, 200, {
-    data: { search: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } },
+    data: {
+      search: { pageInfo: { hasNextPage: false, endCursor: null }, nodes },
+    },
   });
 }
 
@@ -115,18 +128,31 @@ function handleAuthorize(res, url) {
 }
 
 function handleToken(res) {
-  if (scenario === "token-http-failure") return send(res, 500, "internal error");
-  if (scenario === "token-rejected") return send(res, 200, { error: "bad_verification_code" });
-  return send(res, 200, { access_token: "gho_e2e_token", token_type: "bearer" });
+  if (scenario === "token-http-failure")
+    return send(res, 500, "internal error");
+  if (scenario === "token-rejected")
+    return send(res, 200, { error: "bad_verification_code" });
+  return send(res, 200, {
+    access_token: "gho_e2e_token",
+    token_type: "bearer",
+  });
 }
 
 /* ------------------------------------------------------------------ deps.dev */
 
+/** 점수 조회가 느린 상황을 만든다. fetchDepsDevProject의 5초 대기보다는 짧게 둔다. */
+const SLOW_SCORECARD_MS = 1_500;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /** GET /deps-dev/v3/projects/{github.com%2Fowner%2Frepo} */
 function handleDepsDevProject(res, pathname) {
-  if (scenario === "scorecards-failure") return send(res, 503, "service unavailable");
+  if (scenario === "scorecards-failure")
+    return send(res, 503, "service unavailable");
 
-  const key = decodeURIComponent(pathname.split("/projects/")[1] ?? "").replace("github.com/", "");
+  const key = decodeURIComponent(pathname.split("/projects/")[1] ?? "").replace(
+    "github.com/",
+    "",
+  );
   const overallScore = SCORECARDS[key];
   if (overallScore === undefined) return send(res, 404, "project not found");
 
@@ -147,17 +173,20 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/__scenario") {
     if (req.method === "POST") {
-      scenario = JSON.parse((await readBody(req)) || "{}").scenario ?? "default";
+      scenario =
+        JSON.parse((await readBody(req)) || "{}").scenario ?? "default";
       return send(res, 200, { scenario });
     }
     return send(res, 200, { scenario });
   }
 
   if (url.pathname.startsWith("/deps-dev/v3/projects/")) {
+    if (scenario === "slow-scorecards") await sleep(SLOW_SCORECARD_MS);
     return handleDepsDevProject(res, url.pathname);
   }
 
-  if (url.pathname === "/login/oauth/authorize") return handleAuthorize(res, url);
+  if (url.pathname === "/login/oauth/authorize")
+    return handleAuthorize(res, url);
   if (url.pathname === "/login/oauth/access_token") return handleToken(res);
 
   if (url.pathname === "/graphql") {
