@@ -112,23 +112,34 @@ describe("ContributionQuilt", () => {
     expect(container.querySelectorAll(".quilt-cell")).toHaveLength(12);
   });
 
+  it("가로로 넘치는 격자를 스크롤 상자에 담는다", () => {
+    const { container } = render(
+      <ContributionQuilt weeks={weeksFrom("2026-08-09", [1])} />,
+    );
+
+    const scroller = container.querySelector(".quilt-scroller");
+    expect(scroller).toBeInTheDocument();
+    expect(scroller?.querySelector("[title]")).toBeInTheDocument();
+  });
+
   it("아무 날도 없는 주는 월 이름을 만들지 않는다", () => {
     render(<ContributionQuilt weeks={[[], [day("2026-08-09", 1)]]} />);
     expect(screen.queryByText("Aug")).not.toBeInTheDocument();
   });
 
+  it.each<[string, CalendarDay[][]]>([
+    ["짧은 기간", weeksFrom("2026-08-09", [1])],
+    ["긴 기간", weeksFrom("2025-06-01", zeros(70 * 7))],
+  ])("%s에서도 칸은 12px 그대로다", (_label, weeks) => {
+    const { container } = render(<ContributionQuilt weeks={weeks} />);
+
+    expect(
+      container.querySelector('[style*="grid-template-rows"]'),
+    ).toHaveAttribute("style", expect.stringContaining("repeat(7, 12px)"));
+    expect(container.querySelectorAll(".quilt-cell").length).toBeGreaterThan(0);
+  });
+
   describe("기간이 짧을 때", () => {
-    it("12px 칸을 쓴다", () => {
-      const { container } = render(
-        <ContributionQuilt weeks={weeksFrom("2026-08-09", [1])} />,
-      );
-
-      expect(container.querySelectorAll(".quilt-cell-dense")).toHaveLength(0);
-      expect(
-        container.querySelector('[style*="grid-template-rows"]'),
-      ).toHaveAttribute("style", expect.stringContaining("repeat(7, 12px)"));
-    });
-
     it("달이 바뀔 때마다 월 이름을 찍는다", () => {
       render(<ContributionQuilt weeks={weeksFrom("2026-06-07", zeros(84))} />);
 
@@ -154,17 +165,8 @@ describe("ContributionQuilt", () => {
   describe("기간이 길 때", () => {
     const longWeeks = weeksFrom("2025-06-01", zeros(70 * 7));
 
-    it("60주를 넘으면 8px 칸으로 줄인다", () => {
-      const { container } = render(<ContributionQuilt weeks={longWeeks} />);
-
+    it("60주를 넘으면 월 이름 대신 연 경계에만 연도를 찍는다", () => {
       expect(longWeeks.length).toBeGreaterThan(60);
-      expect(container.querySelectorAll(".quilt-cell")).toHaveLength(0);
-      expect(
-        container.querySelector('[style*="grid-template-rows"]'),
-      ).toHaveAttribute("style", expect.stringContaining("repeat(7, 8px)"));
-    });
-
-    it("월 이름 대신 연 경계에만 연도를 찍는다", () => {
       render(<ContributionQuilt weeks={longWeeks} />);
 
       expect(screen.getByText("2026")).toBeInTheDocument();

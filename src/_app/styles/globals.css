@@ -107,14 +107,55 @@ body {
   background-color: var(--patch-4);
 }
 
-/* 셀 크기는 두 종류뿐이라, 인라인 style 대신 클래스로 둔다 (5년이면 셀이 1,800개가 넘는다). */
 .quilt-cell {
   width: 12px;
   height: 12px;
   border-radius: 2px;
 }
-.quilt-cell-dense {
-  width: 8px;
-  height: 8px;
-  border-radius: 1px;
+
+@property --quilt-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --quilt-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes quilt-fade {
+  from {
+    --quilt-fade-start: 0px;
+    --quilt-fade-end: 24px;
+  }
+  to {
+    --quilt-fade-start: 24px;
+    --quilt-fade-end: 0px;
+  }
+}
+
+.quilt-scroller {
+  overflow-x: auto;
+}
+
+@supports (animation-timeline: scroll()) {
+  .quilt-scroller {
+    scrollbar-width: none;
+    animation-name: quilt-fade;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(self inline);
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--quilt-fade-start),
+      #000 calc(100% - var(--quilt-fade-end)),
+      transparent 100%
+    );
+  }
+  .quilt-scroller::-webkit-scrollbar {
+    display: none;
+  }
 }
