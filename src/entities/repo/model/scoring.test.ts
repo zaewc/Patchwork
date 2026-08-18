@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { withImpact, type Unscored } from "@/entities/repo/model/scoring";
+import {
+  scoringKeys,
+  withImpact,
+  type Unscored,
+} from "@/entities/repo/model/scoring";
 
 type Item = { name: string; impact: number };
 
@@ -10,7 +14,10 @@ const unscored = (key: string, isPrivate = false): Unscored<Item> => ({
 
 describe("withImpact", () => {
   it("Scorecard로 impact를 채우고 꼬리표를 떼어낸다", () => {
-    const scored = withImpact<Item>(unscored("vercel/next.js"), new Map([["vercel/next.js", 6.2]]));
+    const scored = withImpact<Item>(
+      unscored("vercel/next.js"),
+      new Map([["vercel/next.js", 6.2]]),
+    );
 
     expect(scored).toEqual({ name: "vercel/next.js", impact: 62 });
     expect("scoring" in scored).toBe(false);
@@ -42,5 +49,34 @@ describe("withImpact", () => {
 
     expect(withImpact<Item>(unscored("a/one"), scorecards).impact).toBe(90);
     expect(withImpact<Item>(unscored("b/two"), scorecards).impact).toBe(10);
+  });
+});
+
+describe("scoringKeys", () => {
+  it("점수를 물을 repository 이름만 남긴다", () => {
+    expect(
+      scoringKeys([
+        unscored("vercel/next.js").scoring,
+        unscored("org/small").scoring,
+      ]),
+    ).toEqual(["vercel/next.js", "org/small"]);
+  });
+
+  it("같은 repository는 한 번만 묻는다", () => {
+    expect(
+      scoringKeys([
+        unscored("vercel/next.js").scoring,
+        unscored("vercel/next.js").scoring,
+      ]),
+    ).toEqual(["vercel/next.js"]);
+  });
+
+  /** 비공개 repository는 공개 생태계의 척도가 아니고 deps.dev에도 없다. */
+  it("비공개 repository는 묻지 않는다", () => {
+    expect(scoringKeys([unscored("acme/internal", true).scoring])).toEqual([]);
+  });
+
+  it("물을 것이 없으면 빈 목록이다", () => {
+    expect(scoringKeys([])).toEqual([]);
   });
 });

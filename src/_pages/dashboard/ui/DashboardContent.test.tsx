@@ -2,14 +2,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { dashboardData } from "@/_pages/dashboard/api/dashboard.fixtures";
-import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboardQuery";
+import {
+  dashboardData,
+  dashboardFixture,
+  repoStat,
+} from "@/_pages/dashboard/api/dashboard.fixtures";
+import {
+  dashboardQueryKey,
+  impactQueryKey,
+} from "@/_pages/dashboard/api/dashboardQuery";
 import {
   DashboardQueryError,
   fetchDashboard,
+  fetchImpact,
 } from "@/_pages/dashboard/api/fetchDashboard";
 import { DashboardContent } from "@/_pages/dashboard/ui/DashboardContent";
-import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
+import type { DashboardCore } from "@/_pages/dashboard/api/loadDashboard";
+import type { DashboardView } from "@/_pages/dashboard/lib/dashboardView";
 import { ROUTES, type RangeKey } from "@/shared/config";
 import { dictionaryOf } from "@/shared/lib/i18n-server";
 
@@ -18,19 +27,33 @@ vi.mock("@/_pages/dashboard/api/fetchDashboard", async (importOriginal) => {
     await importOriginal<
       typeof import("@/_pages/dashboard/api/fetchDashboard")
     >();
-  return { ...original, fetchDashboard: vi.fn() };
+  return { ...original, fetchDashboard: vi.fn(), fetchImpact: vi.fn() };
 });
 
 const KO = dictionaryOf("ko");
 const PARAMS = { range: "1y" as const, showAll: false };
 
-/** 이미 받아 둔 범위를 캐시에 심어 둔 채로 화면을 띄운다. */
-function renderContent(cached: Partial<Record<RangeKey, DashboardData>> = {}) {
+/** 화면이 받는 두 조각을 서버가 내주도록 흉내낸다. */
+function serve(view: Partial<DashboardView> = {}) {
+  const { core, impact } = dashboardFixture(view);
+  vi.mocked(fetchDashboard).mockResolvedValue(core);
+  vi.mocked(fetchImpact).mockResolvedValue(impact);
+}
+
+/** 이미 받아 둔 범위를 캐시에 심어 둔 채로 화면을 띄운다. 핵심 데이터와 점수표 둘 다 심는다. */
+function renderContent(
+  cached: Partial<Record<RangeKey, DashboardView>> = {},
+  { skipImpact = [] }: { skipImpact?: RangeKey[] } = {},
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  for (const [range, data] of Object.entries(cached)) {
-    queryClient.setQueryData(dashboardQueryKey(range as RangeKey), data);
+  for (const [range, view] of Object.entries(cached)) {
+    const { core, impact } = dashboardFixture(view);
+    queryClient.setQueryData(dashboardQueryKey(range as RangeKey), core);
+    if (!skipImpact.includes(range as RangeKey)) {
+      queryClient.setQueryData(impactQueryKey(range as RangeKey), impact);
+    }
   }
 
   return render(
@@ -44,7 +67,8 @@ beforeEach(() => {
   window.history.replaceState(null, "", ROUTES.dashboard);
   // restoreMocks는 vi.spyOn으로 만든 것만 되돌린다. 호출 기록은 직접 비운다.
   vi.mocked(fetchDashboard).mockReset();
-  vi.mocked(fetchDashboard).mockResolvedValue(dashboardData());
+  vi.mocked(fetchImpact).mockReset();
+  serve();
 });
 
 describe("Query 상태", () => {
@@ -110,6 +134,7 @@ describe("조회 조건 바꾸기", () => {
 
     expect(screen.getByText("4,321")).toBeInTheDocument();
     expect(fetchDashboard).not.toHaveBeenCalled();
+    expect(fetchImpact).not.toHaveBeenCalled();
     // 주소는 따라오되 서버를 다시 다녀오지는 않는다.
     expect(window.location.search).toBe("?range=90d");
   });
@@ -140,10 +165,32 @@ describe("조회 조건 바꾸기", () => {
     expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
   });
 
-  it("새 기간이 도착하면 흐림을 걷고 그 숫자로 바꾼다", async () => {
-    vi.mocked(fetchDashboard).mockResolvedValue(
-      dashboardData({ totals: { contributions: 30, restricted: 0 } }),
+  /**
+   * 핵심 데이터와 점수표는 서로 다른 조회다. 새 기간의 핵심이 먼저 도착하면 목록을 걸러낼
+   * 점수가 아직 없으므로, 직전 기간의 점수로 억지로 걸러 엉뚱한 줄을 보이지 않게 한다.
+   */
+  it("핵심 데이터만 먼저 와도 직전 화면을 흐린 채로 둔다", () => {
+    vi.mocked(fetchImpact).mockReturnValue(new Promise(() => {}));
+    const { container } = renderContent(
+      {
+        "1y": dashboardData(),
+        "30d": dashboardData({
+          repos: [repoStat({ nameWithOwner: "other/repo", total: 42 })],
+          totals: { contributions: 30, restricted: 0 },
+        }),
+      },
+      { skipImpact: ["30d"] },
     );
+
+    fireEvent.click(screen.getByRole("link", { name: "30일" }));
+
+    expect(screen.getByText("1,234")).toBeInTheDocument();
+    expect(screen.queryByText("30")).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+  });
+
+  it("새 기간이 도착하면 흐림을 걷고 그 숫자로 바꾼다", async () => {
+    serve({ totals: { contributions: 30, restricted: 0 } });
     const { container } = renderContent({ "1y": dashboardData() });
 
     fireEvent.click(screen.getByRole("link", { name: "30일" }));
@@ -179,7 +226,7 @@ describe("조회 조건 바꾸기", () => {
 
 describe("새로고침", () => {
   it("버튼으로 데이터를 다시 받아 화면을 갱신한다", async () => {
-    let finish!: (data: DashboardData) => void;
+    let finish!: (core: DashboardCore) => void;
     vi.mocked(fetchDashboard).mockReturnValue(
       new Promise((resolve) => {
         finish = resolve;
@@ -195,7 +242,9 @@ describe("새로고침", () => {
       ).toBeDisabled(),
     );
 
-    finish(dashboardData({ totals: { contributions: 4321, restricted: 0 } }));
+    finish(
+      dashboardFixture({ totals: { contributions: 4321, restricted: 0 } }).core,
+    );
 
     expect(await screen.findByText("4,321")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "새로고침" })).toBeEnabled();

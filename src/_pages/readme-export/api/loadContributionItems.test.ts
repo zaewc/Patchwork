@@ -65,11 +65,8 @@ describe("loadContributionItems", () => {
     await loadContributionItems("t", "1y", KO);
 
     expect(loadScorecards).toHaveBeenCalledExactlyOnceWith([
-      {
-        key: "vercel/next.js",
-        signals: { isPrivate: false, stars: 50_000, forks: 0 },
-      },
-      { key: "someone/toy", signals: { isPrivate: false, stars: 2, forks: 0 } },
+      "vercel/next.js",
+      "someone/toy",
     ]);
   });
 

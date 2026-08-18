@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { dashboardQueryKey } from "@/_pages/dashboard/api/dashboardQuery";
 import {
   loadDashboard,
-  type DashboardData,
+  type DashboardCore,
 } from "@/_pages/dashboard/api/loadDashboard";
 import { DashboardContent } from "@/_pages/dashboard/ui/DashboardContent";
 import { DashboardQueryProvider } from "@/_pages/dashboard/ui/DashboardQueryProvider";
@@ -26,7 +26,7 @@ export async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
 
   const queryClient = makeQueryClient();
   try {
-    await queryClient.fetchQuery<DashboardData>({
+    await queryClient.fetchQuery<DashboardCore>({
       queryKey: dashboardQueryKey(range),
       queryFn: () => loadDashboard(session.token, range, dict),
     });

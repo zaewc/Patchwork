@@ -94,6 +94,7 @@ export const ko: Dictionary = {
 
   errors: {
     signInRequired: "로그인이 필요합니다.",
+    badRequest: "요청이 올바르지 않습니다.",
     dashboardFailed: "대시보드 데이터를 불러오지 못했습니다.",
     pullRequestsFailed: "PR을 불러오지 못했습니다.",
     contributionsWarning:

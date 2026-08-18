@@ -10,28 +10,21 @@ import {
   type PullRequest,
   type PullRequestBoardData,
 } from "@/entities/pull-request";
-import {
-  isNotable,
-  loadScorecards,
-  withImpact,
-  type RepoStat,
-} from "@/entities/repo";
+import type { RepoStat, Unscored } from "@/entities/repo";
 import { GitHubAuthError, type GitHubViewer } from "@/shared/api";
 import { rangeStartDate, windowsFor, type RangeKey } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { percent } from "@/shared/lib/format";
 import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 
-export type DashboardData = {
+export type DashboardCore = {
   viewer: GitHubViewer;
   totals: { contributions: number; restricted: number };
   external: { contributions: number; ratio: number };
-  /** 주요 OSS이면서 내 소유가 아닌 Repository에 대한 기여 */
-  notable: { repos: number; contributions: number };
   weeks: CalendarDay[][];
-  repos: RepoStat[];
-  openPullRequests: PullRequest[];
-  mergedPullRequests: PullRequest[];
+  repos: Unscored<RepoStat>[];
+  openPullRequests: Unscored<PullRequest>[];
+  mergedPullRequests: Unscored<PullRequest>[];
   openCount: number;
   /** PR 조회만 실패한 경우의 사유. 나머지 지표는 정상이다. */
   pullRequestsError: string | null;
@@ -56,17 +49,20 @@ const failureOf = <T>(
 ): outcome is { ok: false; error: unknown } => !outcome.ok;
 
 /**
- * 대시보드 한 화면에 필요한 모든 것을 모은다.
+ * 대시보드 한 화면에 필요한 것 중 GitHub에서 오는 몫을 모은다.
  *
  * 기여 집계는 화면의 뼈대라 전부 실패하면 그릴 것이 없지만, 일부 구간만 실패하면
  * 남은 구간으로 그리고 경고를 붙인다. PR 조회는 곁가지라 실패해도 그 구역만 비운다.
  * 어느 쪽이든 토큰이 죽은 것이라면 다시 로그인해야 하므로 그대로 올린다.
+ *
+ * deps.dev 조회를 여기서 기다리지 않는 것이 핵심이다. 점수는 곁가지인데도 예전에는
+ * 이 함수 끝에서 직렬로 기다려, 퀼트와 합계까지 그 지연에 묶여 있었다.
  */
 export async function loadDashboard(
   token: string,
   range: RangeKey,
   dict: Dictionary,
-): Promise<DashboardData> {
+): Promise<DashboardCore> {
   const now = Date.now();
   const windows = windowsFor(range, now);
 
@@ -118,22 +114,13 @@ export async function loadDashboard(
 
   const weeks = mergeCalendars(collections);
 
-  // 점수는 deps.dev의 OpenSSF Scorecard에서 온다. repository와 PR이 가리키는 곳을 모아
-  // 한 번에 물어본 뒤 세 목록에 같은 결과를 나눠 준다.
-  const tallies = aggregateRepos(collections, viewer.login);
-  const scorecards = await loadScorecards(
-    [...tallies, ...board.open, ...board.merged].map((item) => item.scoring),
-  );
+  const repos = aggregateRepos(collections, viewer.login);
 
-  const repos = tallies.map((tally) => withImpact<RepoStat>(tally, scorecards));
-
-  const externalRepos = repos.filter((repo) => repo.isExternal);
-  const externalContributions = externalRepos.reduce(
-    (sum, repo) => sum + repo.total,
-    0,
-  );
+  // 외부 기여 비중은 소유자만 보면 알 수 있어 점수를 기다리지 않는다.
+  const externalContributions = repos
+    .filter((repo) => repo.isExternal)
+    .reduce((sum, repo) => sum + repo.total, 0);
   const allContributions = repos.reduce((sum, repo) => sum + repo.total, 0);
-  const notableRepos = externalRepos.filter((repo) => isNotable(repo.impact));
 
   return {
     viewer,
@@ -149,18 +136,10 @@ export async function loadDashboard(
       contributions: externalContributions,
       ratio: percent(externalContributions, allContributions),
     },
-    notable: {
-      repos: notableRepos.length,
-      contributions: notableRepos.reduce((sum, repo) => sum + repo.total, 0),
-    },
     weeks,
     repos,
-    openPullRequests: board.open.map((pr) =>
-      withImpact<PullRequest>(pr, scorecards),
-    ),
-    mergedPullRequests: board.merged.map((pr) =>
-      withImpact<PullRequest>(pr, scorecards),
-    ),
+    openPullRequests: board.open,
+    mergedPullRequests: board.merged,
     openCount: board.openCount,
     pullRequestsError,
     // 여러 해를 나눠 부르는 경우, 일부 구간만 실패하면 나머지로 그린다.

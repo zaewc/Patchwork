@@ -12,7 +12,7 @@ export { audienceScore } from "@/entities/repo/model/audience";
 
 export { repoScoringOf, repoSignalsOf } from "@/entities/repo/model/signals";
 
-export { withImpact } from "@/entities/repo/model/scoring";
+export { scoringKeys, withImpact } from "@/entities/repo/model/scoring";
 export type {
   RepoScoring,
   ScorecardIndex,

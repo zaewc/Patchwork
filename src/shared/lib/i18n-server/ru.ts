@@ -107,6 +107,7 @@ export const ru: Dictionary = {
 
   errors: {
     signInRequired: "Требуется вход.",
+    badRequest: "Некорректный запрос.",
     dashboardFailed: "Не удалось загрузить данные панели.",
     pullRequestsFailed: "Не удалось загрузить пул-реквесты.",
     contributionsWarning:

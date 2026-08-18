@@ -1,8 +1,14 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { dashboardQueryOptions } from "@/_pages/dashboard/api/dashboardQuery";
+import { useMemo } from "react";
+import {
+  dashboardQueryOptions,
+  impactQueryOptions,
+} from "@/_pages/dashboard/api/dashboardQuery";
 import { DashboardQueryError } from "@/_pages/dashboard/api/fetchDashboard";
+import { dashboardView } from "@/_pages/dashboard/lib/dashboardView";
+import { useLastPaired } from "@/_pages/dashboard/lib/useLastPaired";
 import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
 import { DashboardLoading } from "@/_pages/dashboard/ui/DashboardLoading";
 import { DashboardStats } from "@/_pages/dashboard/ui/DashboardStats";
@@ -18,6 +24,7 @@ import {
   useScopeParams,
   type ScopeParams,
 } from "@/features/contribution-scope";
+import { scoringKeys } from "@/entities/repo";
 import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { interpolate, type Dictionary } from "@/shared/lib/i18n";
@@ -44,12 +51,52 @@ export function DashboardContent({
 }) {
   const [params, selectScope] = useScopeParams(initialParams, ROUTES.dashboard);
   const queryClient = useQueryClient();
-  const { data, error, isFetching, isPlaceholderData, refetch } = useQuery(
-    dashboardQueryOptions(params.range),
-  );
 
+  const core = useQuery(dashboardQueryOptions(params.range));
+
+  /** 점수를 물을 목록은 핵심 데이터의 꼬리표에서 나온다. 아직 없으면 무엇을 물을지 모른다. */
+  const keys = useMemo(
+    () =>
+      core.data
+        ? scoringKeys(
+            [
+              ...core.data.repos,
+              ...core.data.openPullRequests,
+              ...core.data.mergedPullRequests,
+            ].map((item) => item.scoring),
+          )
+        : null,
+    [core.data],
+  );
+  const impact = useQuery(impactQueryOptions(params.range, keys));
+
+  /**
+   * 두 조회의 짝이 맞을 때만 화면을 만든다.
+   *
+   * 물어본 이름이 점수표에 모두 들어 있어야 짝이다 — 다른 기간의 점수표가 placeholder로
+   * 남아 있는 동안을 이 검사가 걸러낸다. 짝이 아직 아니면 `useLastPaired`가 직전 화면을
+   * 붙들어 준다.
+   */
+  const paired = useMemo(() => {
+    if (!core.data || !impact.data || !keys) return null;
+    const scorecards = new Map(impact.data);
+    if (!keys.every((key) => scorecards.has(key))) return null;
+    return dashboardView(core.data, scorecards);
+  }, [core.data, impact.data, keys]);
+
+  const view = useLastPaired(paired);
+
+  const error = core.error ?? impact.error;
+  const isFetching = core.isFetching || impact.isFetching;
+  /** 자리는 잡혀 있지만 지금 보이는 것이 이 조회 조건의 결과가 아닌 상태 */
+  const isPlaceholderData = core.isPlaceholderData || paired === null;
+
+  /** 탭에 포인터가 닿는 순간 그 범위를 미리 받아 둔다. 이미 있으면 아무 일도 하지 않는다. */
   const prefetchScope = ({ range }: ScopeParams) =>
     void queryClient.prefetchQuery(dashboardQueryOptions(range));
+
+  /** 새로고침은 둘 다 다시 받는다. 점수표의 조회 키는 기간뿐이라 저절로 따라오지 않는다. */
+  const refetch = () => void Promise.all([core.refetch(), impact.refetch()]);
 
   if (error instanceof DashboardQueryError && error.status === 401) {
     return (
@@ -62,7 +109,7 @@ export function DashboardContent({
     );
   }
 
-  if (!data) {
+  if (!view) {
     if (error) {
       return (
         <ErrorScreen
@@ -76,7 +123,7 @@ export function DashboardContent({
     return <DashboardLoading />;
   }
 
-  const { viewer, repos, openPullRequests, mergedPullRequests } = data;
+  const { viewer, repos, openPullRequests, mergedPullRequests } = view;
 
   const visibleRepos = filterByScope(repos, params.showAll);
   const visibleOpen = filterByScope(openPullRequests, params.showAll);
@@ -90,8 +137,8 @@ export function DashboardContent({
 
   const warnings = [
     error ? errorMessage(error, dict.dashboard.refreshFailed) : null,
-    data.contributionsWarning,
-    data.pullRequestsError,
+    view.contributionsWarning,
+    view.pullRequestsError,
   ].filter((warning): warning is string => Boolean(warning));
 
   return (
@@ -111,7 +158,7 @@ export function DashboardContent({
             type="button"
             className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
             disabled={isFetching}
-            onClick={() => void refetch()}
+            onClick={refetch}
           >
             {/* 불러오는 동안에는 아이콘이 돈다. 움직임을 꺼 둔 사용자에게는 멈춰 있는다. */}
             <RefreshIcon
@@ -128,10 +175,10 @@ export function DashboardContent({
         className={`transition-opacity ${isPlaceholderData ? "opacity-50" : ""}`}
       >
         <DashboardStats
-          totals={data.totals}
-          notable={data.notable}
-          external={data.external}
-          openCount={params.showAll ? data.openCount : visibleOpen.length}
+          totals={view.totals}
+          notable={view.notable}
+          external={view.external}
+          openCount={params.showAll ? view.openCount : visibleOpen.length}
           staleCount={visibleOpen.filter((pr) => pr.isStale).length}
           mergedCount={visibleMerged.length}
           dict={dict}
@@ -145,7 +192,7 @@ export function DashboardContent({
 
         <Section title={`Contributions · ${dict.ranges[params.range]}`}>
           <div className="rounded-xl border border-border bg-surface p-4">
-            <ContributionQuilt weeks={data.weeks} />
+            <ContributionQuilt weeks={view.weeks} />
           </div>
         </Section>
 

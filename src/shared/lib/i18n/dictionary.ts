@@ -93,6 +93,8 @@ export type Dictionary = {
   /** 라우트 핸들러가 JSON으로 돌려주는 사유와, 화면이 준비해 두는 대비 문구 */
   errors: {
     signInRequired: string;
+    /** 라우트 핸들러가 알아들을 수 없는 요청을 받았을 때 */
+    badRequest: string;
     dashboardFailed: string;
     pullRequestsFailed: string;
     contributionsWarning: string;

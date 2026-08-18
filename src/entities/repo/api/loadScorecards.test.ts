@@ -1,14 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadScorecards } from "@/entities/repo/api/loadScorecards";
-import type { RepoScoring } from "@/entities/repo/model/scoring";
 import { fetchDepsDevProject, type DepsDevProject } from "@/shared/api";
 
 vi.mock("@/shared/api", () => ({ fetchDepsDevProject: vi.fn() }));
-
-const scoring = (key: string, isPrivate = false): RepoScoring => ({
-  key,
-  signals: { isPrivate, stars: 1_000, forks: 100 },
-});
 
 const project = (overallScore: number | null): DepsDevProject =>
   overallScore === null
@@ -25,10 +19,7 @@ describe("loadScorecards", () => {
       Promise.resolve(project(key === "vercel/next.js" ? 6.2 : 3.8)),
     );
 
-    const scorecards = await loadScorecards([
-      scoring("vercel/next.js"),
-      scoring("org/small"),
-    ]);
+    const scorecards = await loadScorecards(["vercel/next.js", "org/small"]);
 
     expect(scorecards.get("vercel/next.js")).toBe(6.2);
     expect(scorecards.get("org/small")).toBe(3.8);
@@ -37,36 +28,15 @@ describe("loadScorecards", () => {
   it("평가되지 않은 프로젝트는 null로 둔다", async () => {
     vi.mocked(fetchDepsDevProject).mockResolvedValue(project(null));
 
-    const scorecards = await loadScorecards([scoring("someone/tiny")]);
+    const scorecards = await loadScorecards(["someone/tiny"]);
     expect(scorecards.get("someone/tiny")).toBeNull();
   });
 
   it("deps.dev가 모르는 repository도 null로 둔다", async () => {
     vi.mocked(fetchDepsDevProject).mockResolvedValue(null);
 
-    const scorecards = await loadScorecards([scoring("nobody/nothing")]);
+    const scorecards = await loadScorecards(["nobody/nothing"]);
     expect(scorecards.get("nobody/nothing")).toBeNull();
-  });
-
-  it("비공개 repository는 묻지 않는다", async () => {
-    vi.mocked(fetchDepsDevProject).mockResolvedValue(project(9));
-
-    const scorecards = await loadScorecards([scoring("acme/internal", true)]);
-
-    expect(fetchDepsDevProject).not.toHaveBeenCalled();
-    expect(scorecards.has("acme/internal")).toBe(false);
-  });
-
-  it("같은 repository는 한 번만 묻는다", async () => {
-    vi.mocked(fetchDepsDevProject).mockResolvedValue(project(7));
-
-    await loadScorecards([
-      scoring("vercel/next.js"),
-      scoring("vercel/next.js"),
-      scoring("vercel/next.js"),
-    ]);
-
-    expect(fetchDepsDevProject).toHaveBeenCalledTimes(1);
   });
 
   it("물을 것이 없으면 요청하지 않는다", async () => {
@@ -85,10 +55,7 @@ describe("loadScorecards", () => {
     });
     const warn = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const scorecards = await loadScorecards([
-      scoring("flaky/repo"),
-      scoring("good/repo"),
-    ]);
+    const scorecards = await loadScorecards(["flaky/repo", "good/repo"]);
 
     expect(scorecards.get("flaky/repo")).toBeNull();
     expect(scorecards.get("good/repo")).toBe(8);
@@ -99,7 +66,7 @@ describe("loadScorecards", () => {
     vi.mocked(fetchDepsDevProject).mockResolvedValue(project(8));
     const warn = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await loadScorecards([scoring("good/repo")]);
+    await loadScorecards(["good/repo"]);
 
     expect(warn).not.toHaveBeenCalled();
   });
@@ -115,9 +82,7 @@ describe("loadScorecards", () => {
       return project(5);
     });
 
-    await loadScorecards(
-      Array.from({ length: 40 }, (_, i) => scoring(`org${i}/repo`)),
-    );
+    await loadScorecards(Array.from({ length: 40 }, (_, i) => `org${i}/repo`));
 
     expect(peak).toBe(16);
     expect(fetchDepsDevProject).toHaveBeenCalledTimes(40);

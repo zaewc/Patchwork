@@ -1,4 +1,4 @@
-import type { DashboardData } from "@/_pages/dashboard/api/loadDashboard";
+import type { DashboardView } from "@/_pages/dashboard/lib/dashboardView";
 import { formatNumber } from "@/shared/lib/format";
 import { interpolate, type Dictionary } from "@/shared/lib/i18n";
 import { StatCard } from "@/shared/ui/stat-card";
@@ -12,7 +12,7 @@ export function DashboardStats({
   staleCount,
   mergedCount,
   dict,
-}: Pick<DashboardData, "totals" | "notable" | "external"> & {
+}: Pick<DashboardView, "totals" | "notable" | "external"> & {
   openCount: number;
   staleCount: number;
   mergedCount: number;

@@ -1,17 +1,16 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "@/_pages/dashboard/ui/DashboardPage";
 import {
-  dashboardData,
+  dashboardFixture,
   PLAIN_IMPACT,
   pullRequest,
   repoStat,
 } from "@/_pages/dashboard/api/dashboard.fixtures";
-import {
-  loadDashboard,
-  type DashboardData,
-} from "@/_pages/dashboard/api/loadDashboard";
+import { fetchImpact } from "@/_pages/dashboard/api/fetchDashboard";
+import { loadDashboard } from "@/_pages/dashboard/api/loadDashboard";
+import type { DashboardView } from "@/_pages/dashboard/lib/dashboardView";
 import { getSession } from "@/entities/viewer";
 import { GitHubAuthError } from "@/shared/api";
 import { dictionaryOf } from "@/shared/lib/i18n-server";
@@ -21,6 +20,14 @@ vi.mock("@/entities/viewer", () => ({ getSession: vi.fn() }));
 vi.mock("@/_pages/dashboard/api/loadDashboard", () => ({
   loadDashboard: vi.fn(),
 }));
+/** 점수표는 브라우저가 따로 받아 온다. 서버가 그것까지 기다리지 않는다는 뜻이다. */
+vi.mock("@/_pages/dashboard/api/fetchDashboard", async (importOriginal) => {
+  const original =
+    await importOriginal<
+      typeof import("@/_pages/dashboard/api/fetchDashboard")
+    >();
+  return { ...original, fetchImpact: vi.fn() };
+});
 
 const KO = dictionaryOf("ko");
 
@@ -41,11 +48,19 @@ const props = (
 });
 
 const renderPage = async (
-  data: Partial<DashboardData> = {},
+  data: Partial<DashboardView> = {},
   searchParams?: Record<string, string | string[] | undefined>,
 ) => {
-  vi.mocked(loadDashboard).mockResolvedValue(dashboardData(data));
-  return render(await DashboardPage(props(searchParams)));
+  const { core, impact } = dashboardFixture(data);
+  vi.mocked(loadDashboard).mockResolvedValue(core);
+  vi.mocked(fetchImpact).mockResolvedValue(impact);
+
+  const result = render(await DashboardPage(props(searchParams)));
+  // 이 테스트는 가짜 시계를 쓰므로 waitFor를 걸 수 없다. 마이크로태스크만 흘려보낸다.
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  return result;
 };
 
 const section = (title: string) =>
@@ -185,8 +200,8 @@ describe("지표", () => {
     await renderPage();
 
     const card = statCard("주요 OSS 기여");
-    expect(within(card).getByText("500")).toBeInTheDocument();
-    expect(within(card).getByText("repository 3곳")).toBeInTheDocument();
+    expect(within(card).getByText("100")).toBeInTheDocument();
+    expect(within(card).getByText("repository 1곳")).toBeInTheDocument();
   });
 
   it("외부 repository 기여 비중을 보여준다", async () => {

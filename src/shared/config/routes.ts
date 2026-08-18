@@ -3,6 +3,7 @@ export const ROUTES = {
   home: "/",
   dashboard: "/dashboard",
   dashboardData: "/api/dashboard",
+  impactData: "/api/impact",
   export: "/export",
   locale: "/api/locale",
   login: "/api/auth/login",

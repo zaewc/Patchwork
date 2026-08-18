@@ -2,7 +2,7 @@ import {
   fetchContributionItems,
   type ContributionGroup,
 } from "@/entities/contribution";
-import { loadScorecards, withImpact } from "@/entities/repo";
+import { loadScorecards, scoringKeys, withImpact } from "@/entities/repo";
 import { rangeStartDate, type RangeKey } from "@/shared/config";
 import type { Dictionary } from "@/shared/lib/i18n";
 
@@ -21,7 +21,9 @@ export async function loadContributionItems(
     rangeStartDate(range, Date.now()),
     dict.github,
   );
-  const scorecards = await loadScorecards(groups.map((group) => group.scoring));
+  const scorecards = await loadScorecards(
+    scoringKeys(groups.map((group) => group.scoring)),
+  );
 
   return groups.map((group) =>
     withImpact<ContributionGroup>(group, scorecards),
