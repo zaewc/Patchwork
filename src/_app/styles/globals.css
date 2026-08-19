@@ -37,7 +37,8 @@
   --accent: #b8562f;
   --accent-soft: #f6e3d9;
   --ok: #2f7d4f;
-  --warn: #b07d13;
+  /* 작은 글자로도 읽혀야 한다. 흰 바탕에서 4.56:1 — 이전 #b07d13은 3.63:1로 모자랐다. */
+  --warn: #9c6d10;
   --danger: #b3402f;
 
   --patch-0: #eeeae1;

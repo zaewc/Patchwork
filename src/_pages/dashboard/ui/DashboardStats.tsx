@@ -43,12 +43,12 @@ export function DashboardStats({
 
   const openHint =
     staleCount !== null && mergedCount !== null
-      ? {
-          hint:
-            staleCount > 0
-              ? interpolate(stats.staleHint, { count: staleCount })
-              : interpolate(stats.mergedHint, { count: mergedCount }),
-        }
+      ? staleCount > 0
+        ? {
+            hint: interpolate(stats.staleHint, { count: staleCount }),
+            hintTone: "warn" as const,
+          }
+        : { hint: interpolate(stats.mergedHint, { count: mergedCount }) }
       : {};
 
   return (

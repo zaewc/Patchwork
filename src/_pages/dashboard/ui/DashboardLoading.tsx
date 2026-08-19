@@ -37,11 +37,12 @@ export function DashboardLoading() {
         {Array.from({ length: STAT_CARDS }, (_, card) => (
           <div
             key={card}
-            className="rounded-xl border border-border bg-surface p-4"
+            className="rounded-xl border border-border bg-surface p-5"
           >
+            {/* 이름·숫자·덧말. 치수는 StatCard와 같아야 도착하는 순간 자리가 튀지 않는다. */}
             <SkeletonBlock className="h-4 w-24 rounded" />
-            <SkeletonBlock className="mt-1 h-8 w-20 rounded" />
-            <SkeletonBlock className="mt-1 h-4 w-28 rounded" />
+            <SkeletonBlock className="mt-2.5 h-7 w-20 rounded" />
+            <SkeletonBlock className="mt-2.5 h-4 w-28 rounded" />
           </div>
         ))}
       </div>

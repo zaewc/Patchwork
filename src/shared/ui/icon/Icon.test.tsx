@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
+  AlertIcon,
   CheckIcon,
   ChevronDownIcon,
   CopyIcon,
@@ -20,6 +21,7 @@ const ICONS = [
   { name: "SunIcon", Icon: SunIcon },
   { name: "MoonIcon", Icon: MoonIcon },
   { name: "MonitorIcon", Icon: MonitorIcon },
+  { name: "AlertIcon", Icon: AlertIcon },
 ] as const;
 
 describe.each(ICONS)("$name", ({ Icon }) => {

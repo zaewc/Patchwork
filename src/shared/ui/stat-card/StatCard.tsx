@@ -1,10 +1,12 @@
 import { formatNumber } from "@/shared/lib/format";
+import { AlertIcon } from "@/shared/ui/icon";
 
 export function StatCard({
   label,
   value,
   numberLocale,
   hint,
+  hintTone = "muted",
   accent = false,
 }: {
   label: string;
@@ -13,26 +15,36 @@ export function StatCard({
   /** 자릿점을 찍을 때 쓸 BCP 47 태그 */
   numberLocale: string;
   hint?: string;
+  hintTone?: "muted" | "warn";
   accent?: boolean;
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
-        accent ? "border-accent/40 bg-accent-soft" : "border-border bg-surface"
+      className={`rounded-xl border border-border bg-surface p-5 ${
+        accent ? "border-l-2 border-l-accent" : ""
       }`}
     >
       <p className="text-xs font-medium text-muted">{label}</p>
       {value === null ? (
         <>
-          <div className="mt-1 h-8 w-20 animate-pulse rounded bg-surface-2" />
-          <div className="mt-1 h-4 w-28 animate-pulse rounded bg-surface-2" />
+          <div className="mt-2.5 h-7 w-20 animate-pulse rounded bg-surface-2" />
+          <div className="mt-2.5 h-4 w-28 animate-pulse rounded bg-surface-2" />
         </>
       ) : (
         <>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">
+          <p className="mt-2.5 text-[28px] font-semibold leading-none tracking-tight">
             {formatNumber(value, numberLocale)}
           </p>
-          {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
+          {hint ? (
+            <p
+              className={`mt-2.5 flex items-center gap-1 text-xs leading-4 ${
+                hintTone === "warn" ? "text-warn" : "text-muted"
+              }`}
+            >
+              {hintTone === "warn" ? <AlertIcon size={12} /> : null}
+              {hint}
+            </p>
+          ) : null}
         </>
       )}
     </div>
