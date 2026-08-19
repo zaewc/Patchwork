@@ -6,7 +6,7 @@ import { SkeletonBlock } from "@/_pages/dashboard/ui/SkeletonBlock";
 
 /** 퀼트 격자의 요일 행 수. 실제 퀼트와 같은 세로 치수를 잡으려고 맞춘다. */
 const QUILT_ROWS = 7;
-const STAT_CARDS = 4;
+const STAT_CARDS = 3;
 
 /**
  * 아무것도 받지 못한 동안 실제 화면과 같은 자리에 자리만 잡아 둔다.
@@ -23,17 +23,38 @@ const STAT_CARDS = 4;
 export function DashboardLoading() {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <SkeletonBlock className="h-7 w-40 rounded-md" />
-        {/* 범위 탭 둘과 새로고침 버튼. 어느 조건을 보고 있는지 모르는 자리라 자리만 잡는다. */}
-        <div className="flex flex-wrap items-center gap-2">
-          <SkeletonBlock className="h-9.5 w-32 rounded-lg" />
-          <SkeletonBlock className="h-9.5 w-52 rounded-lg" />
-          <SkeletonBlock className="h-8 w-24 rounded-md" />
+      {/* 판 하나. 신원 · 이끄는 수 · 퀼트가 여기 모인다. */}
+      <section className="rounded-2xl border border-border bg-surface p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <SkeletonBlock className="h-10 w-10 rounded-full" />
+            <div>
+              <SkeletonBlock className="h-5 w-32 rounded" />
+              <SkeletonBlock className="mt-1.5 h-3 w-20 rounded" />
+            </div>
+          </div>
+          {/* 범위 탭 둘과 새로고침 버튼. 어느 조건을 보고 있는지 모르는 자리라 자리만 잡는다. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <SkeletonBlock className="h-9.5 w-32 rounded-lg" />
+            <SkeletonBlock className="h-9.5 w-52 rounded-lg" />
+            <SkeletonBlock className="h-8 w-24 rounded-md" />
+          </div>
         </div>
-      </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SkeletonBlock className="mt-7 h-12 w-44 rounded-md" />
+
+        <div className="mt-6">
+          <SkeletonBlock className="h-4 w-48 rounded" />
+          <div className="flex flex-col gap-[3px]">
+            {Array.from({ length: QUILT_ROWS }, (_, row) => (
+              <SkeletonBlock key={row} className="h-3 rounded-sm" />
+            ))}
+          </div>
+          <SkeletonBlock className="mt-3 h-4 w-40 rounded" />
+        </div>
+      </section>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {Array.from({ length: STAT_CARDS }, (_, card) => (
           <div
             key={card}
@@ -46,19 +67,6 @@ export function DashboardLoading() {
           </div>
         ))}
       </div>
-
-      {/* 조회 범위는 아직 모르므로 제목에 기간을 덧붙이지 않는다. */}
-      <Section title="Contributions">
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <SkeletonBlock className="h-4 w-48 rounded" />
-          <div className="flex flex-col gap-[3px]">
-            {Array.from({ length: QUILT_ROWS }, (_, row) => (
-              <SkeletonBlock key={row} className="h-3 rounded-sm" />
-            ))}
-          </div>
-          <SkeletonBlock className="mt-3 h-4 w-40 rounded" />
-        </div>
-      </Section>
 
       <Section title="Repositories">
         <RepoTableSkeleton />

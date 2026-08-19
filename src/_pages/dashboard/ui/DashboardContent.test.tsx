@@ -117,10 +117,8 @@ describe("Query 상태", () => {
     expect(
       screen.getByTitle("2026-08-09 · 4 contributions"),
     ).toBeInTheDocument();
-    expect(
-      within(statCard("Contributions")).getByText("1,234"),
-    ).toBeInTheDocument();
-    expect(isPlaceholder("Contributions · 1년")).toBe(false);
+    expect(screen.getByText("1,234")).toBeInTheDocument();
+    expect(screen.getByText("Contributions · 1년")).toBeInTheDocument();
   });
 
   it("점수가 있어야 세는 지표만 숫자 자리를 비워 둔다", () => {

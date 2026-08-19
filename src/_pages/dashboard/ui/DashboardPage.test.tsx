@@ -178,12 +178,13 @@ describe("머리글", () => {
   });
 });
 
-describe("지표", () => {
-  it("전체 기여 수를 보여준다", async () => {
+describe("이끄는 수", () => {
+  /** 전체 기여는 카드가 아니라 화면을 이끄는 수다. 바로 아래 퀼트가 같은 것을 그림으로 말한다. */
+  it("전체 기여 수와 그것이 어느 기간의 합인지 앞세운다", async () => {
     await renderPage();
-    expect(
-      within(statCard("Contributions")).getByText("1,234"),
-    ).toBeInTheDocument();
+
+    expect(screen.getByText("1,234")).toBeInTheDocument();
+    expect(screen.getByText("Contributions · 1년")).toBeInTheDocument();
   });
 
   it("비공개 기여가 있으면 함께 알려준다", async () => {
@@ -316,11 +317,9 @@ describe("경고", () => {
 });
 
 describe("본문", () => {
-  it("조회 기간을 제목에 적는다", async () => {
+  it("조회 기간을 이끄는 수 옆에 적는다", async () => {
     await renderPage({}, { range: "5y" });
-    expect(
-      screen.getByRole("heading", { name: "Contributions · 5년" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Contributions · 5년")).toBeInTheDocument();
   });
 
   it("기여 달력을 그린다", async () => {
@@ -330,7 +329,7 @@ describe("본문", () => {
     ).toBeInTheDocument();
   });
 
-  it("네 구역을 순서대로 그린다", async () => {
+  it("세 구역을 순서대로 그린다", async () => {
     await renderPage();
 
     for (const title of [

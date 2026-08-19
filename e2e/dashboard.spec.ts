@@ -29,12 +29,10 @@ test.beforeEach(async ({ signIn }) => {
 
 test.describe("지표", () => {
   test("전체 기여 수와 비공개 기여를 보여준다", async ({ page }) => {
-    const card = statCard(page, "Contributions");
-
     await expect(
-      card.getByText(String(CONTRIBUTIONS), { exact: true }),
+      page.getByText(String(CONTRIBUTIONS), { exact: true }),
     ).toBeVisible();
-    await expect(card.getByText(`Private ${RESTRICTED}건 포함`)).toBeVisible();
+    await expect(page.getByText(`Private ${RESTRICTED}건 포함`)).toBeVisible();
   });
 
   test("주요 OSS 기여와 repository 수를 보여준다", async ({ page }) => {
@@ -105,9 +103,7 @@ test.describe("조회 범위", () => {
     await page.getByRole("link", { name: "30일" }).click();
 
     await expect(page).toHaveURL("/dashboard?range=30d");
-    await expect(
-      page.getByRole("heading", { name: "Contributions · 30일" }),
-    ).toBeVisible();
+    await expect(page.getByText("Contributions · 30일")).toBeVisible();
   });
 
   test("5년은 구간을 나눠 부르고도 합계를 두 번 세지 않는다", async ({
@@ -116,13 +112,9 @@ test.describe("조회 범위", () => {
     await page.getByRole("link", { name: "5년" }).click();
 
     await expect(page).toHaveURL("/dashboard?range=5y");
+    await expect(page.getByText("Contributions · 5년")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Contributions · 5년" }),
-    ).toBeVisible();
-    await expect(
-      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), {
-        exact: true,
-      }),
+      page.getByText(String(CONTRIBUTIONS), { exact: true }),
     ).toBeVisible();
   });
 
@@ -157,15 +149,11 @@ test.describe("조회 범위", () => {
     });
 
     await page.getByRole("link", { name: "30일" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Contributions · 30일" }),
-    ).toBeVisible();
+    await expect(page.getByText("Contributions · 30일")).toBeVisible();
     expect(calls).toHaveLength(1);
 
     await page.getByRole("link", { name: "1년" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Contributions · 1년" }),
-    ).toBeVisible();
+    await expect(page.getByText("Contributions · 1년")).toBeVisible();
     // 1년치는 서버가 첫 화면에 심어 준 것이라 되돌아와도 물어볼 일이 없다.
     expect(calls).toHaveLength(1);
   });
@@ -189,9 +177,7 @@ test.describe("조회 범위", () => {
 
   test("모르는 범위는 1년으로 떨어진다", async ({ page }) => {
     await page.goto("/dashboard?range=100y");
-    await expect(
-      page.getByRole("heading", { name: "Contributions · 1년" }),
-    ).toBeVisible();
+    await expect(page.getByText("Contributions · 1년")).toBeVisible();
   });
 });
 
@@ -388,9 +374,7 @@ test.describe("deps.dev가 느릴 때", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: "주요 OSS" })).toBeVisible();
     await expect(
-      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), {
-        exact: true,
-      }),
+      page.getByText(String(CONTRIBUTIONS), { exact: true }),
     ).toBeVisible();
 
     // 점수가 있어야 걸러낼 목록은 아직 자리만 잡고 있다.
@@ -415,9 +399,7 @@ test.describe("deps.dev가 죽었을 때", () => {
     await page.goto("/dashboard");
 
     await expect(
-      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), {
-        exact: true,
-      }),
+      page.getByText(String(CONTRIBUTIONS), { exact: true }),
     ).toBeVisible();
     // Scorecard가 없으면 외부 관심(stars 100,000 · forks 20,000)만으로 60점 — 경계선에 닿는다.
     await expect(
@@ -438,9 +420,7 @@ test.describe("일부만 실패했을 때", () => {
 
     await expect(page.getByText("PR 검색이 실패했습니다.")).toBeVisible();
     await expect(
-      statCard(page, "Contributions").getByText(String(CONTRIBUTIONS), {
-        exact: true,
-      }),
+      page.getByText(String(CONTRIBUTIONS), { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("열려 있는 pull request가 없습니다."),
@@ -478,9 +458,7 @@ test.describe("조회가 실패했을 때", () => {
     await page.getByRole("link", { name: "다시 시도" }).click();
 
     await expect(page).toHaveURL("/dashboard?range=90d&scope=all");
-    await expect(
-      page.getByRole("heading", { name: "Contributions · 90일" }),
-    ).toBeVisible();
+    await expect(page.getByText("Contributions · 90일")).toBeVisible();
   });
 
   test("토큰이 만료되면 다시 로그인하도록 안내한다", async ({

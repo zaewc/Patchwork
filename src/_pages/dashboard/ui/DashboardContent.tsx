@@ -8,8 +8,8 @@ import {
 } from "@/_pages/dashboard/api/dashboardQuery";
 import { DashboardQueryError } from "@/_pages/dashboard/api/fetchDashboard";
 import { dashboardView } from "@/_pages/dashboard/lib/dashboardView";
-import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
 import { DashboardLoading } from "@/_pages/dashboard/ui/DashboardLoading";
+import { DashboardHero } from "@/_pages/dashboard/ui/DashboardHero";
 import { DashboardStats } from "@/_pages/dashboard/ui/DashboardStats";
 import { ErrorScreen } from "@/_pages/dashboard/ui/ErrorScreen";
 import { MergedPullRequestList } from "@/_pages/dashboard/ui/MergedPullRequestList";
@@ -154,34 +154,29 @@ export function DashboardContent({
     core.data.pullRequestsError,
   ].filter((warning): warning is string => Boolean(warning));
 
+  const actions = (
+    <>
+      <LiveScopeTabs
+        params={params}
+        path={ROUTES.dashboard}
+        dict={dict}
+        inPlace={{ select: selectScope, prefetch: prefetchScope }}
+      />
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
+        disabled={isFetching}
+        onClick={refetch}
+      >
+        {/* 불러오는 동안에는 아이콘이 돈다. 움직임을 꺼 둔 사용자에게는 멈춰 있는다. */}
+        <RefreshIcon className={isFetching ? "motion-safe:animate-spin" : ""} />
+        {label(dict, isFetching, core.isPlaceholderData)}
+      </button>
+    </>
+  );
+
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold tracking-tight">
-          {viewer.name ?? viewer.login}
-        </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <LiveScopeTabs
-            params={params}
-            path={ROUTES.dashboard}
-            dict={dict}
-            inPlace={{ select: selectScope, prefetch: prefetchScope }}
-          />
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60"
-            disabled={isFetching}
-            onClick={refetch}
-          >
-            {/* 불러오는 동안에는 아이콘이 돈다. 움직임을 꺼 둔 사용자에게는 멈춰 있는다. */}
-            <RefreshIcon
-              className={isFetching ? "motion-safe:animate-spin" : ""}
-            />
-            {label(dict, isFetching, core.isPlaceholderData)}
-          </button>
-        </div>
-      </div>
-
       {/*
         아직 못 받은 범위를 기다리는 중이면 직전 범위를 흐려 둔다. 자리는 그대로다.
         점수를 기다리는 것은 여기서 흐리지 않는다 — 그것은 구역마다 자기 자리로 알린다.
@@ -190,8 +185,16 @@ export function DashboardContent({
         aria-busy={core.isPlaceholderData}
         className={`transition-opacity ${core.isPlaceholderData ? "opacity-50" : ""}`}
       >
-        <DashboardStats
+        <DashboardHero
+          viewer={viewer}
           totals={totals}
+          weeks={weeks}
+          rangeLabel={dict.ranges[params.range]}
+          dict={dict}
+          actions={actions}
+        />
+
+        <DashboardStats
           notable={view?.notable ?? null}
           external={external}
           // 전체 모드의 열린 PR 수는 GitHub이 준 값이라 점수를 기다리지 않는다.
@@ -208,13 +211,6 @@ export function DashboardContent({
             {warning}
           </Banner>
         ))}
-
-        {/* 기여 달력은 GitHub 응답만으로 그린다. 점수를 기다릴 이유가 없다. */}
-        <Section title={`Contributions · ${dict.ranges[params.range]}`}>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <ContributionQuilt weeks={weeks} />
-          </div>
-        </Section>
 
         <Section title="Repositories">
           {scoped ? (
