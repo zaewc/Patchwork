@@ -6,6 +6,7 @@ export const ROUTES = {
   impactData: "/api/impact",
   export: "/export",
   locale: "/api/locale",
+  theme: "/api/theme",
   login: "/api/auth/login",
   logout: "/api/auth/logout",
   callback: "/api/auth/callback",

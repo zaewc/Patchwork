@@ -4,8 +4,11 @@ import {
   CheckIcon,
   ChevronDownIcon,
   CopyIcon,
+  MonitorIcon,
+  MoonIcon,
   RefreshIcon,
   SignOutIcon,
+  SunIcon,
 } from "@/shared/ui/icon";
 
 const ICONS = [
@@ -14,6 +17,9 @@ const ICONS = [
   { name: "CopyIcon", Icon: CopyIcon },
   { name: "CheckIcon", Icon: CheckIcon },
   { name: "ChevronDownIcon", Icon: ChevronDownIcon },
+  { name: "SunIcon", Icon: SunIcon },
+  { name: "MoonIcon", Icon: MoonIcon },
+  { name: "MonitorIcon", Icon: MonitorIcon },
 ] as const;
 
 describe.each(ICONS)("$name", ({ Icon }) => {

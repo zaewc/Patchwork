@@ -83,3 +83,40 @@ export function CheckIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** 빛살이 뻗는 해. 밝게. */
+export function SunIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="M4.9 4.9l1.4 1.4" />
+      <path d="M17.7 17.7l1.4 1.4" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="M6.3 17.7l-1.4 1.4" />
+      <path d="M19.1 4.9l-1.4 1.4" />
+    </Icon>
+  );
+}
+
+/** 이지러진 달. 어둡게. */
+export function MoonIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </Icon>
+  );
+}
+
+/** 받침 달린 화면. 운영체제 설정을 따른다. */
+export function MonitorIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+    </Icon>
+  );
+}

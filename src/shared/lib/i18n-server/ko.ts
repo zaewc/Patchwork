@@ -11,7 +11,16 @@ export const ko: Dictionary = {
 
   time: { locale: "ko-KR", justNow: "방금 전" },
 
-  header: { signOut: "로그아웃", language: "언어" },
+  header: {
+    signOut: "로그아웃",
+    language: "언어",
+    theme: "테마",
+    themes: {
+      system: "시스템 설정",
+      light: "밝게",
+      dark: "어둡게",
+    },
+  },
 
   home: {
     title: "오픈소스 기여를 한 장의 Patchwork로",

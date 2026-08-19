@@ -12,7 +12,16 @@ export const ja: Dictionary = {
 
   time: { locale: "ja-JP", justNow: "たった今" },
 
-  header: { signOut: "ログアウト", language: "言語" },
+  header: {
+    signOut: "ログアウト",
+    language: "言語",
+    theme: "テーマ",
+    themes: {
+      system: "システム設定",
+      light: "ライト",
+      dark: "ダーク",
+    },
+  },
 
   home: {
     title: "オープンソースへの貢献を一枚のPatchworkに",

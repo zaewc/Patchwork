@@ -17,7 +17,16 @@ export const ru: Dictionary = {
 
   time: { locale: "ru-RU", justNow: "только что" },
 
-  header: { signOut: "Выйти", language: "Язык" },
+  header: {
+    signOut: "Выйти",
+    language: "Язык",
+    theme: "Тема",
+    themes: {
+      system: "Как в системе",
+      light: "Светлая",
+      dark: "Тёмная",
+    },
+  },
 
   home: {
     title: "Ваш вклад в открытый код — одним полотном",

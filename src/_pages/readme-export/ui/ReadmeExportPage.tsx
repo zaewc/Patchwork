@@ -14,6 +14,7 @@ import { ROUTES } from "@/shared/config";
 import { errorMessage } from "@/shared/lib/error-message";
 import { interpolate } from "@/shared/lib/i18n";
 import { getDictionary } from "@/shared/lib/i18n-server";
+import { requestTheme } from "@/shared/lib/theme-server";
 import { Banner } from "@/shared/ui/banner";
 import { CopyButton } from "@/shared/ui/copy-button";
 
@@ -21,7 +22,7 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
   const session = await getSession();
   if (!session) redirect(ROUTES.home);
 
-  const dict = await getDictionary();
+  const [dict, theme] = await Promise.all([getDictionary(), requestTheme()]);
   const params = parseScopeParams(await searchParams);
 
   let groups: ContributionGroup[] = [];
@@ -39,7 +40,7 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
 
   return (
     <>
-      <SiteHeader user={session} dict={dict} />
+      <SiteHeader user={session} theme={theme} dict={dict} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

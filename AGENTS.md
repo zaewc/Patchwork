@@ -103,6 +103,42 @@ shared/lib/i18n-server      사전 데이터 ko·en · getDictionary()          
 
 - **RTL(아랍어·히브리어)은 준비되어 있지 않습니다.** `<html dir>`도, 논리 속성(`ps-*` `text-start` `inset-inline-start`)도 쓰지 않습니다. 지금은 `pl-9`·`text-right`·`style={{ left }}` 같은 물리 속성이라, RTL 언어를 넣으려면 그 전환이 먼저입니다.
 
+### 색과 테마
+
+밝은 벌과 어두운 벌 두 가지이고, 사용자는 셋 중 하나를 고릅니다 — `system` · `light` · `dark`.
+`system`은 "고르지 않았다"는 뜻입니다. 고른 것은 `pw_theme` 쿠키에 남습니다.
+
+#### 자리가 넷입니다
+
+```text
+shared/config/theme.ts        어떤 테마를 아는가 — THEMES · 쿠키 · parseTheme · themeAttribute
+shared/lib/theme-server       requestTheme() — 쿠키를 읽는다                    (서버 전용)
+_app/styles/globals.css       색 값 — 밝은 벌 · --dark-* 한 벌
+_app/api-routes/theme.ts      고른 것을 쿠키에 심고 보던 자리로 되돌린다
+```
+
+`i18n`·`i18n-server`를 가른 것과 같은 이유로 `theme.ts`와 `theme-server`를 갈라 두었습니다.
+`requestTheme`은 `next/headers`를 쓰므로 브라우저로 넘어가면 빌드가 깨집니다.
+
+#### 지키는 것들
+
+- **깜빡이지 않습니다.** 서버가 쿠키를 읽어 `<html data-theme>`에 적어 보내므로 첫 그림부터
+  고른 색입니다. 스크립트가 켜진 뒤 class를 붙이는 흔한 방법은 그 사이에 반대 색이 한 번
+  번쩍입니다. **이 자리에 클라이언트 코드를 들이지 마세요** — 테마 때문에 실리는 JS는 0바이트입니다.
+- **`system`은 속성을 적지 않습니다.** 속성이 없는 상태가 곧 "운영체제를 따르라"이고, 그래야
+  CSS가 `:root:not([data-theme="light"])` 한 줄로 "고르지 않았거나 어둡게"를 가릅니다.
+- **어두운 색 값은 `--dark-*`에 한 번만 적습니다.** 쓰는 자리가 둘(media 블록과 `[data-theme="dark"]`)
+  이라 값을 두 번 적으면 언젠가 한쪽만 바뀝니다. 그 어긋남은 운영체제를 어둡게 쓰는 사람에게만
+  보여서 좀처럼 눈에 띄지 않습니다.
+- **`:root[data-theme="dark"]` 블록을 media 블록 위로 올리지 마세요.** 명시도가 같아 순서가 곧
+  우선순위입니다. 올리면 "운영체제는 밝은데 어둡게를 고른" 경우가 깨집니다.
+- 테마 이름(`밝게`·`Light`)은 언어마다 다르므로 **사전에 넣습니다**(`header.themes`). 언어 이름과
+  반대입니다 — 그쪽은 어느 언어로 보든 같아야 해서 `LOCALE_LABELS` 한 벌뿐입니다.
+- 그림(해·달·화면)은 곁다리입니다. 뜻은 늘 이름이 지므로 스크린 리더에는 `aria-hidden`으로
+  감추고, 좁은 화면에서 이름이 접혀도 `aria-label`이 남습니다.
+- 되돌아갈 주소를 정하는 `_app/api-routes/returnTo.ts`는 언어 전환과 함께 씁니다. 바깥으로
+  튕겨 보내는 구멍이 되기 쉬운 자리라 한 곳에만 둡니다.
+
 ### 새 코드를 넣을 자리
 
 1. 화면이 늘어나는가 → `_pages`에 슬라이스 추가, `app/`에 재내보내기 한 줄

@@ -1,4 +1,4 @@
-import type { Locale, RangeKey } from "@/shared/config";
+import type { Locale, RangeKey, Theme } from "@/shared/config";
 
 /**
  * 화면에 나오는 문구 중 **언어마다 달라지는 것**만 담는다.
@@ -24,7 +24,13 @@ export type Dictionary = {
     justNow: string;
   };
 
-  header: { signOut: string; language: string };
+  header: {
+    signOut: string;
+    language: string;
+    /** 테마 고르는 자리의 이름과, 고를 수 있는 것들 */
+    theme: string;
+    themes: Record<Theme, string>;
+  };
 
   home: {
     title: string;

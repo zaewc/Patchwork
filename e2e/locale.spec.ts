@@ -1,10 +1,17 @@
 import { expect, test } from "./fixtures";
 import type { Page } from "@playwright/test";
 
-/** 접혀 있는 목록을 펼친 뒤 고른다. 머리에 `<summary>`는 이 하나뿐이다. */
+/**
+ * 접혀 있는 목록을 펼친 뒤 고른다.
+ *
+ * 머리에는 같은 모양의 전환 자리가 둘(언어·테마) 있다. 이름표는 보는 언어에 따라 바뀌므로
+ * 폼이 어디로 보내는지로 가른다.
+ */
+const localeSwitch = (page: Page) => page.locator('form[action="/api/locale"]');
+
 async function switchTo(page: Page, name: string) {
-  await page.locator("summary").click();
-  await page.getByRole("button", { name, exact: true }).click();
+  await localeSwitch(page).locator("summary").click();
+  await localeSwitch(page).getByRole("button", { name, exact: true }).click();
 }
 
 test.describe("로그인 전", () => {
@@ -23,10 +30,13 @@ test.describe("로그인 전", () => {
   /** 언어 하나 바꾸자고 브라우저 스크립트를 싣지 않는다. `<details>`가 스스로 펼친다. */
   test("목록은 접혀 있다가 눌러야 펼쳐진다", async ({ page }) => {
     await page.goto("/");
-    const option = page.getByRole("button", { name: "English", exact: true });
+    const option = localeSwitch(page).getByRole("button", {
+      name: "English",
+      exact: true,
+    });
 
     await expect(option).toBeHidden();
-    await page.locator("summary").click();
+    await localeSwitch(page).locator("summary").click();
     await expect(option).toBeVisible();
   });
 

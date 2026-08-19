@@ -99,8 +99,22 @@ describe("SiteHeader", () => {
     ).toBeInTheDocument();
   });
 
-  it("언어 전환은 로그인 전에도 늘 있다", () => {
+  /** 보는 방식을 정하는 것 둘은 로그인 전에도 쓸 수 있어야 한다. */
+  it("언어·테마 전환은 로그인 전에도 늘 있다", () => {
     render(<SiteHeader dict={KO} />);
+
     expect(screen.getByRole("form", { name: "언어" })).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "테마" })).toBeInTheDocument();
+  });
+
+  it("고른 테마를 전환 자리에 그대로 보여준다", () => {
+    render(<SiteHeader theme="dark" dict={KO} />);
+    expect(screen.getByLabelText("테마: 어둡게")).toBeInTheDocument();
+  });
+
+  /** 머리를 그리는 자리가 여럿이라, 넘기지 않은 곳에서 깨지지 않아야 한다. */
+  it("테마를 넘기지 않으면 시스템 설정으로 본다", () => {
+    render(<SiteHeader dict={KO} />);
+    expect(screen.getByLabelText("테마: 시스템 설정")).toBeInTheDocument();
   });
 });

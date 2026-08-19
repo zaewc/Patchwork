@@ -12,7 +12,16 @@ export const en: Dictionary = {
 
   time: { locale: "en-US", justNow: "just now" },
 
-  header: { signOut: "Sign out", language: "Language" },
+  header: {
+    signOut: "Sign out",
+    language: "Language",
+    theme: "Theme",
+    themes: {
+      system: "System",
+      light: "Light",
+      dark: "Dark",
+    },
+  },
 
   home: {
     title: "Your open source work, as one Patchwork",

@@ -34,3 +34,13 @@ export {
 export type { RangeKey } from "@/shared/config/ranges";
 
 export { ROUTES } from "@/shared/config/routes";
+
+export {
+  DEFAULT_THEME,
+  parseTheme,
+  THEME_COOKIE,
+  THEME_MAX_AGE,
+  THEMES,
+  themeAttribute,
+} from "@/shared/config/theme";
+export type { Theme } from "@/shared/config/theme";

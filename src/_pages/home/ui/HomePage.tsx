@@ -6,18 +6,19 @@ import { getSession } from "@/entities/viewer";
 import { Logo, SiteHeader } from "@/widgets/site-header";
 import { ROUTES, isOAuthConfigured } from "@/shared/config";
 import { getDictionary } from "@/shared/lib/i18n-server";
+import { requestTheme } from "@/shared/lib/theme-server";
 import { Banner } from "@/shared/ui/banner";
 
 export async function HomePage({ searchParams }: PageProps<"/">) {
   if (await getSession()) redirect(ROUTES.dashboard);
 
-  const dict = await getDictionary();
+  const [dict, theme] = await Promise.all([getDictionary(), requestTheme()]);
   const params = await searchParams;
   const error = loginErrorMessage(params.error, dict);
 
   return (
     <>
-      <SiteHeader dict={dict} />
+      <SiteHeader theme={theme} dict={dict} />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-4 py-24 text-center">
         <Logo size={40} />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">
