@@ -108,6 +108,10 @@ describe("접근 제어", () => {
     expect(
       screen.getByRole("link", { name: "The Octocat" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "README" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 });
 

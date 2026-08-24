@@ -16,6 +16,7 @@ export async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
         {...(session ? { user: session } : {})}
         theme={theme}
         dict={dict}
+        active="dashboard"
       />
       {children}
     </>

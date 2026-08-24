@@ -40,7 +40,7 @@ export async function ReadmeExportPage({ searchParams }: PageProps<"/export">) {
 
   return (
     <>
-      <SiteHeader user={session} theme={theme} dict={dict} />
+      <SiteHeader user={session} theme={theme} dict={dict} active="export" />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

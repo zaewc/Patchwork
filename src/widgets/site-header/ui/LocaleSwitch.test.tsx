@@ -16,6 +16,12 @@ describe("LocaleSwitch", () => {
     expect(summary()).toHaveAccessibleName("언어: 한국어");
   });
 
+  it("좁은 화면에서는 이름을 접고 국기로 자리를 줄인다", () => {
+    render(<LocaleSwitch locale="ko" label="언어" />);
+
+    expect(summary().querySelector("span")).toHaveClass("hidden", "lg:inline");
+  });
+
   it("펼치면 아는 언어가 모두 있다", () => {
     render(<LocaleSwitch locale="ko" label="언어" />);
 

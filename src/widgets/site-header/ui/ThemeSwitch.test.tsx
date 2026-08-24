@@ -65,6 +65,6 @@ describe("ThemeSwitch", () => {
   it("접힌 채로는 좁은 화면에서 그림만 남는다", () => {
     render(<ThemeSwitch theme="dark" dict={KO} />);
 
-    expect(summary().querySelector("span")).toHaveClass("hidden", "sm:inline");
+    expect(summary().querySelector("span")).toHaveClass("hidden", "lg:inline");
   });
 });

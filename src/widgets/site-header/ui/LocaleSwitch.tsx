@@ -56,17 +56,17 @@ export function LocaleSwitch({
         {/* 보이는 글자는 언어 이름뿐이라 무엇을 여는 단추인지 이름으로 마저 알린다. */}
         <summary
           aria-label={`${label}: ${current.name}`}
-          className="flex cursor-pointer list-none items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent [&::-webkit-details-marker]:hidden"
+          className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg px-2 text-xs text-muted transition-colors hover:bg-surface hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden"
         >
           <Flag countryCode={current.countryCode} />
-          {current.name}
+          <span className="hidden lg:inline">{current.name}</span>
           <ChevronDownIcon
             size={12}
             className="transition-transform group-open:rotate-180"
           />
         </summary>
 
-        <ul className="absolute right-0 z-20 mt-1 min-w-full overflow-hidden rounded-md border border-border bg-surface py-1 text-xs shadow-lg">
+        <ul className="absolute right-0 z-20 mt-2 w-40 rounded-xl border border-border bg-surface p-1.5 text-sm shadow-xl">
           {LOCALES.map((value) => {
             const option = LOCALE_LABELS[value];
             const selected = value === locale;
@@ -78,7 +78,7 @@ export function LocaleSwitch({
                   name="locale"
                   value={value}
                   aria-current={selected ? "true" : undefined}
-                  className={`flex w-full cursor-pointer items-center gap-2 whitespace-nowrap px-3 py-1.5 text-left transition-colors ${
+                  className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                     selected
                       ? "bg-accent-soft font-medium text-accent"
                       : "text-muted hover:bg-surface-2 hover:text-fg"
