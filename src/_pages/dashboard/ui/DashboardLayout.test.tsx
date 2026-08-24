@@ -34,6 +34,10 @@ describe("DashboardLayout", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Patchwork" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(screen.getByText("본문")).toBeInTheDocument();
   });
 

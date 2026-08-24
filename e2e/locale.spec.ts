@@ -112,6 +112,7 @@ test.describe("로그인 후", () => {
   test("대시보드의 문구와 탭이 함께 영어가 된다", async ({ page }) => {
     await switchTo(page, "English");
 
+    await page.getByLabel("The Octocat", { exact: true }).click();
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Notable OSS" })).toBeVisible();

@@ -59,6 +59,7 @@ describe("SiteHeader", () => {
 
   it("로그인 후에는 대시보드·README 링크를 보여준다", () => {
     render(<SiteHeader user={USER} dict={KO} />);
+    expect(screen.getByRole("navigation")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
       "href",
       "/dashboard",
@@ -69,10 +70,41 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("현재 화면을 주요 이동 경로에서 구분한다", () => {
+    const { rerender } = render(
+      <SiteHeader user={USER} dict={KO} active="dashboard" />,
+    );
+
+    expect(screen.getByRole("navigation")).toHaveClass(
+      "border-b",
+      "border-border",
+    );
+    const dashboard = screen.getByRole("link", { name: "Dashboard" });
+    expect(dashboard).toHaveAttribute("aria-current", "page");
+    expect(dashboard).toHaveClass(
+      "text-accent",
+      "after:h-[3px]",
+      "after:rounded-full",
+      "after:bg-accent",
+    );
+    expect(screen.getByRole("link", { name: "README" })).not.toHaveAttribute(
+      "aria-current",
+    );
+
+    rerender(<SiteHeader user={USER} dict={KO} active="export" />);
+    expect(screen.getByRole("link", { name: "README" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   it("사용자 이름과 avatar로 GitHub 프로필을 잇는다", () => {
     render(<SiteHeader user={USER} dict={KO} />);
     const profile = screen.getByRole("link", { name: "The Octocat" });
     expect(profile).toHaveAttribute("href", "https://github.com/octocat");
+    expect(screen.getByLabelText("The Octocat")).toHaveTextContent(
+      "The Octocat",
+    );
     expect(screen.getByRole("presentation")).toHaveAttribute(
       "src",
       USER.avatarUrl,
@@ -88,8 +120,10 @@ describe("SiteHeader", () => {
     render(<SiteHeader user={USER} dict={KO} />);
     const button = screen.getByRole("button", { name: "로그아웃" });
     const form = button.closest("form");
+    const menu = button.closest("details");
     expect(form).toHaveAttribute("action", "/api/auth/logout");
     expect(form).toHaveAttribute("method", "post");
+    expect(menu).toContainElement(screen.getByLabelText("The Octocat"));
   });
 
   it("사전을 바꾸면 문구도 함께 바뀐다", () => {
