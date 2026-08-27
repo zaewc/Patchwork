@@ -46,6 +46,16 @@ function label(
   return isFetching ? dict.dashboard.refreshing : dict.dashboard.refresh;
 }
 
+/** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
+function filteredAway(
+  template: string,
+  total: number,
+): { emptyMessage?: string } {
+  return total > 0
+    ? { emptyMessage: interpolate(template, { count: total }) }
+    : {};
+}
+
 export function DashboardContent({
   initialParams,
   dict,
@@ -140,13 +150,6 @@ export function DashboardContent({
         },
       }
     : null;
-
-  /** 필터 때문에 목록이 통째로 빈 경우의 안내. 원래 비어 있으면 각 컴포넌트의 기본 문구를 쓴다. */
-  const filteredAway = (
-    template: string,
-    total: number,
-  ): { emptyMessage?: string } =>
-    total > 0 ? { emptyMessage: interpolate(template, { count: total }) } : {};
 
   const warnings = [
     error ? errorMessage(error, dict.dashboard.refreshFailed) : null,
