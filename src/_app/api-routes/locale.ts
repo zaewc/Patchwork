@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { returnTo } from "@/_app/api-routes/returnTo";
+import { safeReturnTo } from "@/_app/api-routes/returnTo";
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
@@ -16,7 +16,9 @@ export async function handleLocale(request: Request) {
   const form = await request.formData();
   const locale = parseLocale(form.get("locale")) ?? DEFAULT_LOCALE;
 
-  const response = NextResponse.redirect(returnTo(request), { status: 303 });
+  const response = NextResponse.redirect(safeReturnTo(request), {
+    status: 303,
+  });
   response.cookies.set(LOCALE_COOKIE, locale, cookieOptions(LOCALE_MAX_AGE));
   return response;
 }

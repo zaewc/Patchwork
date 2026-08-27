@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { returnTo } from "@/_app/api-routes/returnTo";
+import { safeReturnTo } from "@/_app/api-routes/returnTo";
 import {
   DEFAULT_THEME,
   parseTheme,
@@ -18,7 +18,9 @@ export async function handleTheme(request: Request) {
   const form = await request.formData();
   const theme = parseTheme(form.get("theme")) ?? DEFAULT_THEME;
 
-  const response = NextResponse.redirect(returnTo(request), { status: 303 });
+  const response = NextResponse.redirect(safeReturnTo(request), {
+    status: 303,
+  });
   response.cookies.set(THEME_COOKIE, theme, cookieOptions(THEME_MAX_AGE));
   return response;
 }
