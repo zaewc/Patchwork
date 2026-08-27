@@ -19,7 +19,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:performance": "node e2e/performance/build.mjs && lhci autorun",
     "test:all": "npm run check && npm run test:coverage && npm run test:e2e",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
@@ -49,6 +50,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^16.4.0",
     "prettier": "^3.9.6",
+    "react-doctor": "^0.9.12",
     "steiger": "^0.6.0",
     "tailwindcss": "^4",
     "typescript": "^5",
