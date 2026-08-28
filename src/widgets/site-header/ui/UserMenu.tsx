@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ChevronDownIcon, SignOutIcon } from "@/shared/ui/icon";
 import type { GitHubViewer } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
@@ -18,8 +19,7 @@ export function UserMenu({
         aria-label={displayName}
         className="flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg px-1.5 text-sm font-medium transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={user.avatarUrl}
           alt=""
           width={28}

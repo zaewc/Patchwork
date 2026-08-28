@@ -10,7 +10,7 @@ import { appOrigin, ROUTES } from "@/shared/config";
  * `patchwork.dev.evil.example`을 통과시키지 않게 하기 위해서다. 바깥으로 튕겨 보내는
  * 구멍이 되기 쉬운 자리라 한 곳에만 두고 두 폼이 같은 것을 쓴다.
  */
-export function returnTo(request: Request): string {
+export function safeReturnTo(request: Request): string {
   const origin = appOrigin(request);
   const referer = request.headers.get("referer") ?? "";
   return referer.startsWith(`${origin}/`) ? referer : `${origin}${ROUTES.home}`;

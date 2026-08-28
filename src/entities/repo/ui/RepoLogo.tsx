@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function RepoLogo({
   src,
   alt,
@@ -8,8 +10,7 @@ export function RepoLogo({
   size?: number;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={src}
       alt={alt}
       width={size}

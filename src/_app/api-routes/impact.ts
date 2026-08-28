@@ -28,9 +28,7 @@ function parseKeys(body: unknown): string[] | null {
  * deps.dev 조회는 곁가지라 실패를 삼키고 "모른다"로 돌려주므로 이 자리에 실패는 없다.
  */
 export async function handleImpact(request: Request) {
-  const dict = await getDictionary();
-
-  const session = await getSession();
+  const [dict, session] = await Promise.all([getDictionary(), getSession()]);
   if (!session) {
     return Response.json(
       { error: dict.errors.signInRequired },

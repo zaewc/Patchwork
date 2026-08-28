@@ -43,7 +43,7 @@ describe("POST /api/theme", () => {
     );
   });
 
-  /** 언어 전환과 같은 안전장치를 쓴다. 한 곳(returnTo)만 고치면 둘 다 고쳐진다. */
+  /** 언어 전환과 같은 안전장치를 쓴다. 한 곳(safeReturnTo)만 고치면 둘 다 고쳐진다. */
   it("다른 사이트로는 돌려보내지 않는다", async () => {
     for (const referer of [
       "https://evil.example/dashboard",
