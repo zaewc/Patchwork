@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { DashboardCore } from "@/_pages/dashboard/api/loadDashboard";
 import { ContributionQuilt } from "@/_pages/dashboard/ui/ContributionQuilt";
 import { formatNumber } from "@/shared/lib/format";
@@ -33,8 +34,7 @@ export function DashboardHero({
     <section className="rounded-2xl border border-border bg-surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={viewer.avatarUrl}
             alt=""
             width={40}

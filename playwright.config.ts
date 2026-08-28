@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 const APP_PORT = 3100;
 const MOCK_PORT = 4010;
+const MOCK_AVATAR_URL =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232563eb'/%3E%3C/svg%3E";
 
 export const APP_URL = `http://localhost:${APP_PORT}`;
 export const MOCK_GITHUB_URL = `http://localhost:${MOCK_PORT}`;
@@ -28,7 +30,9 @@ export default defineConfig({
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }]]
+    : [["list"]],
   // 방금 빌드한 서버의 첫 요청은 라우트를 데우느라 오래 걸린다.
   timeout: 60_000,
   expect: { timeout: 10_000 },
@@ -47,7 +51,10 @@ export default defineConfig({
     {
       command: "node e2e/mock-github/server.mjs",
       url: `${MOCK_GITHUB_URL}/__scenario`,
-      env: { MOCK_GITHUB_PORT: String(MOCK_PORT) },
+      env: {
+        MOCK_GITHUB_PORT: String(MOCK_PORT),
+        MOCK_AVATAR_URL,
+      },
       reuseExistingServer: !process.env.CI,
       stdout: "ignore",
     },
